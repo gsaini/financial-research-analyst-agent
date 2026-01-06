@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="AI-Powered Financial Research Analyst Dashboard"
+    />
+    <title>Financial Research Analyst | AI-Powered Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <div class="logo">
+          <span class="logo-icon">📊</span>
+          <span class="logo-text"
+            >Financial<span class="logo-accent">AI</span></span
+          >
+        </div>
+        <nav class="nav">
+          <a href="#dashboard" class="nav-link active">Dashboard</a>
+          <a href="#analysis" class="nav-link">Analysis</a>
+          <a href="#portfolio" class="nav-link">Portfolio</a>
+          <a href="#reports" class="nav-link">Reports</a>
+        </nav>
+        <div class="header-actions">
+          <button class="btn btn-outline" id="theme-toggle">🌙</button>
+          <button class="btn btn-primary">Connect API</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">
+            AI-Powered <span class="gradient-text">Financial Analysis</span>
+          </h1>
+          <p class="hero-subtitle">
+            Leverage advanced AI agents to analyze stocks, generate insights,
+            and make data-driven investment decisions.
+          </p>
+          <div class="search-container">
+            <input
+              type="text"
+              id="symbol-input"
+              class="search-input"
+              placeholder="Enter stock symbol (e.g., AAPL, GOOGL, MSFT)"
+            />
+            <button class="btn btn-primary btn-large" id="analyze-btn">
+              <span>Analyze</span>
+              <span class="btn-icon">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Section -->
+      <section class="stats-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-value" id="stocks-analyzed">1,247</div>
+            <div class="stat-label">Stocks Analyzed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value" id="accuracy">87.3%</div>
+            <div class="stat-label">Signal Accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-value" id="avg-time">2.4s</div>
+            <div class="stat-label">Avg Analysis Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🤖</div>
+            <div class="stat-value" id="agents-count">6</div>
+            <div class="stat-label">AI Agents Active</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analysis Results Section -->
+      <section
+        class="analysis-section"
+        id="analysis-results"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h2 class="section-title">Analysis Results</h2>
+          <span class="badge" id="symbol-badge">AAPL</span>
+        </div>
+
+        <!-- Price Overview -->
+        <div class="price-overview">
+          <div class="price-main">
+            <span class="price-value" id="current-price">$0.00</span>
+            <span class="price-change positive" id="price-change">+0.00%</span>
+          </div>
+          <div class="price-meta">
+            <span>Last Updated: <span id="last-updated">--</span></span>
+          </div>
+        </div>
+
+        <!-- Analysis Cards Grid -->
+        <div class="analysis-grid">
+          <!-- Recommendation Card -->
+          <div class="analysis-card recommendation-card">
+            <div class="card-header">
+              <h3 class="card-title">Recommendation</h3>
+              <span class="card-icon">💡</span>
+            </div>
+            <div class="card-content">
+              <div class="recommendation-badge" id="recommendation">HOLD</div>
+              <div class="confidence-bar">
+                <div
+                  class="confidence-fill"
+                  id="confidence-fill"
+                  style="width: 50%"
+                ></div>
+              </div>
+              <span class="confidence-label"
+                >Confidence: <span id="confidence">50%</span></span
+              >
+            </div>
+          </div>
+
+          <!-- Technical Analysis Card -->
+          <div class="analysis-card">
+            <div class="card-header">
+              <h3 class="card-title">Technical Analysis</h3>
+              <span class="card-icon">📊</span>
+            </div>
+            <div class="card-content">
+              <div class="indicator-grid">
+                <div class="indicator">
+                  <span class="indicator-label">RSI (14)</span>
+                  <span class="indicator-value" id="rsi-value">--</span>
+                  <span class="indicator-signal neutral" id="rsi-signal"
+                    >Neutral</span
+                  >
+                </div>
+                <div class="indicator">
+                  <span class="indicator-label">MACD</span>
+                  <span class="indicator-value" id="macd-value">--</span>
+                  <span class="indicator-signal neutral" id="macd-signal"
+                    >Neutral</span
+                  >
+                </div>
+                <div class="indicator">
+                  <span class="indicator-label">Trend</span>
+                  <span class="indicator-value" id="trend-value">--</span>
+                  <span class="indicator-signal neutral" id="trend-signal"
+                    >Neutral</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fundamental Analysis Card -->
+          <div class="analysis-card">
+            <div class="card-header">
+              <h3 class="card-title">Fundamental Analysis</h3>
+              <span class="card-icon">📑</span>
+            </div>
+            <div class="card-content">
+              <div class="metrics-grid">
+                <div class="metric">
+                  <span class="metric-label">P/E Ratio</span>
+                  <span class="metric-value" id="pe-ratio">--</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Market Cap</span>
+                  <span class="metric-value" id="market-cap">--</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">EPS</span>
+                  <span class="metric-value" id="eps">--</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Sector</span>
+                  <span class="metric-value" id="sector">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentiment Card -->
+          <div class="analysis-card">
+            <div class="card-header">
+              <h3 class="card-title">Sentiment Analysis</h3>
+              <span class="card-icon">💬</span>
+            </div>
+            <div class="card-content">
+              <div class="sentiment-meter">
+                <div class="sentiment-scale">
+                  <span>Bearish</span>
+                  <span>Neutral</span>
+                  <span>Bullish</span>
+                </div>
+                <div class="sentiment-bar">
+                  <div
+                    class="sentiment-marker"
+                    id="sentiment-marker"
+                    style="left: 50%"
+                  ></div>
+                </div>
+              </div>
+              <div class="sentiment-score">
+                Score: <span id="sentiment-score">0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="summary-card">
+          <h3 class="summary-title">Analysis Summary</h3>
+          <p class="summary-text" id="summary-text">
+            Enter a stock symbol above to get AI-powered analysis.
+          </p>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section class="features-section" id="features">
+        <h2 class="section-title centered">Powered by AI Agents</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3 class="feature-title">Data Collector</h3>
+            <p class="feature-desc">
+              Gathers real-time data from multiple financial sources
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <h3 class="feature-title">Technical Analyst</h3>
+            <p class="feature-desc">
+              Calculates indicators and identifies patterns
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3 class="feature-title">Fundamental Analyst</h3>
+            <p class="feature-desc">
+              Evaluates company financials and valuations
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💭</div>
+            <h3 class="feature-title">Sentiment Analyst</h3>
+            <p class="feature-desc">Analyzes news and social media sentiment</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⚠️</div>
+            <h3 class="feature-title">Risk Analyst</h3>
+            <p class="feature-desc">Assesses investment risks and volatility</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3 class="feature-title">Report Generator</h3>
+            <p class="feature-desc">Creates comprehensive research reports</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <span class="logo-icon">📊</span>
+            <span>FinancialAI</span>
+          </div>
+          <p class="footer-disclaimer">
+            This tool is for informational purposes only and does not constitute
+            financial advice. Always conduct your own research before making
+            investment decisions.
+          </p>
+        </div>
+        <div class="footer-links">
+          <a href="#">Documentation</a>
+          <a href="#">API Reference</a>
+          <a href="#">GitHub</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Analyzing with AI Agents...</p>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

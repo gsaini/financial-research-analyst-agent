@@ -1,0 +1,643 @@
+# 🏦 Financial Research Analyst Agent
+
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)
+![LangChain](https://img.shields.io/badge/LangChain-0.1.0+-green.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)
+
+**An AI-powered autonomous agent that automates financial data analysis and generates investment insights using LangChain, Python, and multi-agent orchestration.**
+
+[Features](#-features) • [Architecture](#-architecture) • [Installation](#-installation) • [Usage](#-usage) • [API Reference](#-api-reference) • [Contributing](#-contributing)
+
+</div>
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Case Study Details](#-case-study-details)
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+- [API Reference](#-api-reference)
+- [Agent Capabilities](#-agent-capabilities)
+- [Sample Analysis](#-sample-analysis)
+- [Testing](#-testing)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## 🎯 Overview
+
+The **Financial Research Analyst Agent** is an end-to-end AI solution designed to automate financial data analysis and insight generation. Built with LangChain and Python, this agent leverages multiple specialized sub-agents to:
+
+- 📊 **Analyze financial data** from multiple sources
+- 📈 **Generate investment insights** with detailed reasoning
+- 🔍 **Perform market research** autonomously
+- 📑 **Create comprehensive reports** with actionable recommendations
+- ⚡ **Enhance decision-making speed** through automation
+
+---
+
+## 📚 Case Study Details
+
+| Attribute      | Description                                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Leverage AI agent capabilities to automate data analysis and insight generation, enhancing the speed and quality of investment decision-making |
+| **Domain**     | Finance, Investment Analysis, Automation                                                                                                       |
+| **Skills**     | AI Agents, Data Analysis, Investment Decision-Making, LangChain, Python                                                                        |
+| **Complexity** | Advanced                                                                                                                                       |
+| **Duration**   | 4-6 weeks implementation                                                                                                                       |
+
+### Problem Statement
+
+Traditional financial research is:
+
+- **Time-consuming**: Analysts spend 60-80% of time on data gathering
+- **Error-prone**: Manual analysis leads to inconsistencies
+- **Limited in scope**: Human capacity limits coverage
+- **Reactive**: Difficulty in real-time market monitoring
+
+### Solution
+
+This AI agent system addresses these challenges by:
+
+1. **Automating data collection** from multiple financial APIs
+2. **Performing real-time analysis** using advanced NLP and ML
+3. **Generating actionable insights** with confidence scores
+4. **Creating structured reports** for decision-makers
+
+---
+
+## ✨ Features
+
+### Core Capabilities
+
+| Feature                         | Description                                     |
+| ------------------------------- | ----------------------------------------------- |
+| 🤖 **Multi-Agent Architecture** | Specialized agents for different analysis tasks |
+| 📊 **Real-time Data Analysis**  | Live market data processing and analysis        |
+| 📈 **Technical Analysis**       | Automated chart pattern and indicator analysis  |
+| 📰 **News Sentiment Analysis**  | NLP-powered news and social media analysis      |
+| 📑 **Report Generation**        | Automated investment research reports           |
+| 🔔 **Alert System**             | Configurable alerts for market conditions       |
+| 🌐 **API Integration**          | REST API for external system integration        |
+| 📱 **Web Dashboard**            | Interactive visualization dashboard             |
+
+### Agent Types
+
+1. **Data Collector Agent**: Gathers financial data from multiple sources
+2. **Technical Analyst Agent**: Performs technical analysis on price data
+3. **Fundamental Analyst Agent**: Analyzes company financials and metrics
+4. **Sentiment Analyst Agent**: Processes news and social media sentiment
+5. **Report Generator Agent**: Compiles insights into structured reports
+6. **Orchestrator Agent**: Coordinates all agents and manages workflow
+
+---
+
+## 🏗 Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         FINANCIAL RESEARCH ANALYST AGENT                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                      ORCHESTRATOR AGENT                          │   │
+│  │  • Task Planning & Decomposition                                  │   │
+│  │  • Agent Coordination                                             │   │
+│  │  • Result Aggregation                                             │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                    │                                     │
+│                    ┌───────────────┼───────────────┐                    │
+│                    │               │               │                    │
+│  ┌─────────────────▼──┐  ┌────────▼────────┐  ┌──▼─────────────────┐  │
+│  │ DATA COLLECTOR     │  │ TECHNICAL       │  │ FUNDAMENTAL        │  │
+│  │ AGENT              │  │ ANALYST AGENT   │  │ ANALYST AGENT      │  │
+│  │                    │  │                 │  │                    │  │
+│  │ • Yahoo Finance    │  │ • RSI, MACD     │  │ • P/E Ratio        │  │
+│  │ • Alpha Vantage    │  │ • Moving Avg    │  │ • EPS Growth       │  │
+│  │ • News APIs        │  │ • Patterns      │  │ • Debt Metrics     │  │
+│  └────────────────────┘  └─────────────────┘  └────────────────────┘  │
+│                                                                          │
+│  ┌────────────────────┐  ┌─────────────────┐  ┌────────────────────┐  │
+│  │ SENTIMENT          │  │ RISK            │  │ REPORT             │  │
+│  │ ANALYST AGENT      │  │ ANALYST AGENT   │  │ GENERATOR AGENT    │  │
+│  │                    │  │                 │  │                    │  │
+│  │ • News Sentiment   │  │ • VaR Calc      │  │ • PDF Reports      │  │
+│  │ • Social Media     │  │ • Volatility    │  │ • JSON Output      │  │
+│  │ • Trend Analysis   │  │ • Correlation   │  │ • Recommendations  │  │
+│  └────────────────────┘  └─────────────────┘  └────────────────────┘  │
+│                                                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                              DATA LAYER                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
+│  │ Vector Store │  │ Cache Layer  │  │ Database     │  │ File Store │ │
+│  │ (ChromaDB)   │  │ (Redis)      │  │ (PostgreSQL) │  │ (S3/Local) │ │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Technology Stack
+
+| Component           | Technology                         |
+| ------------------- | ---------------------------------- |
+| **AI Framework**    | LangChain, LangGraph               |
+| **LLM**             | OpenAI GPT-4 / Anthropic Claude    |
+| **Embeddings**      | OpenAI Ada / Sentence Transformers |
+| **Vector Store**    | ChromaDB / Pinecone                |
+| **Backend**         | FastAPI, Python 3.14+              |
+| **Data Processing** | Pandas, NumPy                      |
+| **Visualization**   | Plotly, Matplotlib                 |
+| **Frontend**        | HTML5, CSS3, JavaScript            |
+| **Database**        | PostgreSQL / SQLite                |
+| **Caching**         | Redis                              |
+
+---
+
+## 🚀 Installation
+
+### Prerequisites
+
+- Python 3.14 or higher
+- pip or conda package manager
+- OpenAI API key (or other LLM provider)
+- Alpha Vantage API key (optional, for live data)
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/financial-research-analyst-agent.git
+cd financial-research-analyst-agent
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your API keys
+
+# Run the application
+python -m src.main
+```
+
+### Docker Installation
+
+```bash
+# Build the Docker image
+docker build -t financial-analyst-agent .
+
+# Run the container
+docker run -p 8000:8000 --env-file .env financial-analyst-agent
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# LLM Configuration
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key  # Optional
+LLM_MODEL=gpt-4-turbo-preview
+LLM_TEMPERATURE=0.1
+
+# Financial Data APIs
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
+FINNHUB_API_KEY=your_finnhub_key
+NEWS_API_KEY=your_news_api_key
+
+# Database Configuration
+DATABASE_URL=sqlite:///./data/financial_agent.db
+REDIS_URL=redis://localhost:6379
+
+# Vector Store
+CHROMA_PERSIST_DIR=./data/chroma
+
+# Application Settings
+DEBUG=false
+LOG_LEVEL=INFO
+API_HOST=0.0.0.0
+API_PORT=8000
+```
+
+### Agent Configuration
+
+Edit `config/agents.yaml` to customize agent behavior:
+
+```yaml
+orchestrator:
+  max_iterations: 10
+  timeout_seconds: 300
+
+technical_analyst:
+  indicators:
+    - RSI
+    - MACD
+    - SMA
+    - EMA
+    - Bollinger Bands
+  lookback_periods: [14, 30, 50, 200]
+
+sentiment_analyst:
+  sources:
+    - news
+    - twitter
+    - reddit
+  sentiment_threshold: 0.3
+```
+
+---
+
+## 📖 Usage
+
+### Python API
+
+```python
+from src.agents import FinancialResearchAgent
+
+# Initialize the agent
+agent = FinancialResearchAgent()
+
+# Analyze a single stock
+result = agent.analyze("AAPL")
+print(result.summary)
+print(result.recommendation)
+print(result.confidence_score)
+
+# Analyze multiple stocks
+portfolio = ["AAPL", "GOOGL", "MSFT", "AMZN"]
+portfolio_analysis = agent.analyze_portfolio(portfolio)
+
+# Generate a research report
+report = agent.generate_report(
+    symbols=["AAPL"],
+    include_technical=True,
+    include_fundamental=True,
+    include_sentiment=True,
+    format="pdf"
+)
+```
+
+### REST API
+
+```bash
+# Analyze a stock
+curl -X POST "http://localhost:8000/api/v1/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{"symbol": "AAPL", "analysis_type": "comprehensive"}'
+
+# Get technical analysis
+curl "http://localhost:8000/api/v1/technical/AAPL"
+
+# Generate report
+curl -X POST "http://localhost:8000/api/v1/reports" \
+  -H "Content-Type: application/json" \
+  -d '{"symbols": ["AAPL", "GOOGL"], "format": "pdf"}'
+```
+
+### Command Line Interface
+
+```bash
+# Quick analysis
+python -m src.cli analyze AAPL
+
+# Portfolio analysis
+python -m src.cli portfolio AAPL GOOGL MSFT --output report.pdf
+
+# Start web dashboard
+python -m src.cli dashboard --port 8080
+```
+
+---
+
+## 🔧 API Reference
+
+### Endpoints
+
+| Method      | Endpoint                       | Description              |
+| ----------- | ------------------------------ | ------------------------ |
+| `POST`      | `/api/v1/analyze`              | Analyze a stock symbol   |
+| `GET`       | `/api/v1/technical/{symbol}`   | Get technical analysis   |
+| `GET`       | `/api/v1/fundamental/{symbol}` | Get fundamental analysis |
+| `GET`       | `/api/v1/sentiment/{symbol}`   | Get sentiment analysis   |
+| `POST`      | `/api/v1/portfolio`            | Analyze a portfolio      |
+| `POST`      | `/api/v1/reports`              | Generate a report        |
+| `GET`       | `/api/v1/market/summary`       | Get market summary       |
+| `WebSocket` | `/ws/alerts`                   | Real-time alerts         |
+
+### Response Schema
+
+```json
+{
+  "symbol": "AAPL",
+  "analysis_date": "2024-01-15T10:30:00Z",
+  "technical": {
+    "trend": "bullish",
+    "signals": [...],
+    "indicators": {...}
+  },
+  "fundamental": {
+    "valuation": "fairly_valued",
+    "metrics": {...},
+    "growth_score": 8.5
+  },
+  "sentiment": {
+    "overall": "positive",
+    "score": 0.72,
+    "sources": {...}
+  },
+  "recommendation": {
+    "action": "BUY",
+    "confidence": 0.85,
+    "reasoning": "...",
+    "target_price": 195.00,
+    "stop_loss": 175.00
+  }
+}
+```
+
+---
+
+## 🤖 Agent Capabilities
+
+### 1. Data Collector Agent
+
+```python
+Capabilities:
+- Fetch real-time stock prices
+- Historical data retrieval
+- Financial statements download
+- News article collection
+- Social media data gathering
+```
+
+### 2. Technical Analyst Agent
+
+```python
+Indicators Supported:
+- RSI (Relative Strength Index)
+- MACD (Moving Average Convergence Divergence)
+- SMA/EMA (Simple/Exponential Moving Averages)
+- Bollinger Bands
+- Fibonacci Retracements
+- Volume Analysis
+- Support/Resistance Levels
+```
+
+### 3. Fundamental Analyst Agent
+
+```python
+Metrics Analyzed:
+- P/E Ratio, P/B Ratio, P/S Ratio
+- EPS and Revenue Growth
+- ROE, ROA, ROIC
+- Debt-to-Equity Ratio
+- Free Cash Flow
+- Dividend Yield and Payout Ratio
+- Competitive Analysis
+```
+
+### 4. Sentiment Analyst Agent
+
+```python
+Sources:
+- Financial news articles
+- SEC filings and earnings calls
+- Social media (Twitter, Reddit)
+- Analyst ratings
+- Insider trading activity
+```
+
+---
+
+## 📊 Sample Analysis
+
+### Example: Apple Inc. (AAPL) Analysis
+
+```
+================================================================================
+                     FINANCIAL RESEARCH ANALYST REPORT
+                              Apple Inc. (AAPL)
+                           Generated: 2024-01-15
+================================================================================
+
+EXECUTIVE SUMMARY
+-----------------
+Apple Inc. demonstrates strong fundamentals with continued growth in services
+revenue and a robust product ecosystem. Technical indicators suggest a bullish
+trend, while sentiment analysis reveals positive market perception.
+
+TECHNICAL ANALYSIS
+------------------
+Trend: BULLISH
+RSI (14): 58.3 (Neutral)
+MACD: Bullish crossover detected
+Support: $175.00
+Resistance: $195.00
+
+FUNDAMENTAL ANALYSIS
+--------------------
+P/E Ratio: 28.5 (Industry Avg: 25.2)
+Revenue Growth: 8.2% YoY
+EPS Growth: 12.1% YoY
+Debt/Equity: 1.52
+ROE: 147.3%
+
+SENTIMENT ANALYSIS
+------------------
+Overall Sentiment: POSITIVE (Score: 0.72)
+News Sentiment: 0.68
+Social Media: 0.75
+Analyst Consensus: 0.82
+
+RECOMMENDATION
+--------------
+Action: BUY
+Confidence: 85%
+Target Price: $195.00
+Stop Loss: $175.00
+
+Reasoning: Strong fundamentals combined with positive technical signals and
+favorable market sentiment suggest upside potential. The services segment
+continues to grow, providing recurring revenue stability.
+================================================================================
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific test suite
+pytest tests/test_agents.py -v
+
+# Run with coverage
+pytest tests/ --cov=src --cov-report=html
+
+# Run integration tests
+pytest tests/integration/ -v --integration
+```
+
+---
+
+## 🚢 Deployment
+
+### Docker Compose
+
+```yaml
+version: "3.8"
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/financial_agent
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: financial_agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # Set in .env file
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+### Kubernetes
+
+See `k8s/` directory for Kubernetes deployment manifests.
+
+---
+
+## 📁 Project Structure
+
+```
+financial-research-analyst-agent/
+├── src/
+│   ├── __init__.py
+│   ├── main.py                 # Application entry point
+│   ├── config.py               # Configuration management
+│   ├── agents/
+│   │   ├── __init__.py
+│   │   ├── base.py             # Base agent class
+│   │   ├── orchestrator.py     # Main orchestrator agent
+│   │   ├── data_collector.py   # Data collection agent
+│   │   ├── technical.py        # Technical analysis agent
+│   │   ├── fundamental.py      # Fundamental analysis agent
+│   │   ├── sentiment.py        # Sentiment analysis agent
+│   │   ├── risk.py             # Risk analysis agent
+│   │   └── report_generator.py # Report generation agent
+│   ├── tools/
+│   │   ├── __init__.py
+│   │   ├── market_data.py      # Market data fetching tools
+│   │   ├── news_fetcher.py     # News fetching tools
+│   │   ├── technical_indicators.py
+│   │   └── financial_metrics.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── analysis.py         # Analysis data models
+│   │   └── report.py           # Report data models
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── routes.py           # API routes
+│   │   └── schemas.py          # Pydantic schemas
+│   └── utils/
+│       ├── __init__.py
+│       ├── logger.py           # Logging utility
+│       └── helpers.py          # Helper functions
+├── tests/
+│   ├── __init__.py
+│   ├── test_agents.py
+│   ├── test_tools.py
+│   └── test_api.py
+├── data/
+│   └── sample_data.csv
+├── docs/
+│   ├── architecture.md
+│   └── api_reference.md
+├── notebooks/
+│   └── exploration.ipynb
+├── static/
+│   └── dashboard/
+├── config/
+│   └── agents.yaml
+├── .env.example
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- [LangChain](https://langchain.com/) - AI Agent Framework
+- [OpenAI](https://openai.com/) - Language Models
+- [Alpha Vantage](https://www.alphavantage.co/) - Financial Data API
+- [Yahoo Finance](https://finance.yahoo.com/) - Market Data
+
+---
+
+<div align="center">
+
+**Created by 🤖 Antigravity AI (Google DeepMind)**
+
+**Author: Gopal Saini**
+
+_Part of the AI Agents Case Studies Collection_
+
+[⬆ Back to Top](#-financial-research-analyst-agent)
+
+</div>

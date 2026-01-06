@@ -1,0 +1,150 @@
+# Agent configuration for Financial Research Analyst
+
+# Orchestrator Agent Settings
+orchestrator:
+  name: "Orchestrator"
+  description: "Coordinates all specialized agents"
+  max_iterations: 10
+  timeout_seconds: 300
+  parallel_execution: true
+
+# Data Collector Agent Settings
+data_collector:
+  name: "DataCollector"
+  description: "Collects financial data from multiple sources"
+  data_sources:
+    - yahoo_finance
+    - alpha_vantage
+    - news_api
+    - finnhub
+  cache_ttl_seconds: 300
+  rate_limit:
+    requests_per_minute: 60
+
+# Technical Analyst Agent Settings
+technical_analyst:
+  name: "TechnicalAnalyst"
+  description: "Performs technical analysis"
+  indicators:
+    - name: RSI
+      period: 14
+      overbought: 70
+      oversold: 30
+    - name: MACD
+      fast_period: 12
+      slow_period: 26
+      signal_period: 9
+    - name: SMA
+      periods: [20, 50, 200]
+    - name: EMA
+      periods: [12, 26]
+    - name: Bollinger Bands
+      period: 20
+      std_dev: 2.0
+  pattern_detection:
+    enabled: true
+    patterns:
+      - double_top
+      - double_bottom
+      - head_shoulders
+      - triangle
+      - wedge
+
+# Fundamental Analyst Agent Settings
+fundamental_analyst:
+  name: "FundamentalAnalyst"
+  description: "Analyzes company fundamentals"
+  valuation_methods:
+    - dcf
+    - multiples
+    - ddm
+  metrics:
+    valuation:
+      - pe_ratio
+      - pb_ratio
+      - ps_ratio
+      - ev_ebitda
+      - peg_ratio
+    profitability:
+      - gross_margin
+      - operating_margin
+      - net_margin
+      - roe
+      - roa
+      - roic
+    liquidity:
+      - current_ratio
+      - quick_ratio
+      - cash_ratio
+    solvency:
+      - debt_to_equity
+      - interest_coverage
+      - debt_to_assets
+
+# Sentiment Analyst Agent Settings
+sentiment_analyst:
+  name: "SentimentAnalyst"
+  description: "Analyzes market sentiment"
+  sources:
+    - news
+    - social_media
+    - analyst_ratings
+    - insider_activity
+  sentiment_weights:
+    news: 0.25
+    social: 0.15
+    analyst: 0.40
+    insider: 0.20
+  lookback_days: 30
+
+# Risk Analyst Agent Settings
+risk_analyst:
+  name: "RiskAnalyst"
+  description: "Assesses investment risks"
+  metrics:
+    - volatility
+    - var
+    - cvar
+    - sharpe_ratio
+    - sortino_ratio
+    - max_drawdown
+    - beta
+  var_confidence: 0.95
+  lookback_period_days: 252
+
+# Report Generator Agent Settings
+report_generator:
+  name: "ReportGenerator"
+  description: "Generates research reports"
+  formats:
+    - json
+    - markdown
+    - pdf
+    - html
+  sections:
+    - executive_summary
+    - technical_analysis
+    - fundamental_analysis
+    - sentiment_analysis
+    - risk_assessment
+    - recommendation
+    - disclaimers
+
+# LLM Settings
+llm:
+  default_model: "gpt-4-turbo-preview"
+  temperature: 0.1
+  max_tokens: 4096
+  fallback_model: "gpt-3.5-turbo"
+
+# Recommendation Thresholds
+recommendation:
+  strong_buy_threshold: 0.80
+  buy_threshold: 0.65
+  hold_threshold: 0.45
+  sell_threshold: 0.30
+  confidence_weights:
+    technical: 0.25
+    fundamental: 0.35
+    sentiment: 0.20
+    risk: 0.20
