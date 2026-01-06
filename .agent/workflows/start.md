@@ -15,10 +15,10 @@ Follow these steps to set up and run the Financial Research Analyst Agent.
 
 // turbo-all
 
-1. Navigate to the project directory:
+1. Navigate to the project directory (if not already there):
 
 ```bash
-cd /Users/gopalsaini/Documents/Source/ai-agents-case-studies/financial-research-analyst-agent
+cd financial-research-analyst-agent
 ```
 
 2. Create a Python virtual environment:

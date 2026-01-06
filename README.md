@@ -175,7 +175,7 @@ This AI agent system addresses these challenges by:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/financial-research-analyst-agent.git
+git clone https://github.com/gsaini/financial-research-analyst-agent.git
 cd financial-research-analyst-agent
 
 # Create virtual environment
