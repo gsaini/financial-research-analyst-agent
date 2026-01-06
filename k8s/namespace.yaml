@@ -1,0 +1,8 @@
+# Namespace for Financial Research Analyst Agent
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/part-of: ai-agents-case-studies

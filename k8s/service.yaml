@@ -1,0 +1,59 @@
+# Service for Financial Research Analyst Agent API
+apiVersion: v1
+kind: Service
+metadata:
+  name: financial-agent-service
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: api
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: redis
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: postgres

@@ -1,0 +1,50 @@
+# Persistent Volume Claim for Financial Agent Data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: financial-agent-pvc
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+---
+# Persistent Volume Claim for PostgreSQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard
+---
+# Persistent Volume Claim for Redis
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: redis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard

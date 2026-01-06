@@ -1,0 +1,134 @@
+# Deployment for Financial Research Analyst Agent API
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: financial-agent-api
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-research-analyst-agent
+    app.kubernetes.io/component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: financial-research-analyst-agent
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: financial-research-analyst-agent
+        app.kubernetes.io/component: api
+    spec:
+      containers:
+        - name: api
+          image: financial-analyst-agent:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            # Configuration from ConfigMap
+            - name: DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: financial-agent-config
+                  key: DEBUG
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: financial-agent-config
+                  key: LOG_LEVEL
+            - name: API_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: financial-agent-config
+                  key: API_HOST
+            - name: API_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: financial-agent-config
+                  key: API_PORT
+            - name: LLM_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: financial-agent-config
+                  key: LLM_MODEL
+            - name: LLM_TEMPERATURE
+              valueFrom:
+                configMapKeyRef:
+                  name: financial-agent-config
+                  key: LLM_TEMPERATURE
+            - name: CHROMA_PERSIST_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: financial-agent-config
+                  key: CHROMA_PERSIST_DIR
+            # Secrets
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: financial-agent-secrets
+                  key: OPENAI_API_KEY
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: financial-agent-secrets
+                  key: ANTHROPIC_API_KEY
+                  optional: true
+            - name: ALPHA_VANTAGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: financial-agent-secrets
+                  key: ALPHA_VANTAGE_API_KEY
+            - name: FINNHUB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: financial-agent-secrets
+                  key: FINNHUB_API_KEY
+                  optional: true
+            - name: NEWS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: financial-agent-secrets
+                  key: NEWS_API_KEY
+                  optional: true
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: financial-agent-secrets
+                  key: DATABASE_URL
+            # Redis URL construction
+            - name: REDIS_URL
+              value: "redis://redis-service:6379"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: financial-agent-pvc
+      restartPolicy: Always
