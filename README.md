@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
@@ -153,18 +153,18 @@ This AI agent system addresses these challenges by:
 
 ### Technology Stack
 
-| Component           | Technology                         |
-| ------------------- | ---------------------------------- |
-| **AI Framework**    | LangChain, LangGraph               |
-| **LLM**             | OpenAI GPT-4 / Anthropic Claude    |
-| **Embeddings**      | OpenAI Ada / Sentence Transformers |
-| **Vector Store**    | ChromaDB / Pinecone                |
-| **Backend**         | FastAPI, Python 3.14+              |
-| **Data Processing** | Pandas, NumPy                      |
-| **Visualization**   | Plotly, Matplotlib                 |
-| **Frontend**        | HTML5, CSS3, JavaScript            |
-| **Database**        | PostgreSQL / SQLite                |
-| **Caching**         | Redis                              |
+| Component           | Technology                                        |
+| ------------------- | ------------------------------------------------- |
+| **AI Framework**    | LangChain, LangGraph                              |
+| **LLM**             | Ollama (Llama 4, Mistral) / Groq / LM Studio      |
+| **Embeddings**      | Sentence Transformers / HuggingFace / Ollama      |
+| **Vector Store**    | ChromaDB / Qdrant / Milvus / Weaviate             |
+| **Backend**         | FastAPI, Python 3.14+                             |
+| **Data Processing** | Pandas, NumPy                                     |
+| **Visualization**   | Plotly, Matplotlib                                |
+| **Frontend**        | HTML5, CSS3, JavaScript                           |
+| **Database**        | PostgreSQL / SQLite                               |
+| **Caching**         | Redis                                             |
 
 ---
 
@@ -218,22 +218,27 @@ docker run -p 8000:8000 --env-file .env financial-analyst-agent
 Create a `.env` file in the root directory:
 
 ```env
-# LLM Configuration
-OPENAI_API_KEY=your_openai_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key  # Optional
-LLM_MODEL=gpt-4-turbo-preview
+# LLM Configuration (Open Source by Default)
+LLM_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama4:latest
 LLM_TEMPERATURE=0.1
 
-# Financial Data APIs
-ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
-FINNHUB_API_KEY=your_finnhub_key
-NEWS_API_KEY=your_news_api_key
+# Embedding Configuration (Open Source)
+EMBEDDING_PROVIDER=sentence-transformers
+SENTENCE_TRANSFORMER_MODEL=all-MiniLM-L6-v2
+
+# Financial Data APIs (Yahoo Finance is free, others optional)
+USE_YFINANCE=true
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key  # Optional
+NEWS_API_KEY=your_news_api_key  # Optional
 
 # Database Configuration
 DATABASE_URL=sqlite:///./data/financial_agent.db
 REDIS_URL=redis://localhost:6379
 
-# Vector Store
+# Vector Store (Open Source)
+VECTOR_STORE_PROVIDER=chroma
 CHROMA_PERSIST_DIR=./data/chroma
 
 # Application Settings

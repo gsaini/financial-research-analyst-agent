@@ -130,12 +130,14 @@ report_generator:
     - recommendation
     - disclaimers
 
-# LLM Settings
+# LLM Settings (Open Source by Default)
 llm:
-  default_model: "gpt-4-turbo-preview"
+  provider: "ollama"
+  default_model: "llama4:latest"
   temperature: 0.1
   max_tokens: 4096
-  fallback_model: "gpt-3.5-turbo"
+  fallback_model: "mistral:latest"
+  # Alternative models: llama4, llama3.2, mistral, mixtral, codellama, phi3, qwen2.5
 
 # Recommendation Thresholds
 recommendation:

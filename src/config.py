@@ -16,13 +16,35 @@ from pydantic_settings import BaseSettings
 
 class LLMSettings(BaseSettings):
     """LLM-related configuration settings."""
-    
+
+    # Provider selection (ollama, openai, anthropic, lmstudio, vllm, groq)
+    provider: str = Field(default="ollama", env="LLM_PROVIDER")
+
+    # Open source / local LLM settings (default)
+    ollama_base_url: str = Field(default="http://localhost:11434", env="OLLAMA_BASE_URL")
+    ollama_model: str = Field(default="llama4:latest", env="OLLAMA_MODEL")
+
+    # LM Studio settings
+    lmstudio_base_url: str = Field(default="http://localhost:1234/v1", env="LMSTUDIO_BASE_URL")
+    lmstudio_model: str = Field(default="local-model", env="LMSTUDIO_MODEL")
+
+    # vLLM settings
+    vllm_base_url: str = Field(default="http://localhost:8000/v1", env="VLLM_BASE_URL")
+    vllm_model: str = Field(default="meta-llama/Llama-3.2-8B-Instruct", env="VLLM_MODEL")
+
+    # Groq settings (free tier available)
+    groq_api_key: str = Field(default="", env="GROQ_API_KEY")
+    groq_model: str = Field(default="llama-3.2-70b-versatile", env="GROQ_MODEL")
+
+    # Commercial API keys (optional)
     openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
     anthropic_api_key: str = Field(default="", env="ANTHROPIC_API_KEY")
-    model: str = Field(default="gpt-4-turbo-preview", env="LLM_MODEL")
+
+    # General LLM settings
+    model: str = Field(default="llama4:latest", env="LLM_MODEL")
     temperature: float = Field(default=0.1, env="LLM_TEMPERATURE")
     max_tokens: int = Field(default=4096, env="LLM_MAX_TOKENS")
-    
+
     class Config:
         env_prefix = ""
 
@@ -55,13 +77,34 @@ class DatabaseSettings(BaseSettings):
 
 class VectorStoreSettings(BaseSettings):
     """Vector store configuration settings."""
-    
+
+    # Vector store provider (chroma, qdrant, milvus, weaviate)
+    provider: str = Field(default="chroma", env="VECTOR_STORE_PROVIDER")
     chroma_persist_dir: str = Field(default="./data/chroma", env="CHROMA_PERSIST_DIR")
+
+    # Embedding provider (sentence-transformers, huggingface, ollama, openai)
+    embedding_provider: str = Field(default="sentence-transformers", env="EMBEDDING_PROVIDER")
+
+    # Open source embedding models (default)
+    sentence_transformer_model: str = Field(
+        default="all-MiniLM-L6-v2",
+        env="SENTENCE_TRANSFORMER_MODEL"
+    )
+    hf_embedding_model: str = Field(
+        default="BAAI/bge-small-en-v1.5",
+        env="HF_EMBEDDING_MODEL"
+    )
+    ollama_embedding_model: str = Field(
+        default="nomic-embed-text",
+        env="OLLAMA_EMBEDDING_MODEL"
+    )
+
+    # Commercial embedding (optional)
     embedding_model: str = Field(
-        default="text-embedding-3-small",
+        default="all-MiniLM-L6-v2",
         env="EMBEDDING_MODEL"
     )
-    
+
     class Config:
         env_prefix = ""
 

@@ -13,9 +13,8 @@ import json
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_core.tools import BaseTool
-from langchain_openai import ChatOpenAI
-from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 from pydantic import BaseModel, Field
 
 from src.config import settings
@@ -113,13 +112,64 @@ class BaseAgent(ABC):
         logger.info(f"Initialized agent: {self.name}")
     
     def _create_default_llm(self) -> BaseChatModel:
-        """Create the default LLM instance."""
-        return ChatOpenAI(
-            model=settings.llm.model,
-            temperature=self.temperature,
-            api_key=settings.llm.openai_api_key,
-            max_tokens=settings.llm.max_tokens,
-        )
+        """Create the default LLM instance based on configured provider."""
+        provider = settings.llm.provider.lower()
+
+        if provider == "ollama":
+            from langchain_ollama import ChatOllama
+            return ChatOllama(
+                model=settings.llm.ollama_model,
+                base_url=settings.llm.ollama_base_url,
+                temperature=self.temperature,
+            )
+        elif provider == "lmstudio":
+            from langchain_openai import ChatOpenAI
+            return ChatOpenAI(
+                model=settings.llm.lmstudio_model,
+                base_url=settings.llm.lmstudio_base_url,
+                temperature=self.temperature,
+                api_key="lm-studio",  # LM Studio doesn't require real API key
+            )
+        elif provider == "vllm":
+            from langchain_openai import ChatOpenAI
+            return ChatOpenAI(
+                model=settings.llm.vllm_model,
+                base_url=settings.llm.vllm_base_url,
+                temperature=self.temperature,
+                api_key="vllm",  # vLLM uses OpenAI-compatible API
+            )
+        elif provider == "groq":
+            from langchain_groq import ChatGroq
+            return ChatGroq(
+                model=settings.llm.groq_model,
+                api_key=settings.llm.groq_api_key,
+                temperature=self.temperature,
+            )
+        elif provider == "anthropic":
+            from langchain_anthropic import ChatAnthropic
+            return ChatAnthropic(
+                model=settings.llm.model,
+                api_key=settings.llm.anthropic_api_key,
+                temperature=self.temperature,
+                max_tokens=settings.llm.max_tokens,
+            )
+        elif provider == "openai":
+            from langchain_openai import ChatOpenAI
+            return ChatOpenAI(
+                model=settings.llm.model,
+                temperature=self.temperature,
+                api_key=settings.llm.openai_api_key,
+                max_tokens=settings.llm.max_tokens,
+            )
+        else:
+            # Default to Ollama (open source)
+            from langchain_ollama import ChatOllama
+            logger.warning(f"Unknown provider '{provider}', defaulting to Ollama")
+            return ChatOllama(
+                model=settings.llm.ollama_model,
+                base_url=settings.llm.ollama_base_url,
+                temperature=self.temperature,
+            )
     
     @abstractmethod
     def _get_default_tools(self) -> List[BaseTool]:
@@ -146,16 +196,17 @@ class BaseAgent(ABC):
         if not self.tools:
             logger.warning(f"No tools configured for agent: {self.name}")
             return None
-        
+
         prompt = ChatPromptTemplate.from_messages([
             ("system", self._get_system_prompt()),
             MessagesPlaceholder(variable_name="chat_history", optional=True),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
-        
-        agent = create_openai_tools_agent(self.llm, self.tools, prompt)
-        
+
+        # Use generic tool calling agent (works with Ollama, OpenAI, etc.)
+        agent = create_tool_calling_agent(self.llm, self.tools, prompt)
+
         return AgentExecutor(
             agent=agent,
             tools=self.tools,
