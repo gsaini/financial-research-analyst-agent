@@ -50,6 +50,7 @@ DataColl TechAnly FundAnly SentiAnly RiskAnly → ReportGen
 ```
 
 **OrchestratorAgent** (`src/agents/orchestrator.py`) coordinates all specialized agents, manages workflow, and aggregates results. Each agent inherits from **BaseAgent** (`src/agents/base.py`) which provides:
+
 - LLM initialization and tool binding
 - State management via `AgentState` (idle/running/completed/error)
 - Standardized results via `AgentResult`
@@ -69,6 +70,7 @@ DataColl TechAnly FundAnly SentiAnly RiskAnly → ReportGen
 ### Tools Layer
 
 Tools in `src/tools/` are bound to agents using LangChain's `@tool` decorator:
+
 - `market_data.py` - Yahoo Finance integration (prices, historical, financials)
 - `technical_indicators.py` - RSI, MACD, moving averages calculations
 - `news_fetcher.py` - Multi-source news with fallback mechanisms
@@ -77,6 +79,7 @@ Tools in `src/tools/` are bound to agents using LangChain's `@tool` decorator:
 ### API Layer
 
 FastAPI app in `src/api/routes.py` with prefix `/api/v1`:
+
 - `POST /analyze` - Comprehensive stock analysis
 - `GET /technical/{symbol}`, `GET /fundamental/{symbol}`, `GET /sentiment/{symbol}`
 - `POST /portfolio` - Multi-stock analysis
@@ -85,17 +88,20 @@ FastAPI app in `src/api/routes.py` with prefix `/api/v1`:
 ## Configuration (Open Source by Default)
 
 **Prerequisites**: Install [Ollama](https://ollama.ai) and pull a model:
+
 ```bash
 ollama pull llama4:latest
 ```
 
 **Environment**: Copy `.env.example` to `.env`. Default configuration uses:
+
 - **LLM**: Ollama with Llama 4 (local, free)
 - **Embeddings**: Sentence Transformers (local, free)
 - **Vector Store**: ChromaDB (local, free)
 - **Financial Data**: Yahoo Finance via yfinance (free, no API key)
 
 **Supported LLM providers** (set `LLM_PROVIDER` in `.env`):
+
 | Provider | Local | Free | Notes |
 |----------|-------|------|-------|
 | `ollama` | Yes | Yes | Default - Llama 4, Mistral, etc. |
@@ -106,6 +112,7 @@ ollama pull llama4:latest
 | `anthropic` | No | Paid | Claude models |
 
 **Agent settings**: `config/agents.yaml` contains indicator parameters, recommendation thresholds, and weight distributions:
+
 - Technical: 25%, Fundamental: 35%, Sentiment: 20%, Risk: 20%
 - Recommendation thresholds: Strong Buy (0.80+), Buy (0.65+), Hold (0.45+), Sell (0.30+)
 

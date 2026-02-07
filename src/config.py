@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List, Optional
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -137,13 +137,20 @@ class APISettings(BaseSettings):
 
 class Settings(BaseSettings):
     """Main application settings combining all sub-settings."""
-    
+
+    model_config = ConfigDict(
+        extra="ignore",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False
+    )
+
     # Application
     debug: bool = Field(default=False, env="DEBUG")
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
     log_file: str = Field(default="./logs/app.log", env="LOG_FILE")
     secret_key: str = Field(default="changeme", env="SECRET_KEY")
-    
+
     # Sub-settings
     llm: LLMSettings = Field(default_factory=LLMSettings)
     data_api: DataAPISettings = Field(default_factory=DataAPISettings)
@@ -151,15 +158,10 @@ class Settings(BaseSettings):
     vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
     agent: AgentSettings = Field(default_factory=AgentSettings)
     api: APISettings = Field(default_factory=APISettings)
-    
+
     # Rate limiting
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
     rate_limit_window_seconds: int = Field(default=60, env="RATE_LIMIT_WINDOW_SECONDS")
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
     
     @property
     def project_root(self) -> Path:
