@@ -102,11 +102,31 @@ class ReportResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    """API health check response."""
-    status: str
-    version: str
-    timestamp: datetime
-    services: Dict[str, str]
+    """API health check response following industry standards."""
+    status: str = Field(
+        ...,
+        description="Overall health status: healthy, degraded, or unhealthy",
+        example="healthy"
+    )
+    version: str = Field(..., description="API version", example="1.0.0")
+    timestamp: datetime = Field(..., description="Health check timestamp")
+    uptime_seconds: float = Field(..., description="API uptime in seconds")
+    checks: Dict[str, str] = Field(
+        ...,
+        description="Individual service health checks",
+        example={
+            "market_data": "healthy",
+            "agent_engine": "healthy",
+            "data_processing": "healthy"
+        }
+    )
+    response_time_ms: Optional[float] = Field(
+        None,
+        description="Health check response time in milliseconds"
+    )
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class ErrorResponse(BaseModel):

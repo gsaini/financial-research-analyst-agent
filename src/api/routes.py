@@ -28,6 +28,9 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Track startup time for uptime calculation
+_startup_time = time.time()
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Financial Research Analyst API",
@@ -73,19 +76,103 @@ async def root():
     }
 
 
+async def check_market_data_service() -> str:
+    """Check if market data service is available."""
+    try:
+        result = get_stock_price("AAPL")
+        if "error" in result:
+            return "degraded"
+        return "healthy"
+    except Exception as e:
+        logger.warning(f"Market data service check failed: {e}")
+        return "unhealthy"
+
+
+async def check_agent_engine() -> str:
+    """Check if agent engine is initialized and ready."""
+    try:
+        agent = get_agent()
+        if agent is None:
+            return "unhealthy"
+        return "healthy"
+    except Exception as e:
+        logger.warning(f"Agent engine check failed: {e}")
+        return "unhealthy"
+
+
+async def check_data_processing() -> str:
+    """Check if data processing pipelines are working."""
+    try:
+        hist_data = get_historical_data("AAPL", period="1d")
+        if "error" in hist_data or not hist_data:
+            return "degraded"
+        return "healthy"
+    except Exception as e:
+        logger.warning(f"Data processing check failed: {e}")
+        return "unhealthy"
+
+
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    """Check API health status."""
-    return HealthResponse(
-        status="healthy",
+    """
+    Check API health status with dependency checks.
+
+    Performs checks on:
+    - Market data service (Yahoo Finance integration)
+    - Agent engine (LLM and orchestration)
+    - Data processing pipelines
+
+    Returns:
+    - 200: All systems healthy
+    - 503: Service unhealthy or degraded
+    """
+    check_start = time.time()
+
+    # Run dependency checks concurrently
+    market_data_status = await check_market_data_service()
+    agent_status = await check_agent_engine()
+    data_processing_status = await check_data_processing()
+
+    checks = {
+        "market_data": market_data_status,
+        "agent_engine": agent_status,
+        "data_processing": data_processing_status,
+    }
+
+    # Determine overall health status
+    unhealthy = [s for s in checks.values() if s == "unhealthy"]
+    degraded = [s for s in checks.values() if s == "degraded"]
+
+    if unhealthy:
+        overall_status = "unhealthy"
+    elif degraded:
+        overall_status = "degraded"
+    else:
+        overall_status = "healthy"
+
+    # Calculate uptime in seconds
+    uptime_seconds = time.time() - _startup_time
+
+    # Calculate response time
+    response_time_ms = (time.time() - check_start) * 1000
+
+    health_response = HealthResponse(
+        status=overall_status,
         version="1.0.0",
         timestamp=datetime.utcnow(),
-        services={
-            "api": "running",
-            "agent": "ready",
-            "database": "connected",
-        }
+        uptime_seconds=uptime_seconds,
+        checks=checks,
+        response_time_ms=round(response_time_ms, 2),
     )
+
+    # Return appropriate HTTP status code
+    if overall_status == "unhealthy":
+        return JSONResponse(
+            status_code=503,
+            content=health_response.model_dump(mode='json'),
+        )
+
+    return health_response
 
 
 @router.post("/analyze", response_model=AnalysisResponse)

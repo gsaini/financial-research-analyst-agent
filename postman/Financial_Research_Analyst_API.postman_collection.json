@@ -1,0 +1,449 @@
+{
+	"info": {
+		"_postman_id": "financial-research-analyst-api",
+		"name": "Financial Research Analyst API",
+		"description": "AI-powered financial analysis and investment research API.\n\nThis collection covers all endpoints for the Financial Research Analyst Agent, including stock analysis, technical/fundamental/sentiment analysis, portfolio analysis, and report generation.\n\nBase URL: http://localhost:8000",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "symbol",
+			"value": "AAPL",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "General",
+			"item": [
+				{
+					"name": "Root",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "API root endpoint. Returns API name, version, and docs URL."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{base_url}}/",
+									"host": ["{{base_url}}"],
+									"path": [""]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"name\": \"Financial Research Analyst API\",\n  \"version\": \"1.0.0\",\n  \"docs\": \"/docs\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Check API health status. Returns service statuses for api, agent, and database."
+					},
+					"response": [
+						{
+							"name": "Healthy",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{base_url}}/health",
+									"host": ["{{base_url}}"],
+									"path": ["health"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"status\": \"healthy\",\n  \"version\": \"1.0.0\",\n  \"timestamp\": \"2026-02-07T12:00:00\",\n  \"services\": {\n    \"api\": \"running\",\n    \"agent\": \"ready\",\n    \"database\": \"connected\"\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Stock Analysis",
+			"item": [
+				{
+					"name": "Analyze Stock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"analysis_type\": \"comprehensive\",\n  \"include_news\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analyze",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analyze"]
+						},
+						"description": "Perform comprehensive stock analysis.\n\nAnalysis types: comprehensive, technical, fundamental, sentiment, risk.\n\nReturns current price, recommendation (BUY/SELL/HOLD), confidence score, and detailed technical/fundamental/sentiment/risk data."
+					},
+					"response": [
+						{
+							"name": "Success - AAPL Analysis",
+							"originalRequest": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"symbol\": \"AAPL\",\n  \"analysis_type\": \"comprehensive\",\n  \"include_news\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/analyze",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "analyze"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"symbol\": \"AAPL\",\n  \"analysis_type\": \"comprehensive\",\n  \"current_price\": 182.50,\n  \"recommendation\": \"HOLD\",\n  \"confidence\": 0.5,\n  \"summary\": \"AAPL is currently trading at $182.50. Technical indicators suggest a HOLD signal with 50% confidence.\",\n  \"technical\": {\n    \"rsi\": {\"value\": 55.2, \"signal\": \"neutral\"},\n    \"macd\": {\"histogram\": 0.5},\n    \"moving_averages\": {}\n  },\n  \"fundamental\": {\n    \"company\": {},\n    \"price_data\": {}\n  },\n  \"sentiment\": {\"status\": \"analyzed\", \"score\": 0.5},\n  \"risk\": {\"volatility\": \"medium\"},\n  \"analyzed_at\": \"2026-02-07T12:00:00\",\n  \"execution_time_seconds\": 1.25\n}"
+						}
+					]
+				},
+				{
+					"name": "Analyze Stock - Technical Only",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbol\": \"GOOGL\",\n  \"analysis_type\": \"technical\",\n  \"include_news\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analyze",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analyze"]
+						},
+						"description": "Analyze a stock with technical analysis type only."
+					},
+					"response": []
+				},
+				{
+					"name": "Technical Analysis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/technical/{{symbol}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "technical", "{{symbol}}"]
+						},
+						"description": "Get technical analysis for a stock symbol.\n\nReturns RSI, MACD, and moving averages indicators."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{base_url}}/api/v1/technical/AAPL",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "technical", "AAPL"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"symbol\": \"AAPL\",\n  \"rsi\": {\"value\": 55.2, \"signal\": \"neutral\"},\n  \"macd\": {\"macd_line\": 1.2, \"signal_line\": 0.8, \"histogram\": 0.4},\n  \"moving_averages\": {\"sma_20\": 180.5, \"sma_50\": 178.2, \"sma_200\": 170.1},\n  \"analyzed_at\": \"2026-02-07T12:00:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Fundamental Analysis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/fundamental/{{symbol}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "fundamental", "{{symbol}}"]
+						},
+						"description": "Get fundamental analysis for a stock symbol.\n\nReturns company info and current price data."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{base_url}}/api/v1/fundamental/AAPL",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "fundamental", "AAPL"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"symbol\": \"AAPL\",\n  \"company\": {\n    \"name\": \"Apple Inc.\",\n    \"sector\": \"Technology\",\n    \"industry\": \"Consumer Electronics\"\n  },\n  \"price_data\": {\n    \"current_price\": 182.50,\n    \"market_cap\": 2850000000000\n  },\n  \"analyzed_at\": \"2026-02-07T12:00:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Sentiment Analysis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sentiment/{{symbol}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sentiment", "{{symbol}}"]
+						},
+						"description": "Get sentiment analysis for a stock symbol.\n\nReturns overall sentiment, news sentiment, and social media sentiment scores."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{base_url}}/api/v1/sentiment/AAPL",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "sentiment", "AAPL"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"symbol\": \"AAPL\",\n  \"sentiment\": \"positive\",\n  \"score\": 0.65,\n  \"news_sentiment\": 0.7,\n  \"social_sentiment\": 0.6,\n  \"analyzed_at\": \"2026-02-07T12:00:00\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Portfolio",
+			"item": [
+				{
+					"name": "Analyze Portfolio",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbols\": [\"AAPL\", \"GOOGL\", \"MSFT\", \"AMZN\"],\n  \"weights\": [0.25, 0.25, 0.25, 0.25]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/portfolio",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "portfolio"]
+						},
+						"description": "Analyze a portfolio of stocks.\n\nProvide a list of stock symbols and optional weights (defaults to equal weight). Returns individual analyses, portfolio metrics, diversification score, and risk assessment."
+					},
+					"response": [
+						{
+							"name": "Success - Tech Portfolio",
+							"originalRequest": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"symbols\": [\"AAPL\", \"GOOGL\", \"MSFT\", \"AMZN\"],\n  \"weights\": [0.25, 0.25, 0.25, 0.25]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/portfolio",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "portfolio"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"symbols\": [\"AAPL\", \"GOOGL\", \"MSFT\", \"AMZN\"],\n  \"total_value\": null,\n  \"individual_analyses\": [\n    {\"symbol\": \"AAPL\", \"data\": {}},\n    {\"symbol\": \"GOOGL\", \"data\": {}},\n    {\"symbol\": \"MSFT\", \"data\": {}},\n    {\"symbol\": \"AMZN\", \"data\": {}}\n  ],\n  \"portfolio_metrics\": {\"total_stocks\": 4},\n  \"diversification_score\": 0.7,\n  \"risk_assessment\": \"moderate\",\n  \"recommendations\": [\"Consider diversifying across sectors\"],\n  \"analyzed_at\": \"2026-02-07T12:00:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Analyze Portfolio - Equal Weight",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbols\": [\"AAPL\", \"TSLA\", \"NVDA\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/portfolio",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "portfolio"]
+						},
+						"description": "Analyze a portfolio without specifying weights (defaults to equal weight)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Generate Report - JSON",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbols\": [\"AAPL\", \"GOOGL\"],\n  \"format\": \"json\",\n  \"include_charts\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports"]
+						},
+						"description": "Generate an investment research report in JSON format.\n\nSupported formats: json, pdf, markdown."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"symbols\": [\"AAPL\", \"GOOGL\"],\n  \"format\": \"json\",\n  \"include_charts\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/reports",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "reports"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"report_id\": \"a1b2c3d4\",\n  \"symbols\": [\"AAPL\", \"GOOGL\"],\n  \"format\": \"json\",\n  \"content\": \"# Investment Research Report\\n\\nSymbols: AAPL, GOOGL\\nGenerated: 2026-02-07T12:00:00\\n\\n## Summary\\n\\nDetailed analysis available upon request.\",\n  \"download_url\": null,\n  \"generated_at\": \"2026-02-07T12:00:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Generate Report - Markdown",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbols\": [\"MSFT\", \"NVDA\", \"TSLA\"],\n  \"format\": \"markdown\",\n  \"include_charts\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports"]
+						},
+						"description": "Generate an investment research report in Markdown format without charts."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Market",
+			"item": [
+				{
+					"name": "Market Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/market/summary",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "market", "summary"]
+						},
+						"description": "Get market summary with major indices (SPY, QQQ, DIA) and their current prices and changes."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{base_url}}/api/v1/market/summary",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "market", "summary"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"market_status\": \"open\",\n  \"indices\": {\n    \"SPY\": {\"price\": 470.50, \"change\": 0.5},\n    \"QQQ\": {\"price\": 395.20, \"change\": 0.8},\n    \"DIA\": {\"price\": 375.30, \"change\": 0.3}\n  },\n  \"timestamp\": \"2026-02-07T12:00:00\"\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
