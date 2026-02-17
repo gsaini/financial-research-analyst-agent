@@ -1,7 +1,7 @@
 # Enhancement Scope Document - Financial Research Analyst Agent
 
-**Version**: 1.0
-**Last Updated**: February 9, 2026
+**Version**: 2.0
+**Last Updated**: February 16, 2026
 **Status**: Planning
 
 ---
@@ -22,6 +22,14 @@
    - [Feature 9: Enhanced News and Sentiment Analysis](#feature-9-enhanced-news-and-sentiment-analysis)
    - [Feature 10: Bloomberg-like Terminal](#feature-10-bloomberg-like-terminal)
    - [Feature 11: Key Observations and Insights](#feature-11-key-observations-and-insights)
+   - [Feature 12: Insider & Institutional Activity](#feature-12-insider--institutional-activity)
+   - [Feature 13: Options Flow Analysis](#feature-13-options-flow-analysis)
+   - [Feature 14: Short Interest Analysis](#feature-14-short-interest-analysis)
+   - [Feature 15: Dividend Analysis](#feature-15-dividend-analysis)
+   - [Feature 16: Analyst Consensus Tracking](#feature-16-analyst-consensus-tracking)
+   - [Feature 17: Macro Economic Integration](#feature-17-macro-economic-integration)
+   - [Feature 18: Alert & Notification System](#feature-18-alert--notification-system)
+   - [Feature 19: Portfolio Optimization](#feature-19-portfolio-optimization)
 4. [Architecture Changes](#architecture-changes)
 5. [New Agents Required](#new-agents-required)
 6. [New Tools Required](#new-tools-required)
@@ -34,12 +42,16 @@
 
 ### What We're Building
 
-This document defines 11 enhancement features that will transform the Financial Research Analyst Agent from a **basic stock analysis tool** into a **comprehensive investment research platform**. These enhancements cover:
+This document defines 19 enhancement features that will transform the Financial Research Analyst Agent from a **basic stock analysis tool** into a **comprehensive investment research platform**. These enhancements cover:
 
 - **Deeper analysis** - Quarterly earnings, peer comparison, event-driven performance
 - **Broader coverage** - Thematic investing, market disruption, Bloomberg-like terminal
 - **Better intelligence** - Enhanced sentiment (FinBERT), backtesting, key observations
 - **Professional output** - PDF/Markdown/HTML reports with charts
+- **Smart money tracking** - Insider transactions, institutional ownership, options flow
+- **Income investing** - Dividend analysis, payout sustainability, yield tracking
+- **Risk management** - Short interest, macro integration, portfolio optimization
+- **Proactive alerts** - Price alerts, technical signals, news spikes, earnings reminders
 
 ### Why We're Building It
 
@@ -56,7 +68,7 @@ The current system has significant gaps between what's **configured** and what's
 
 ### Expected Outcome
 
-After implementing all 11 features, the system will:
+After implementing all 19 features, the system will:
 
 - Analyze stocks with **real peer comparison** instead of hardcoded benchmarks
 - Track **quarterly earnings** trends and predict earnings impact
@@ -67,6 +79,14 @@ After implementing all 11 features, the system will:
 - Deliver **thematic investing** analysis across sectors/themes
 - Provide **Bloomberg-like** market terminal capabilities
 - Synthesize **key observations** across all analysis dimensions
+- Track **insider buying/selling** and institutional ownership changes
+- Analyze **options flow** for unusual activity and sentiment signals
+- Monitor **short interest** for squeeze potential and bearish sentiment
+- Evaluate **dividend safety** and income investing opportunities
+- Aggregate **analyst ratings** and price target consensus
+- Integrate **macro economic factors** (Fed policy, rates, inflation)
+- Send **proactive alerts** on price levels, signals, and news events
+- Optimize **portfolio allocation** using modern portfolio theory
 
 ---
 
@@ -744,13 +764,17 @@ Risk-Adjusted:
    - Compute returns for standard horizons (1D through 5Y)
    - Handle weekends/holidays correctly
 2. Implement **Beta** (currently missing from `risk.py`):
+
    ```
    Beta = Covariance(stock_returns, market_returns) / Variance(market_returns)
    ```
+
 3. Implement **Sortino** (currently missing from `risk.py`):
+
    ```
    Sortino = (Mean Return - Risk-Free Rate) / Downside Deviation
    ```
+
    Where downside deviation only considers negative returns
 4. Add rolling return windows (30/60/90 day) for trend visualization
 5. Compute dividend-adjusted total returns using yfinance adjusted close
@@ -1144,9 +1168,11 @@ Sell when: Price < 200 SMA OR RSI < 40
 #### Implementation Approach
 
 1. Define `Strategy` base class:
+
    ```
    generate_signals(price_data, indicators) → List of BUY/SELL signals with dates
    ```
+
 2. Implement 5 predefined strategies using existing technical indicator tools
 3. Build backtesting engine:
    - Iterate through historical data day-by-day
@@ -1280,10 +1306,12 @@ Enhanced State (FinBERT):
 #### Implementation Approach
 
 1. Integrate FinBERT from HuggingFace:
+
    ```python
    from transformers import AutoTokenizer, AutoModelForSequenceClassification
    model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert")
    ```
+
    (`transformers` is already in requirements.txt)
 2. Build `FinancialSentimentAnalyzer` class:
    - Batch process articles through FinBERT
@@ -1634,6 +1662,1308 @@ This is purely a **synthesis/intelligence layer** that consumes all other analys
 
 ---
 
+### Feature 12: Insider & Institutional Activity
+
+#### What It Is
+
+**Simple explanation**: Tracking what company insiders (executives, directors) and large institutional investors (hedge funds, mutual funds) are doing with the stock. This is often called "smart money" tracking.
+
+```
+Insider Activity:
+  CEO John Smith    BOUGHT  50,000 shares @ $145.00  ($7.25M)  Jan 15
+  CFO Jane Doe      BOUGHT  10,000 shares @ $146.50  ($1.47M)  Jan 12
+  Director Bob Lee  SOLD     5,000 shares @ $148.00  ($0.74M)  Jan 10
+
+  Net Insider Activity (90 days): +$7.98M (Bullish)
+  Insider Ownership: 2.3% of shares outstanding
+
+Institutional Activity:
+  Berkshire Hathaway  INCREASED  +2.5M shares  (now owns 5.2%)
+  Vanguard Group      INCREASED  +1.2M shares  (now owns 8.1%)
+  BlackRock           DECREASED  -0.5M shares  (now owns 6.8%)
+
+  Institutional Ownership: 72.3%
+  Net Institutional Buying (Quarter): +$450M
+```
+
+#### Why It Matters
+
+- Insiders know their company best - when they buy aggressively, it's a **bullish signal**
+- Insider selling is more nuanced (could be diversification, tax planning)
+- Institutional buying indicates **professional validation** of the investment thesis
+- Clustered insider buying is one of the **most reliable bullish indicators**
+- Data is readily available via yfinance but currently **not utilized**
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| yfinance `insider_transactions` | Existing (unused) | Form 4 filings - insider buys/sells |
+| yfinance `insider_purchases` | Existing (unused) | Summary of insider purchase activity |
+| yfinance `institutional_holders` | Existing (unused) | Top institutional holders |
+| yfinance `major_holders` | Existing (unused) | % institutional vs insider ownership |
+| yfinance `mutualfund_holders` | Existing (unused) | Top mutual fund holders |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/insider_tracker.py` | Parse insider transactions, compute net activity, detect clusters |
+| **CREATE** | `src/tools/institutional_tracker.py` | Track institutional ownership changes, identify accumulation |
+| **MODIFY** | `src/agents/fundamental.py` | Include insider/institutional signals in analysis |
+| **MODIFY** | `src/agents/data_collector.py` | Collect insider and institutional data |
+| **MODIFY** | `src/api/routes.py` | Add `GET /api/v1/insiders/{symbol}`, `GET /api/v1/institutions/{symbol}` |
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "symbol": "AAPL",
+
+  "insider_activity": {
+    "transactions_90_days": [
+      {
+        "name": "Tim Cook",
+        "title": "CEO",
+        "transaction_type": "Sale",
+        "shares": 50000,
+        "price": 185.50,
+        "value": 9275000,
+        "date": "2026-01-15",
+        "shares_remaining": 3280000
+      }
+    ],
+    "net_activity_90_days": {
+      "net_shares": -45000,
+      "net_value": -8500000,
+      "assessment": "Net selling (likely planned sales)"
+    },
+    "insider_ownership_pct": 0.07,
+    "notable_patterns": "No cluster buying detected"
+  },
+
+  "institutional_activity": {
+    "institutional_ownership_pct": 60.5,
+    "top_holders": [
+      {"name": "Vanguard Group", "shares": 1280000000, "pct": 7.8, "change": "+0.2%"},
+      {"name": "BlackRock", "shares": 1050000000, "pct": 6.4, "change": "-0.1%"},
+      {"name": "Berkshire Hathaway", "shares": 915000000, "pct": 5.6, "change": "0.0%"}
+    ],
+    "quarterly_change": {
+      "net_buying": true,
+      "net_shares_change": 25000000,
+      "assessment": "Moderate institutional accumulation"
+    }
+  },
+
+  "smart_money_signal": {
+    "score": 65,
+    "assessment": "Neutral to slightly bullish - institutions accumulating despite insider sales"
+  }
+}
+```
+
+#### Implementation Approach
+
+1. Use `yf.Ticker(symbol).insider_transactions` and `insider_purchases` for Form 4 data
+2. Use `yf.Ticker(symbol).institutional_holders` and `major_holders` for ownership
+3. Compute net insider activity over 30/60/90 day windows
+4. Detect "cluster buying" - multiple insiders buying in short window (strongest signal)
+5. Track quarter-over-quarter institutional ownership changes
+6. Weight insider purchases more heavily than sales (sales can be for many reasons)
+7. Generate combined "smart money" score
+
+#### Priority: P1
+
+Data is **already available** in yfinance but completely unused. High signal value with low implementation effort.
+
+#### Dependencies
+
+- None - can be built immediately using existing yfinance data
+
+---
+
+### Feature 13: Options Flow Analysis
+
+#### What It Is
+
+**Simple explanation**: Analyzing the options market to understand what sophisticated traders are betting on. Options traders often have an "edge" and options flow can predict stock moves.
+
+```
+Options Flow for AAPL:
+
+Put/Call Ratio: 0.65 (More calls = Bullish)
+Implied Volatility: 28.5% (vs Historical 22.3% = Elevated)
+IV Percentile: 78th (Higher than 78% of past year)
+
+Unusual Activity Detected:
+  🔥 1,500 contracts of $200 Calls (Feb 21 expiry) bought for $2.3M
+     → Someone betting on 8% upside in 5 days
+
+  🔥 Large put spread: Buy $175P, Sell $165P (10,000 contracts)
+     → Hedging or bearish bet on downside to $175
+
+Max Pain: $185.00 (price where most options expire worthless)
+Current Price: $188.50
+
+Interpretation: Bullish flow with elevated IV suggests
+               expectation of significant move (likely earnings)
+```
+
+#### Why It Matters
+
+- Options traders are often **more sophisticated** than stock traders
+- Unusual options activity can **predict price moves** before they happen
+- Put/Call ratio reveals **market sentiment** at the options level
+- Implied volatility shows **expected magnitude** of moves
+- "Max pain" theory helps predict short-term price magnets
+- Options flow is heavily used by professional traders
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| yfinance `options` | Existing (unused) | Options chain data (calls, puts, strikes, expiries) |
+| yfinance `option_chain` | Existing (unused) | Detailed options data with Greeks |
+| Yahoo Finance options page | Enhancement | Unusual activity detection |
+| CBOE data | New (optional) | VIX, put/call ratios for market-wide analysis |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/options_analyzer.py` | P/C ratio, IV analysis, unusual activity, max pain |
+| **CREATE** | `src/agents/options.py` | New `OptionsAnalystAgent` |
+| **MODIFY** | `src/agents/risk.py` | Include IV in volatility assessment |
+| **MODIFY** | `src/agents/orchestrator.py` | Add options analysis as optional step |
+| **MODIFY** | `src/api/routes.py` | Add `GET /api/v1/options/{symbol}` |
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "symbol": "AAPL",
+  "current_price": 188.50,
+
+  "options_sentiment": {
+    "put_call_ratio": 0.65,
+    "put_call_assessment": "Bullish (below 0.7)",
+    "call_volume": 125000,
+    "put_volume": 81250,
+    "total_options_volume": 206250,
+    "volume_vs_average": "1.8x normal (elevated)"
+  },
+
+  "implied_volatility": {
+    "current_iv": 28.5,
+    "historical_volatility_30d": 22.3,
+    "iv_percentile": 78,
+    "iv_assessment": "Elevated - market expects significant move",
+    "iv_skew": {
+      "put_iv": 30.2,
+      "call_iv": 26.8,
+      "skew": "Put skew (downside protection demand)"
+    }
+  },
+
+  "unusual_activity": [
+    {
+      "type": "call",
+      "strike": 200,
+      "expiry": "2026-02-21",
+      "contracts": 1500,
+      "premium_paid": 2300000,
+      "implied_move": "+8.0%",
+      "assessment": "Large bullish bet on near-term upside"
+    }
+  ],
+
+  "max_pain": {
+    "price": 185.00,
+    "distance_from_current": "-1.9%",
+    "interpretation": "Options makers benefit if price drifts to $185 by expiry"
+  },
+
+  "options_signal": {
+    "score": 72,
+    "direction": "Bullish",
+    "confidence": "Moderate",
+    "key_insight": "Heavy call buying with elevated IV suggests upside expectation, possibly pre-earnings positioning"
+  }
+}
+```
+
+#### Implementation Approach
+
+1. Use `yf.Ticker(symbol).options` to get available expiration dates
+2. Use `yf.Ticker(symbol).option_chain(date)` for full options chain
+3. Calculate put/call ratio from volume data
+4. Calculate aggregate implied volatility (weighted by volume)
+5. Detect unusual activity: volume > 2x open interest on a strike
+6. Calculate max pain by finding strike that minimizes total option value
+7. Assess IV skew (put IV vs call IV) for directional bias
+8. Generate overall options sentiment score
+
+#### Priority: P2
+
+High value for sophisticated users but requires understanding of options. More complex to implement correctly.
+
+#### Dependencies
+
+- Feature 5 (Stock Performance) - For historical volatility comparison
+- Feature 7 (Event Analysis) - Options often spike around events
+
+---
+
+### Feature 14: Short Interest Analysis
+
+#### What It Is
+
+**Simple explanation**: Tracking how many shares are being "shorted" (bet against). High short interest means many investors are betting the stock will go down, but it also creates **short squeeze potential** (like GameStop in 2021).
+
+```
+Short Interest for GME:
+
+Short Interest: 45.2M shares (24.8% of float)
+Days to Cover: 8.5 days (very high)
+Short Interest Change: +15.2% vs last month
+
+Short Squeeze Score: 85/100 (High Risk)
+
+Why this matters:
+- 24.8% of tradeable shares are shorted
+- At current volume, it would take 8.5 days for shorts to cover
+- If price rises, shorts may be FORCED to buy (causing more price rise)
+- This is called a "short squeeze"
+
+Historical Squeezes:
+  Jan 2021: Price went from $20 → $483 (+2,315%)
+  Mar 2021: Price went from $40 → $348 (+770%)
+```
+
+#### Why It Matters
+
+- High short interest = many investors betting against the stock
+- **Contrarian signal**: Sometimes the crowd is wrong
+- **Short squeeze potential**: Forced buying can cause explosive rallies
+- **Risk indicator**: High short interest often means something is wrong fundamentally
+- Essential for identifying **asymmetric risk/reward** opportunities
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| Yahoo Finance key stats | Enhancement | Short interest, short ratio, short % of float |
+| yfinance `info` | Existing | Contains some short interest data |
+| FINRA short data | New (optional) | Official short interest (delayed 2 weeks) |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/short_interest.py` | Short metrics, squeeze scoring, historical tracking |
+| **MODIFY** | `src/agents/risk.py` | Include short squeeze risk in assessment |
+| **MODIFY** | `src/agents/data_collector.py` | Collect short interest data |
+| **MODIFY** | `src/api/routes.py` | Add `GET /api/v1/shorts/{symbol}` |
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "symbol": "GME",
+
+  "short_interest": {
+    "shares_short": 45200000,
+    "short_percent_of_float": 24.8,
+    "short_percent_of_shares": 18.2,
+    "short_ratio_days_to_cover": 8.5,
+    "previous_month_shares_short": 39200000,
+    "change_vs_previous": "+15.3%"
+  },
+
+  "short_squeeze_analysis": {
+    "squeeze_score": 85,
+    "risk_level": "High",
+    "factors": {
+      "short_percent_score": 90,
+      "days_to_cover_score": 85,
+      "recent_increase_score": 75,
+      "borrow_cost_score": 80
+    },
+    "assessment": "High short squeeze potential - elevated short interest with increasing trend"
+  },
+
+  "historical_context": {
+    "52_week_high_short_pct": 140.0,
+    "52_week_low_short_pct": 15.2,
+    "current_percentile": 45,
+    "trend": "Increasing"
+  },
+
+  "borrow_data": {
+    "borrow_rate": 8.5,
+    "borrow_rate_assessment": "Elevated (hard to borrow)",
+    "shares_available_to_short": 250000
+  },
+
+  "risk_assessment": {
+    "for_longs": "Short squeeze could amplify gains significantly",
+    "for_shorts": "Dangerous - high squeeze risk, consider stop losses",
+    "catalyst_watch": ["Earnings date", "Potential positive news", "Options expiration"]
+  }
+}
+```
+
+#### Implementation Approach
+
+1. Extract short interest from `yf.Ticker(symbol).info`:
+   - `shortPercentOfFloat`
+   - `sharesShort`
+   - `shortRatio` (days to cover)
+   - `sharesShortPriorMonth`
+2. Calculate squeeze score based on:
+   - Short % of float (>20% = high risk)
+   - Days to cover (>5 = high risk)
+   - Month-over-month change (increasing = higher risk)
+   - Borrow rate if available
+3. Track historical short interest percentiles
+4. Generate risk assessment for both longs and shorts
+5. Identify potential squeeze catalysts (earnings, events)
+
+#### Priority: P1
+
+Important risk metric that's often overlooked. Data mostly available in yfinance. High interest from retail investors.
+
+#### Dependencies
+
+- Feature 7 (Event Analysis) - Squeezes often trigger around events
+- Feature 13 (Options) - Options activity can trigger squeezes (gamma squeeze)
+
+---
+
+### Feature 15: Dividend Analysis
+
+#### What It Is
+
+**Simple explanation**: Comprehensive analysis of a company's dividend - how much they pay, how safe it is, and whether it's a good income investment.
+
+```
+Dividend Analysis for JNJ:
+
+Annual Dividend: $4.76 per share
+Dividend Yield: 2.95%
+Payout Ratio: 44.2% (Healthy - keeps 55.8% of earnings)
+
+Dividend Safety Score: 92/100 (Very Safe)
+  ✓ 61 years of consecutive increases (Dividend King)
+  ✓ Payout ratio below 60%
+  ✓ Free cash flow covers dividend 2.3x
+  ✓ Strong balance sheet (AA credit rating)
+
+Dividend Growth:
+  5-Year CAGR: 5.8%
+  10-Year CAGR: 6.2%
+  Last Increase: +4.2% (April 2025)
+
+Yield Comparison:
+  JNJ: 2.95%
+  Healthcare Sector Avg: 1.8%
+  S&P 500 Avg: 1.5%
+  10-Year Treasury: 4.2%
+
+Next Ex-Dividend Date: Feb 21, 2026
+Next Payment Date: Mar 10, 2026
+```
+
+#### Why It Matters
+
+- Dividends are a **major source of total returns** (historically ~40% of S&P returns)
+- Income investors need to know if dividends are **safe and sustainable**
+- Dividend growth is a **sign of financial health** and management confidence
+- Dividend cuts are **major red flags** that often precede price declines
+- Currently **completely missing** despite yfinance having full dividend data
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| yfinance `dividends` | Existing (unused) | Full dividend history |
+| yfinance `info` | Existing | Dividend yield, payout ratio, ex-date |
+| yfinance `income_stmt` | Existing | Earnings for payout ratio calculation |
+| yfinance `cashflow` | Existing | Free cash flow for dividend coverage |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/dividend_analyzer.py` | Dividend metrics, safety scoring, growth analysis |
+| **CREATE** | `src/agents/dividend.py` | New `DividendAnalystAgent` |
+| **MODIFY** | `src/agents/fundamental.py` | Include dividend metrics in analysis |
+| **MODIFY** | `src/api/routes.py` | Add `GET /api/v1/dividends/{symbol}` |
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "symbol": "JNJ",
+
+  "current_dividend": {
+    "annual_dividend": 4.76,
+    "dividend_yield": 2.95,
+    "frequency": "Quarterly",
+    "next_ex_date": "2026-02-21",
+    "next_payment_date": "2026-03-10",
+    "next_payment_amount": 1.19
+  },
+
+  "dividend_safety": {
+    "safety_score": 92,
+    "rating": "Very Safe",
+    "factors": {
+      "payout_ratio": {
+        "value": 44.2,
+        "assessment": "Healthy (below 60%)"
+      },
+      "fcf_coverage": {
+        "value": 2.3,
+        "assessment": "Strong (FCF covers dividend 2.3x)"
+      },
+      "debt_to_equity": {
+        "value": 0.45,
+        "assessment": "Conservative leverage"
+      },
+      "earnings_stability": {
+        "value": 0.92,
+        "assessment": "Very stable earnings history"
+      }
+    },
+    "red_flags": [],
+    "dividend_cut_probability": "Very Low (<5%)"
+  },
+
+  "dividend_growth": {
+    "consecutive_years_increased": 61,
+    "classification": "Dividend King (50+ years)",
+    "cagr_5_year": 5.8,
+    "cagr_10_year": 6.2,
+    "last_increase": {
+      "date": "2025-04-15",
+      "percent_increase": 4.2,
+      "old_dividend": 4.57,
+      "new_dividend": 4.76
+    },
+    "projected_next_increase": {
+      "expected_date": "2026-04-15",
+      "expected_range": "4.0% - 5.5%"
+    }
+  },
+
+  "yield_comparison": {
+    "current_yield": 2.95,
+    "sector_average": 1.8,
+    "sp500_average": 1.5,
+    "treasury_10y": 4.2,
+    "yield_percentile_vs_history": 65,
+    "assessment": "Above sector average, below risk-free rate"
+  },
+
+  "dividend_history": {
+    "5_year_history": [
+      {"year": 2025, "annual": 4.76, "yield_avg": 2.9},
+      {"year": 2024, "annual": 4.57, "yield_avg": 2.8},
+      {"year": 2023, "annual": 4.45, "yield_avg": 2.7}
+    ],
+    "dividend_cuts": [],
+    "dividend_freezes": []
+  },
+
+  "income_investor_summary": {
+    "recommendation": "Strong Income Buy",
+    "key_points": [
+      "61-year dividend growth streak (Dividend King)",
+      "44% payout ratio leaves room for increases",
+      "2.3x FCF coverage provides safety margin",
+      "Yield premium vs sector of +115 bps"
+    ]
+  }
+}
+```
+
+#### Implementation Approach
+
+1. Use `yf.Ticker(symbol).dividends` for complete dividend history
+2. Use `yf.Ticker(symbol).info` for current yield, ex-date, payout ratio
+3. Calculate dividend growth rates (CAGR) over 1/3/5/10 year periods
+4. Count consecutive years of increases for Aristocrat/King classification:
+   - Dividend Achiever: 10+ years
+   - Dividend Aristocrat: 25+ years
+   - Dividend King: 50+ years
+5. Calculate safety score based on:
+   - Payout ratio (<60% = safe)
+   - FCF coverage (>1.5x = safe)
+   - Debt levels
+   - Earnings stability
+6. Compare yield to sector, market, and risk-free rate
+7. Identify dividend cuts/freezes in history as red flags
+
+#### Priority: P1
+
+Income investing is **extremely popular** with retail investors. Data is fully available in yfinance but unused.
+
+#### Dependencies
+
+- Feature 2 (Peer Comparison) - For yield comparison vs peers
+- Feature 4 (Earnings) - For payout ratio calculations
+
+---
+
+### Feature 16: Analyst Consensus Tracking
+
+#### What It Is
+
+**Simple explanation**: Aggregating what Wall Street analysts think about a stock - their ratings (Buy/Hold/Sell), price targets, and how these have changed over time.
+
+```
+Analyst Consensus for AAPL:
+
+Overall Rating: BUY (4.2 out of 5)
+Price Target: $210.50 (consensus of 45 analysts)
+  High: $250.00
+  Low:  $165.00
+  Current Price: $188.50 → 11.7% upside to target
+
+Rating Distribution:
+  Strong Buy: 18 (40%)
+  Buy:        15 (33%)
+  Hold:       10 (22%)
+  Sell:        2 (5%)
+  Strong Sell: 0 (0%)
+
+Recent Changes (Last 30 Days):
+  ↑ Morgan Stanley upgraded to Buy (from Hold), PT $225
+  ↑ Goldman Sachs raised PT to $215 (from $200)
+  ↓ Barclays downgraded to Hold (from Buy), PT $180
+
+Estimate Revisions:
+  EPS Estimates (Next Quarter): $2.35
+  30 Days Ago: $2.28
+  Revision Trend: +3.1% (Positive momentum)
+```
+
+#### Why It Matters
+
+- Analyst consensus provides a **professional baseline** for valuation
+- Price target changes often **precede stock moves**
+- Estimate revisions are a **leading indicator** of earnings surprises
+- Upgrades/downgrades cause significant **short-term price impact**
+- Currently: yfinance has this data but **it's not being used**
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| yfinance `recommendations` | Existing (unused) | Historical analyst ratings |
+| yfinance `recommendations_summary` | Existing (unused) | Current rating distribution |
+| yfinance `analyst_price_targets` | Existing (unused) | Price target data |
+| yfinance `earnings_estimate` | Existing (unused) | EPS estimates and revisions |
+| yfinance `revenue_estimate` | Existing (unused) | Revenue estimates |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/analyst_tracker.py` | Consensus, price targets, revisions, upgrade/downgrade tracking |
+| **MODIFY** | `src/agents/fundamental.py` | Include analyst consensus in valuation |
+| **MODIFY** | `src/agents/data_collector.py` | Collect analyst data |
+| **MODIFY** | `src/api/routes.py` | Add `GET /api/v1/analysts/{symbol}` |
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "symbol": "AAPL",
+  "current_price": 188.50,
+
+  "consensus_rating": {
+    "rating": "Buy",
+    "score": 4.2,
+    "total_analysts": 45,
+    "distribution": {
+      "strong_buy": 18,
+      "buy": 15,
+      "hold": 10,
+      "sell": 2,
+      "strong_sell": 0
+    },
+    "bullish_percent": 73.3,
+    "change_vs_30_days_ago": "+2 upgrades, -1 downgrade"
+  },
+
+  "price_targets": {
+    "consensus": 210.50,
+    "high": 250.00,
+    "low": 165.00,
+    "median": 208.00,
+    "upside_to_consensus": 11.7,
+    "number_of_analysts": 42
+  },
+
+  "recent_changes": [
+    {
+      "date": "2026-02-10",
+      "firm": "Morgan Stanley",
+      "analyst": "Erik Woodring",
+      "action": "Upgrade",
+      "old_rating": "Hold",
+      "new_rating": "Buy",
+      "old_pt": 195.00,
+      "new_pt": 225.00
+    },
+    {
+      "date": "2026-02-05",
+      "firm": "Goldman Sachs",
+      "action": "PT Raise",
+      "old_pt": 200.00,
+      "new_pt": 215.00
+    }
+  ],
+
+  "estimate_revisions": {
+    "next_quarter_eps": {
+      "current_estimate": 2.35,
+      "30_days_ago": 2.28,
+      "90_days_ago": 2.20,
+      "revision_trend": "+3.1%",
+      "assessment": "Positive momentum - estimates rising"
+    },
+    "full_year_eps": {
+      "current_estimate": 7.85,
+      "30_days_ago": 7.65,
+      "revision_trend": "+2.6%"
+    },
+    "revenue_estimate_next_q": {
+      "current": 124500000000,
+      "revision_trend": "+1.2%"
+    }
+  },
+
+  "analyst_signal": {
+    "score": 75,
+    "assessment": "Bullish consensus with positive estimate revisions",
+    "key_insight": "73% of analysts are bullish with 11.7% upside to consensus PT. Rising estimates suggest potential earnings beat."
+  }
+}
+```
+
+#### Implementation Approach
+
+1. Use `yf.Ticker(symbol).recommendations` for historical ratings
+2. Use `yf.Ticker(symbol).recommendations_summary` for current distribution
+3. Use `yf.Ticker(symbol).analyst_price_targets` for PT data
+4. Use `yf.Ticker(symbol).earnings_estimate` for EPS estimates
+5. Track changes over 30/60/90 days
+6. Identify upgrades/downgrades from recommendations history
+7. Calculate estimate revision momentum
+8. Generate overall analyst signal score
+
+#### Priority: P1
+
+Highly requested feature. Data is **fully available** in yfinance but completely unused. Low implementation effort.
+
+#### Dependencies
+
+- Feature 4 (Earnings) - Estimates relate to upcoming earnings
+- Feature 11 (Observations) - Analyst changes feed into key observations
+
+---
+
+### Feature 17: Macro Economic Integration
+
+#### What It Is
+
+**Simple explanation**: Understanding how macroeconomic factors (interest rates, inflation, Fed policy, economic cycles) affect individual stocks and sectors.
+
+```
+Macro Environment Impact on AAPL:
+
+Interest Rate Sensitivity: HIGH
+  - Growth stock with high valuations are rate-sensitive
+  - Fed Funds Rate: 5.25% (↓ expected)
+  - 10Y Treasury: 4.2%
+  - When rates fall, growth stocks typically outperform
+
+Inflation Impact: MODERATE
+  - Consumer discretionary spending affected by inflation
+  - CPI: 3.2% (cooling)
+  - Impact: Moderating inflation is positive for consumer spending
+
+Economic Cycle Position: LATE CYCLE
+  - Consumer Discretionary typically underperforms late cycle
+  - Recession probability (12mo): 25%
+  - Impact: Monitor for signs of consumer weakness
+
+Sector Rotation Signal:
+  - Current favored sectors: Utilities, Healthcare, Staples
+  - Tech typically underperforms in late cycle/recession
+  - AAPL has defensive qualities vs pure growth tech
+
+Dollar Impact: NEGATIVE
+  - AAPL has 60% international revenue
+  - Strong dollar hurts international earnings
+  - DXY: 104.5 (moderately strong)
+```
+
+#### Why It Matters
+
+- **"Don't fight the Fed"** - monetary policy drives markets
+- Interest rates have **huge impact on growth stock valuations**
+- Economic cycles favor **different sectors** at different times
+- Inflation affects consumer spending and corporate margins
+- Currently: No macro awareness at all - analyzing stocks in a vacuum
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| FRED API | New | Federal Reserve economic data (rates, CPI, GDP, unemployment) |
+| yfinance | Existing | Treasury yields (^TNX), VIX (^VIX), Dollar index (DX-Y.NYB) |
+| Fed calendar | New | FOMC meeting dates, rate decision expectations |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/macro_data.py` | Fetch macro indicators (rates, inflation, employment) |
+| **CREATE** | `src/tools/macro_analyzer.py` | Sector rotation, rate sensitivity, cycle positioning |
+| **CREATE** | `src/agents/macro.py` | New `MacroAnalystAgent` |
+| **MODIFY** | `src/agents/orchestrator.py` | Include macro context in analysis |
+| **MODIFY** | `src/api/routes.py` | Add `GET /api/v1/macro`, `GET /api/v1/macro/impact/{symbol}` |
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "macro_environment": {
+    "interest_rates": {
+      "fed_funds_rate": 5.25,
+      "fed_funds_direction": "Cuts expected",
+      "treasury_10y": 4.2,
+      "treasury_2y": 4.8,
+      "yield_curve": "Inverted (-60bps)",
+      "yield_curve_signal": "Recession warning"
+    },
+    "inflation": {
+      "cpi_yoy": 3.2,
+      "cpi_trend": "Cooling",
+      "pce_yoy": 2.8,
+      "fed_target": 2.0,
+      "inflation_assessment": "Above target but improving"
+    },
+    "employment": {
+      "unemployment_rate": 3.9,
+      "nonfarm_payrolls_last": 215000,
+      "labor_market": "Still tight but cooling"
+    },
+    "economic_cycle": {
+      "current_phase": "Late Cycle",
+      "recession_probability_12m": 25,
+      "gdp_growth_last": 2.1
+    }
+  },
+
+  "stock_macro_impact": {
+    "symbol": "AAPL",
+    "sector": "Technology",
+
+    "rate_sensitivity": {
+      "sensitivity": "High",
+      "rationale": "Growth stock with high P/E is rate-sensitive",
+      "impact_of_rate_cut": "Positive - lower rates support higher multiples",
+      "duration_risk": "Moderate"
+    },
+
+    "inflation_sensitivity": {
+      "sensitivity": "Moderate",
+      "rationale": "Consumer discretionary affected by real income",
+      "current_impact": "Slightly positive - inflation cooling helps consumers"
+    },
+
+    "cycle_positioning": {
+      "typical_performance": "Tech underperforms late cycle",
+      "aapl_specific": "More defensive than pure growth - strong balance sheet, cash flows",
+      "recommendation": "Quality tech like AAPL more resilient than speculative growth"
+    },
+
+    "currency_exposure": {
+      "international_revenue_pct": 60,
+      "dollar_impact": "Strong dollar hurts earnings translation",
+      "current_dxy": 104.5,
+      "assessment": "Moderate headwind"
+    },
+
+    "sector_rotation_signal": {
+      "current_favored_sectors": ["Utilities", "Healthcare", "Consumer Staples"],
+      "tech_positioning": "Underweight in late cycle playbook",
+      "aapl_exception": "Quality + cash + dividend = more defensive"
+    }
+  },
+
+  "upcoming_macro_events": [
+    {"date": "2026-02-19", "event": "FOMC Minutes", "importance": "High"},
+    {"date": "2026-02-28", "event": "PCE Inflation", "importance": "High"},
+    {"date": "2026-03-19", "event": "FOMC Decision", "importance": "Critical"}
+  ],
+
+  "macro_signal": {
+    "overall": "Cautiously Bullish",
+    "rationale": "Cooling inflation + expected rate cuts are tailwinds. Late cycle positioning is a concern but AAPL's quality characteristics provide some defense."
+  }
+}
+```
+
+#### Implementation Approach
+
+1. Create `macro_data.py` to fetch:
+   - Treasury yields via yfinance (^TNX, ^FVX, ^IRX)
+   - VIX via yfinance (^VIX)
+   - Dollar index via yfinance (DX-Y.NYB)
+   - FRED API for: CPI, PCE, unemployment, Fed Funds rate, GDP
+2. Build rate sensitivity scoring based on:
+   - P/E ratio (higher = more sensitive)
+   - Sector (Tech, Real Estate most sensitive)
+   - Leverage (more debt = more sensitive)
+3. Map economic cycles to sector rotation:
+   - Early: Financials, Industrials, Consumer Discretionary
+   - Mid: Technology, Communication, Materials
+   - Late: Energy, Healthcare, Consumer Staples
+   - Recession: Utilities, Healthcare, Consumer Staples
+4. Calculate currency exposure from geographic revenue breakdown
+5. Maintain calendar of upcoming macro events
+
+#### Priority: P2
+
+Significant value-add but requires new data source (FRED API). More complex implementation. Best suited for sophisticated users.
+
+#### Dependencies
+
+- Feature 5 (Stock Performance) - For correlation with macro factors
+- Feature 2 (Peer Comparison) - For sector-level analysis
+
+---
+
+### Feature 18: Alert & Notification System
+
+#### What It Is
+
+**Simple explanation**: A proactive system that monitors stocks and notifies users when important events occur - price levels hit, technical signals trigger, news spikes, or earnings approach.
+
+```
+Alert Types:
+
+📊 PRICE ALERTS
+  "AAPL crossed above $190" (triggered 2 mins ago)
+  "TSLA dropped below $200 support" (triggered 1 hour ago)
+
+📈 TECHNICAL SIGNALS
+  "NVDA: RSI dropped below 30 (oversold)"
+  "MSFT: Golden Cross detected (50 SMA > 200 SMA)"
+  "AMD: MACD bullish crossover"
+
+📰 NEWS ALERTS
+  "AAPL: 5x normal news volume detected (possible earnings leak)"
+  "GOOGL: Sentiment shifted from positive to negative"
+
+📅 CALENDAR ALERTS
+  "AAPL earnings in 3 days (Jan 30, after market)"
+  "JNJ ex-dividend date tomorrow"
+  "FOMC decision tomorrow at 2pm ET"
+
+⚠️ RISK ALERTS
+  "Portfolio VaR exceeded threshold"
+  "GME short interest spiked +20%"
+```
+
+#### Why It Matters
+
+- Investors can't monitor markets 24/7
+- **Time-sensitive opportunities** get missed without alerts
+- Technical signals are only useful if you know **when they trigger**
+- Earnings dates and ex-dividend dates require **advance notice**
+- Transforms the agent from **reactive to proactive**
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| All existing analysis tools | Existing | Generate signals to alert on |
+| Redis | Existing (configured) | Store user alerts, pub/sub for notifications |
+| Scheduler (APScheduler) | New | Periodic monitoring jobs |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/alert_manager.py` | Alert creation, storage, evaluation, delivery |
+| **CREATE** | `src/services/alert_scheduler.py` | Background jobs to monitor conditions |
+| **CREATE** | `src/services/notification_service.py` | Delivery via webhook, email, websocket |
+| **MODIFY** | `src/api/routes.py` | Add alert CRUD endpoints, websocket for real-time |
+| **MODIFY** | `src/config.py` | Alert configuration settings |
+
+#### Alert Types and Conditions
+
+```python
+# Price Alerts
+{
+    "type": "price",
+    "symbol": "AAPL",
+    "condition": "crosses_above",  # crosses_below, reaches
+    "value": 200.00,
+    "repeat": False
+}
+
+# Technical Signal Alerts
+{
+    "type": "technical",
+    "symbol": "AAPL",
+    "indicator": "rsi",
+    "condition": "below",  # above, crosses_above, crosses_below
+    "value": 30,
+    "timeframe": "daily"
+}
+
+# News/Sentiment Alerts
+{
+    "type": "news",
+    "symbol": "AAPL",
+    "condition": "volume_spike",  # sentiment_change, keyword
+    "threshold": 3.0,  # 3x normal volume
+}
+
+# Calendar Alerts
+{
+    "type": "calendar",
+    "symbol": "AAPL",
+    "event": "earnings",  # dividend, split
+    "days_before": 3
+}
+
+# Risk Alerts
+{
+    "type": "risk",
+    "portfolio_id": "default",
+    "metric": "var_95",
+    "condition": "exceeds",
+    "threshold": 50000
+}
+```
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "alerts": {
+    "active": [
+      {
+        "id": "alert_001",
+        "type": "price",
+        "symbol": "AAPL",
+        "condition": "crosses_above",
+        "value": 200.00,
+        "created": "2026-02-10T10:00:00Z",
+        "status": "watching",
+        "last_checked": "2026-02-16T15:30:00Z"
+      }
+    ],
+
+    "triggered_today": [
+      {
+        "id": "alert_002",
+        "type": "technical",
+        "symbol": "NVDA",
+        "condition": "RSI below 30",
+        "triggered_at": "2026-02-16T14:22:00Z",
+        "price_at_trigger": 875.50,
+        "message": "NVDA RSI dropped to 28.5 (oversold territory)"
+      }
+    ]
+  },
+
+  "upcoming_events": [
+    {
+      "symbol": "AAPL",
+      "event": "Earnings",
+      "date": "2026-01-30",
+      "time": "After Market",
+      "days_until": 3,
+      "alert_set": true
+    },
+    {
+      "symbol": "JNJ",
+      "event": "Ex-Dividend",
+      "date": "2026-02-21",
+      "days_until": 5,
+      "alert_set": true
+    }
+  ]
+}
+```
+
+#### API Endpoints
+
+```
+POST   /api/v1/alerts              → Create new alert
+GET    /api/v1/alerts              → List all alerts
+GET    /api/v1/alerts/{id}         → Get alert details
+DELETE /api/v1/alerts/{id}         → Delete alert
+PATCH  /api/v1/alerts/{id}         → Update alert
+GET    /api/v1/alerts/triggered    → Get recently triggered alerts
+WS     /api/v1/alerts/stream       → Real-time alert notifications
+```
+
+#### Implementation Approach
+
+1. Create alert data model stored in Redis:
+   - Alert ID, type, symbol, conditions, status
+   - User ID (for multi-user support)
+   - Notification preferences (webhook URL, email, websocket)
+2. Build alert evaluator for each type:
+   - Price alerts: Compare current price to threshold
+   - Technical alerts: Run indicator calculations
+   - News alerts: Check sentiment/volume from news fetcher
+   - Calendar alerts: Check days until event
+3. Use APScheduler for background monitoring:
+   - Price/technical checks every 1-5 minutes during market hours
+   - News checks every 15 minutes
+   - Calendar checks daily
+4. Build notification service:
+   - Webhook delivery (most flexible)
+   - WebSocket push (for real-time UI)
+   - Email (optional, requires SMTP config)
+5. Add WebSocket endpoint for real-time streaming to frontend
+6. Implement alert history and triggered alert log
+
+#### Priority: P2
+
+High user value but requires **background infrastructure** (scheduler, Redis). More complex deployment.
+
+#### Dependencies
+
+- All analysis tools (alerts based on their outputs)
+- Redis infrastructure (configured but not utilized)
+- Feature 4 (Earnings) - For earnings date alerts
+- Feature 15 (Dividends) - For ex-dividend alerts
+
+---
+
+### Feature 19: Portfolio Optimization
+
+#### What It Is
+
+**Simple explanation**: Using Modern Portfolio Theory (MPT) to help users build optimal portfolios - maximizing returns for a given level of risk, or minimizing risk for a target return.
+
+```
+Portfolio Optimization for: AAPL, MSFT, GOOGL, JNJ, JPM
+
+Current Allocation:
+  AAPL:  20%
+  MSFT:  20%
+  GOOGL: 20%
+  JNJ:   20%
+  JPM:   20%
+
+Optimized Allocation (Max Sharpe Ratio):
+  AAPL:  28%  (+8%)
+  MSFT:  32%  (+12%)
+  GOOGL: 15%  (-5%)
+  JNJ:   18%  (-2%)
+  JPM:    7%  (-13%)
+
+Expected Improvement:
+  Return: 12.5% → 14.2% (+1.7%)
+  Risk:   18.3% → 16.8% (-1.5%)
+  Sharpe: 0.68 → 0.85 (+0.17)
+
+Efficient Frontier:
+  ┌────────────────────────────────┐
+  │        *Max Sharpe             │
+  │       /                        │
+  │      /   *Current Portfolio    │
+  │     /                          │
+  │    /                           │
+  │   /*Min Variance               │
+  │  /                             │
+  └────────────────────────────────┘
+    Risk (Standard Deviation) →
+```
+
+#### Why It Matters
+
+- Most investors are **not efficiently diversified**
+- Small allocation changes can **significantly improve risk-adjusted returns**
+- Correlation analysis reveals **hidden concentration risks**
+- Essential for moving from "stock picking" to **portfolio management**
+- Libraries already in requirements.txt (scipy, numpy) support optimization
+
+#### Data Sources Needed
+
+| Source | Type | Purpose |
+|---|---|---|
+| yfinance historical data | Existing | Returns for correlation and optimization |
+| Risk-free rate | Enhancement | For Sharpe ratio calculation (use Treasury data) |
+
+#### Agents/Tools to Create or Modify
+
+| Action | File | What Changes |
+|---|---|---|
+| **CREATE** | `src/tools/portfolio_optimizer.py` | MPT optimization, efficient frontier, correlation |
+| **CREATE** | `src/agents/portfolio.py` | New `PortfolioAnalystAgent` |
+| **MODIFY** | `src/api/routes.py` | Add `POST /api/v1/portfolio/optimize` |
+| **MODIFY** | `src/api/schemas.py` | Add optimization request/response schemas |
+
+#### Key Metrics and Outputs
+
+```json
+{
+  "portfolio": {
+    "symbols": ["AAPL", "MSFT", "GOOGL", "JNJ", "JPM"],
+    "current_weights": [0.20, 0.20, 0.20, 0.20, 0.20]
+  },
+
+  "correlation_matrix": {
+    "AAPL-MSFT": 0.82,
+    "AAPL-GOOGL": 0.78,
+    "AAPL-JNJ": 0.35,
+    "AAPL-JPM": 0.55,
+    "MSFT-GOOGL": 0.85,
+    "MSFT-JNJ": 0.32,
+    "MSFT-JPM": 0.52,
+    "GOOGL-JNJ": 0.28,
+    "GOOGL-JPM": 0.48,
+    "JNJ-JPM": 0.45
+  },
+
+  "correlation_insights": [
+    "MSFT-GOOGL correlation of 0.85 is very high - consider reducing one",
+    "JNJ provides best diversification (low correlation to tech)",
+    "Tech concentration: AAPL+MSFT+GOOGL = 60% with high inter-correlation"
+  ],
+
+  "current_portfolio_metrics": {
+    "expected_return": 12.5,
+    "volatility": 18.3,
+    "sharpe_ratio": 0.68,
+    "max_drawdown_historical": -28.5,
+    "beta": 1.15
+  },
+
+  "optimized_portfolios": {
+    "max_sharpe": {
+      "weights": {
+        "AAPL": 0.28,
+        "MSFT": 0.32,
+        "GOOGL": 0.15,
+        "JNJ": 0.18,
+        "JPM": 0.07
+      },
+      "expected_return": 14.2,
+      "volatility": 16.8,
+      "sharpe_ratio": 0.85
+    },
+    "min_variance": {
+      "weights": {
+        "AAPL": 0.12,
+        "MSFT": 0.15,
+        "GOOGL": 0.08,
+        "JNJ": 0.42,
+        "JPM": 0.23
+      },
+      "expected_return": 9.8,
+      "volatility": 12.2,
+      "sharpe_ratio": 0.80
+    },
+    "target_return_15": {
+      "target_return": 15.0,
+      "weights": {
+        "AAPL": 0.30,
+        "MSFT": 0.35,
+        "GOOGL": 0.18,
+        "JNJ": 0.12,
+        "JPM": 0.05
+      },
+      "volatility": 18.5,
+      "sharpe_ratio": 0.81
+    }
+  },
+
+  "efficient_frontier": {
+    "points": [
+      {"return": 8.0, "risk": 10.5},
+      {"return": 10.0, "risk": 12.0},
+      {"return": 12.0, "risk": 14.5},
+      {"return": 14.0, "risk": 17.0},
+      {"return": 16.0, "risk": 20.5}
+    ]
+  },
+
+  "rebalancing_recommendations": [
+    {
+      "action": "Reduce GOOGL by 5%",
+      "rationale": "High correlation with MSFT, lower Sharpe contribution"
+    },
+    {
+      "action": "Increase AAPL by 8%",
+      "rationale": "Best risk-adjusted return in portfolio"
+    },
+    {
+      "action": "Reduce JPM by 13%",
+      "rationale": "Lowest Sharpe contribution, high volatility"
+    }
+  ],
+
+  "constraints_applied": {
+    "min_weight": 0.05,
+    "max_weight": 0.40,
+    "max_sector_weight": 0.60
+  }
+}
+```
+
+#### Implementation Approach
+
+1. Use scipy.optimize for portfolio optimization:
+
+   ```python
+   from scipy.optimize import minimize
+
+   def optimize_sharpe(weights, returns, cov_matrix, rf_rate):
+       portfolio_return = np.dot(weights, returns)
+       portfolio_std = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+       sharpe = (portfolio_return - rf_rate) / portfolio_std
+       return -sharpe  # Minimize negative Sharpe
+   ```
+
+2. Calculate returns covariance matrix from historical data
+3. Implement optimization objectives:
+   - Max Sharpe: Maximize risk-adjusted return
+   - Min Variance: Minimize portfolio volatility
+   - Target Return: Minimize risk for specified return
+4. Generate efficient frontier by solving for multiple target returns
+5. Build correlation matrix with heatmap visualization
+6. Identify concentration risks from correlation analysis
+7. Generate rebalancing recommendations with rationale
+
+#### Priority: P2
+
+Sophisticated feature that transforms the agent from stock analysis to **portfolio management**. Requires careful implementation of optimization algorithms.
+
+#### Dependencies
+
+- Feature 5 (Stock Performance) - For historical returns
+- Feature 6 (Enhanced Reports) - For efficient frontier charts
+- Multiple stocks analyzed (uses multi-stock data)
+
+---
+
 ## Architecture Changes
 
 ### Current Architecture
@@ -1678,6 +3008,10 @@ OrchestratorAgent (coordinator)
          +-- DisruptionAnalystAgent (if disruption analysis requested)
          +-- BacktestingAgent (if backtest requested)
          +-- EventAnalysis (via EarningsAnalyst)
+         +-- OptionsAnalystAgent (if options analysis requested)
+         +-- DividendAnalystAgent (for income stocks)
+         +-- MacroAnalystAgent (for macro context)
+         +-- PortfolioAnalystAgent (for portfolio optimization)
          |
     Phase 4: Synthesis
          |
@@ -1699,6 +3033,10 @@ OrchestratorAgent (coordinator)
 | 3 | `DisruptionAnalystAgent` | `src/agents/disruption.py` | Disruption analysis combines quantitative + qualitative in a distinct reasoning pattern |
 | 4 | `BacktestingAgent` | `src/agents/backtesting.py` | Completely different execution model (time-series simulation vs point-in-time analysis) |
 | 5 | `ObservationsAgent` | `src/agents/observations.py` | Synthesis agent that consumes ALL other outputs - distinct "meta-analysis" role |
+| 6 | `OptionsAnalystAgent` | `src/agents/options.py` | Options analysis requires specialized knowledge of Greeks, IV, and flow interpretation |
+| 7 | `DividendAnalystAgent` | `src/agents/dividend.py` | Income investing is a distinct strategy with unique metrics (safety, growth, yield) |
+| 8 | `MacroAnalystAgent` | `src/agents/macro.py` | Macro analysis operates at economy level with sector rotation and rate sensitivity |
+| 9 | `PortfolioAnalystAgent` | `src/agents/portfolio.py` | Portfolio optimization requires multi-asset correlation and MPT algorithms |
 
 ---
 
@@ -1720,6 +3058,16 @@ OrchestratorAgent (coordinator)
 | 12 | Report Formatter | `src/tools/report_formatter.py` | ReportGeneratorAgent |
 | 13 | Chart Generator | `src/tools/chart_generator.py` | ReportGeneratorAgent |
 | 14 | Insight Engine | `src/tools/insight_engine.py` | ObservationsAgent |
+| 15 | Insider Tracker | `src/tools/insider_tracker.py` | FundamentalAnalystAgent |
+| 16 | Institutional Tracker | `src/tools/institutional_tracker.py` | FundamentalAnalystAgent |
+| 17 | Options Analyzer | `src/tools/options_analyzer.py` | OptionsAnalystAgent |
+| 18 | Short Interest | `src/tools/short_interest.py` | RiskAnalystAgent |
+| 19 | Dividend Analyzer | `src/tools/dividend_analyzer.py` | DividendAnalystAgent |
+| 20 | Analyst Tracker | `src/tools/analyst_tracker.py` | FundamentalAnalystAgent |
+| 21 | Macro Data | `src/tools/macro_data.py` | MacroAnalystAgent |
+| 22 | Macro Analyzer | `src/tools/macro_analyzer.py` | MacroAnalystAgent |
+| 23 | Alert Manager | `src/tools/alert_manager.py` | AlertService |
+| 24 | Portfolio Optimizer | `src/tools/portfolio_optimizer.py` | PortfolioAnalystAgent |
 
 ---
 
@@ -1774,9 +3122,47 @@ OrchestratorAgent (coordinator)
 | Create predefined strategies | Feature 8 | 3 days |
 | Create `DisruptionAnalystAgent` + tools | Feature 3 | 5 days |
 
-### Phase 4: Terminal Experience (Weeks 17-20)
+### Phase 4: Smart Money & Income (Weeks 17-22)
 
-**Goal**: The most ambitious feature, built last.
+**Goal**: Track what insiders, institutions, and income investors care about.
+
+| Task | Feature | Effort |
+|---|---|---|
+| Create `insider_tracker.py` tool | Feature 12 | 2 days |
+| Create `institutional_tracker.py` tool | Feature 12 | 2 days |
+| Create `dividend_analyzer.py` tool | Feature 15 | 3 days |
+| Create `DividendAnalystAgent` | Feature 15 | 2 days |
+| Create `analyst_tracker.py` tool | Feature 16 | 2 days |
+| Create `short_interest.py` tool | Feature 14 | 2 days |
+
+### Phase 5: Options & Macro (Weeks 23-28)
+
+**Goal**: Advanced analysis for sophisticated investors.
+
+| Task | Feature | Effort |
+|---|---|---|
+| Create `options_analyzer.py` tool | Feature 13 | 4 days |
+| Create `OptionsAnalystAgent` | Feature 13 | 3 days |
+| Create `macro_data.py` tool (FRED integration) | Feature 17 | 4 days |
+| Create `macro_analyzer.py` tool | Feature 17 | 3 days |
+| Create `MacroAnalystAgent` | Feature 17 | 3 days |
+
+### Phase 6: Portfolio & Alerts (Weeks 29-34)
+
+**Goal**: Portfolio management and proactive notifications.
+
+| Task | Feature | Effort |
+|---|---|---|
+| Create `portfolio_optimizer.py` tool | Feature 19 | 5 days |
+| Create `PortfolioAnalystAgent` | Feature 19 | 3 days |
+| Create `alert_manager.py` tool | Feature 18 | 4 days |
+| Create `alert_scheduler.py` service | Feature 18 | 4 days |
+| Create `notification_service.py` | Feature 18 | 3 days |
+| Add WebSocket for real-time alerts | Feature 18 | 3 days |
+
+### Phase 7: Terminal Experience (Weeks 35-38)
+
+**Goal**: Bloomberg-like market command center.
 
 | Task | Feature | Effort |
 |---|---|---|
@@ -1799,9 +3185,17 @@ OrchestratorAgent (coordinator)
 | | Feature 6: Enhanced Reports | Libraries already installed, big user value |
 | | Feature 7: Event Performance | Explicitly requested by user, high interest |
 | | Feature 11: Observations | Capstone that makes everything more useful |
-| **P2** (Build Last) | Feature 3: Displacement | LLM-heavy, hard to validate, niche |
+| | Feature 12: Insider/Institutional | Data already in yfinance, high signal value, low effort |
+| | Feature 14: Short Interest | Important risk metric, mostly available in yfinance |
+| | Feature 15: Dividend Analysis | Income investing is popular, data fully available |
+| | Feature 16: Analyst Consensus | Data fully available in yfinance, frequently requested |
+| **P2** (Build Last) | Feature 3: Disruption | LLM-heavy, hard to validate, niche |
 | | Feature 8: Backtesting | High effort, high value, many dependencies |
 | | Feature 10: Bloomberg Terminal | Largest scope, best delivered incrementally |
+| | Feature 13: Options Flow | Complex to implement correctly, sophisticated users only |
+| | Feature 17: Macro Integration | Requires FRED API, more complex implementation |
+| | Feature 18: Alert System | Requires background infrastructure (scheduler, Redis) |
+| | Feature 19: Portfolio Optimization | Sophisticated MPT algorithms, multi-asset focus |
 
 ---
 
@@ -1822,38 +3216,76 @@ OrchestratorAgent (coordinator)
 | `GET` | `/api/v1/terminal/breadth` | Feature 10 | Market breadth |
 | `GET` | `/api/v1/terminal/movers` | Feature 10 | Top gainers/losers |
 | `WS` | `/api/v1/terminal/stream` | Feature 10 | Real-time updates |
+| `GET` | `/api/v1/insiders/{symbol}` | Feature 12 | Insider transactions |
+| `GET` | `/api/v1/institutions/{symbol}` | Feature 12 | Institutional ownership |
+| `GET` | `/api/v1/options/{symbol}` | Feature 13 | Options flow analysis |
+| `GET` | `/api/v1/shorts/{symbol}` | Feature 14 | Short interest data |
+| `GET` | `/api/v1/dividends/{symbol}` | Feature 15 | Dividend analysis |
+| `GET` | `/api/v1/analysts/{symbol}` | Feature 16 | Analyst consensus |
+| `GET` | `/api/v1/macro` | Feature 17 | Macro environment |
+| `GET` | `/api/v1/macro/impact/{symbol}` | Feature 17 | Stock macro sensitivity |
+| `POST` | `/api/v1/alerts` | Feature 18 | Create alert |
+| `GET` | `/api/v1/alerts` | Feature 18 | List alerts |
+| `DELETE` | `/api/v1/alerts/{id}` | Feature 18 | Delete alert |
+| `GET` | `/api/v1/alerts/triggered` | Feature 18 | Triggered alerts |
+| `WS` | `/api/v1/alerts/stream` | Feature 18 | Real-time alert notifications |
+| `POST` | `/api/v1/portfolio/optimize` | Feature 19 | Portfolio optimization |
 
 ---
 
 ## Success Criteria
 
-### Phase 0 Complete When:
+### Phase 0 Complete When
 
 - [ ] Beta and Sortino calculations work in risk analysis
 - [ ] Sentiment endpoint returns real analysis (not hardcoded)
 - [ ] Market summary returns live data (not hardcoded)
 - [ ] Performance metrics available for any stock
 
-### Phase 1 Complete When:
+### Phase 1 Complete When
 
 - [ ] Peer comparison returns real peer data for any stock
 - [ ] Quarterly earnings history available for last 8 quarters
 - [ ] FinBERT produces accurate financial sentiment scores
 - [ ] News aggregation from 3+ sources with deduplication
 
-### Phase 2 Complete When:
+### Phase 2 Complete When
 
 - [ ] Event performance shows before/after analysis for earnings
 - [ ] PDF reports generate with charts and professional formatting
 - [ ] Key observations synthesize insights across all analysis types
 
-### Phase 3 Complete When:
+### Phase 3 Complete When
 
 - [ ] Thematic analysis covers 10+ predefined themes
 - [ ] Backtesting runs 5 predefined strategies with performance metrics
 - [ ] Disruption scoring classifies companies as disruptors or at-risk
 
-### Phase 4 Complete When:
+### Phase 4 Complete When
+
+- [ ] Insider transactions displayed with net activity scoring
+- [ ] Institutional ownership changes tracked quarter-over-quarter
+- [ ] Dividend safety score calculated with growth history
+- [ ] Analyst consensus aggregated with revision tracking
+- [ ] Short interest displayed with squeeze scoring
+
+### Phase 5 Complete When
+
+- [ ] Options flow analysis shows put/call ratio and unusual activity
+- [ ] Implied volatility compared to historical with IV percentile
+- [ ] Macro environment data fetched from FRED API
+- [ ] Stock-level macro sensitivity calculated (rate, inflation, cycle)
+- [ ] Sector rotation signals based on economic cycle
+
+### Phase 6 Complete When
+
+- [ ] Portfolio optimizer generates efficient frontier
+- [ ] Correlation matrix identifies concentration risks
+- [ ] Max Sharpe and Min Variance portfolios calculated
+- [ ] Alert system monitors price, technical, and news conditions
+- [ ] WebSocket delivers real-time alert notifications
+
+### Phase 7 Complete When
 
 - [ ] Market terminal shows real-time index and sector data
 - [ ] Market breadth indicators computed from S&P 500 components
@@ -1861,6 +3293,6 @@ OrchestratorAgent (coordinator)
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: February 9, 2026
+**Document Version**: 2.0
+**Last Updated**: February 16, 2026
 **Status**: Ready for Implementation
