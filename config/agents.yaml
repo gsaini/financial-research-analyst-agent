@@ -112,6 +112,32 @@ risk_analyst:
   var_confidence: 0.95
   lookback_period_days: 252
 
+# Thematic Analyst Agent Settings
+thematic_analyst:
+  name: "ThematicAnalyst"
+  description: "Analyzes stocks grouped by investment themes and megatrends"
+  config_file: "config/themes.yaml"
+  max_constituents_per_theme: 15
+  default_period: "1y"
+  performance_periods:
+    - 1w
+    - 1m
+    - 3m
+    - 6m
+    - 1y
+    - ytd
+  scoring:
+    momentum_weights:
+      short_term: 0.3
+      medium_term: 0.4
+      long_term: 0.3
+    health_weights:
+      performance: 0.35
+      momentum: 0.25
+      diversification: 0.20
+      risk: 0.20
+  enable_narrative: false
+
 # Report Generator Agent Settings
 report_generator:
   name: "ReportGenerator"

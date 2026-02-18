@@ -1,0 +1,315 @@
+# Thematic Investing Analysis - Theme Definitions
+# Each theme contains constituent stocks, reference ETFs, and metadata.
+
+themes:
+  ai_machine_learning:
+    name: "AI & Machine Learning"
+    description: >
+      Companies leading the development and deployment of artificial intelligence,
+      machine learning, deep learning, and generative AI technologies. Includes
+      chipmakers, cloud AI platforms, and AI-native software companies.
+    constituents:
+      - NVDA # NVIDIA - GPU/AI accelerators
+      - MSFT # Microsoft - Azure AI, OpenAI partnership
+      - GOOGL # Alphabet - Google AI, DeepMind
+      - AMD # AMD - AI/ML processors
+      - PLTR # Palantir - AI analytics platform
+      - SNOW # Snowflake - AI data cloud
+      - AI # C3.ai - Enterprise AI
+      - PATH # UiPath - AI-powered automation
+      - AMZN # Amazon - AWS AI services
+      - META # Meta - AI research, LLMs
+    reference_etfs:
+      - BOTZ # Global X Robotics & AI ETF
+      - ROBT # First Trust Nasdaq AI & Robotics ETF
+      - IRBO # iShares Robotics and AI Multisector ETF
+    sector_tags:
+      - Technology
+      - Communication Services
+    risk_level: "High"
+    growth_stage: "Early-to-Mid Growth"
+
+  electric_vehicles:
+    name: "Electric Vehicles"
+    description: >
+      Companies involved in the electric vehicle ecosystem including EV
+      manufacturers, battery technology, charging infrastructure, and
+      EV component suppliers.
+    constituents:
+      - TSLA # Tesla - EV manufacturer, energy
+      - RIVN # Rivian - EV trucks and SUVs
+      - LCID # Lucid Motors - Luxury EVs
+      - NIO # NIO - Chinese EV manufacturer
+      - LI # Li Auto - Chinese EV manufacturer
+      - XPEV # XPeng - Chinese EV manufacturer
+      - F # Ford - EV transition
+      - GM # GM - EV transition (Ultium)
+      - CHPT # ChargePoint - EV charging
+      - QS # QuantumScape - Solid-state batteries
+    reference_etfs:
+      - DRIV # Global X Autonomous & Electric Vehicles ETF
+      - IDRV # iShares Self-Driving EV and Tech ETF
+      - LIT # Global X Lithium & Battery Tech ETF
+    sector_tags:
+      - Consumer Discretionary
+      - Industrials
+      - Materials
+    risk_level: "High"
+    growth_stage: "Early Growth"
+
+  green_energy:
+    name: "Green Energy & Clean Tech"
+    description: >
+      Companies focused on renewable energy generation, energy storage,
+      green hydrogen, and clean technology solutions for decarbonization.
+    constituents:
+      - ENPH # Enphase Energy - Solar microinverters
+      - SEDG # SolarEdge - Solar power optimizers
+      - FSLR # First Solar - Solar panels
+      - NEE # NextEra Energy - Renewable utility
+      - PLUG # Plug Power - Green hydrogen
+      - BE # Bloom Energy - Fuel cells
+      - RUN # Sunrun - Residential solar
+      - CSIQ # Canadian Solar - Solar modules
+      - AES # AES Corp - Clean energy
+      - DQ # Daqo New Energy - Polysilicon
+    reference_etfs:
+      - ICLN # iShares Global Clean Energy ETF
+      - QCLN # First Trust NASDAQ Clean Edge Green Energy
+      - TAN # Invesco Solar ETF
+    sector_tags:
+      - Utilities
+      - Industrials
+      - Technology
+    risk_level: "High"
+    growth_stage: "Mid Growth"
+
+  cybersecurity:
+    name: "Cybersecurity"
+    description: >
+      Companies providing cybersecurity solutions including endpoint protection,
+      cloud security, identity management, and threat detection platforms.
+    constituents:
+      - CRWD # CrowdStrike - Endpoint security
+      - PANW # Palo Alto Networks - Network security
+      - ZS # Zscaler - Cloud security
+      - FTNT # Fortinet - Network security
+      - S # SentinelOne - AI-powered security
+      - CYBR # CyberArk - Identity security
+      - NET # Cloudflare - Web security, CDN
+      - OKTA # Okta - Identity management
+      - TENB # Tenable - Vulnerability management
+      - RPD # Rapid7 - Security analytics
+    reference_etfs:
+      - CIBR # First Trust NASDAQ Cybersecurity ETF
+      - HACK # ETFMG Prime Cyber Security ETF
+      - BUG # Global X Cybersecurity ETF
+    sector_tags:
+      - Technology
+    risk_level: "Medium"
+    growth_stage: "Mid Growth"
+
+  aging_population:
+    name: "Aging Population & Healthcare"
+    description: >
+      Companies positioned to benefit from the global aging population trend,
+      including healthcare providers, medical devices, pharmaceuticals,
+      senior living, and biotech focused on age-related conditions.
+    constituents:
+      - UNH # UnitedHealth - Health insurance
+      - JNJ # Johnson & Johnson - Pharma, medical devices
+      - ABT # Abbott Labs - Medical devices, diagnostics
+      - MDT # Medtronic - Medical devices
+      - TMO # Thermo Fisher - Life sciences
+      - ISRG # Intuitive Surgical - Robotic surgery
+      - DHR # Danaher - Life sciences
+      - SYK # Stryker - Medical devices
+      - BSX # Boston Scientific - Medical devices
+      - VRTX # Vertex Pharma - Biotech
+    reference_etfs:
+      - XLV # Health Care Select SPDR
+      - IBB # iShares Biotechnology ETF
+      - IHI # iShares U.S. Medical Devices ETF
+    sector_tags:
+      - Healthcare
+      - Consumer Staples
+    risk_level: "Low-Medium"
+    growth_stage: "Mature Growth"
+
+  cloud_computing:
+    name: "Cloud Computing & SaaS"
+    description: >
+      Companies providing cloud infrastructure (IaaS), platform services (PaaS),
+      and software-as-a-service (SaaS) solutions. Includes hyperscalers and
+      cloud-native software providers.
+    constituents:
+      - MSFT # Microsoft - Azure
+      - AMZN # Amazon - AWS
+      - GOOGL # Alphabet - Google Cloud
+      - CRM # Salesforce - CRM SaaS
+      - SNOW # Snowflake - Cloud data
+      - NOW # ServiceNow - IT workflow SaaS
+      - DDOG # Datadog - Cloud monitoring
+      - MDB # MongoDB - Cloud database
+      - WDAY # Workday - HR/Finance SaaS
+      - TEAM # Atlassian - Collaboration SaaS
+    reference_etfs:
+      - SKYY # First Trust Cloud Computing ETF
+      - WCLD # WisdomTree Cloud Computing ETF
+      - CLOU # Global X Cloud Computing ETF
+    sector_tags:
+      - Technology
+    risk_level: "Medium"
+    growth_stage: "Mid-to-Late Growth"
+
+  fintech:
+    name: "Fintech & Digital Payments"
+    description: >
+      Companies disrupting traditional financial services through technology,
+      including digital payments, neobanks, blockchain, lending platforms,
+      and financial data analytics.
+    constituents:
+      - V # Visa - Payment network
+      - MA # Mastercard - Payment network
+      - SQ # Block (Square) - Digital payments
+      - PYPL # PayPal - Digital payments
+      - SOFI # SoFi - Digital banking
+      - AFRM # Affirm - Buy now, pay later
+      - COIN # Coinbase - Crypto exchange
+      - FIS # FIS - Financial technology
+      - FISV # Fiserv - Financial services tech
+      - NU # Nu Holdings - Digital banking (LatAm)
+    reference_etfs:
+      - FINX # Global X FinTech ETF
+      - ARKF # ARK Fintech Innovation ETF
+      - IPAY # ETFMG Prime Mobile Payments ETF
+    sector_tags:
+      - Financials
+      - Technology
+    risk_level: "Medium-High"
+    growth_stage: "Mid Growth"
+
+  space_economy:
+    name: "Space Economy & Aerospace"
+    description: >
+      Companies involved in space exploration, satellite technology,
+      launch services, space tourism, and defense/aerospace innovation.
+    constituents:
+      - LMT # Lockheed Martin - Defense & space
+      - BA # Boeing - Aerospace
+      - RTX # RTX (Raytheon) - Defense tech
+      - NOC # Northrop Grumman - Space systems
+      - RKLB # Rocket Lab - Launch services
+      - IRDM # Iridium - Satellite communications
+      - ASTS # AST SpaceMobile - Space-based cellular
+      - LUNR # Intuitive Machines - Lunar services
+      - SPCE # Virgin Galactic - Space tourism
+      - KTOS # Kratos Defense - Drones, space
+    reference_etfs:
+      - UFO # Procure Space ETF
+      - ARKX # ARK Space Exploration & Innovation ETF
+      - ROKT # SPDR S&P Kensho Final Frontiers ETF
+    sector_tags:
+      - Industrials
+      - Technology
+      - Communication Services
+    risk_level: "High"
+    growth_stage: "Early Growth"
+
+  digital_entertainment:
+    name: "Digital Entertainment & Gaming"
+    description: >
+      Companies in gaming, streaming, social media, digital content creation,
+      and immersive entertainment including VR/AR.
+    constituents:
+      - NFLX # Netflix - Streaming
+      - DIS # Disney - Streaming, parks, content
+      - EA # Electronic Arts - Gaming
+      - TTWO # Take-Two - Gaming (GTA, NBA 2K)
+      - RBLX # Roblox - Gaming platform
+      - U # Unity - Game engine
+      - SPOT # Spotify - Music streaming
+      - SNAP # Snap - Social media, AR
+      - ROKU # Roku - Streaming devices
+      - WBD # Warner Bros Discovery - Content
+    reference_etfs:
+      - HERO # Global X Video Games & Esports ETF
+      - NERD # Roundhill BITKRAFT Esports & Digital Entertainment ETF
+      - SOCL # Global X Social Media ETF
+    sector_tags:
+      - Communication Services
+      - Technology
+      - Consumer Discretionary
+    risk_level: "Medium-High"
+    growth_stage: "Mid Growth"
+
+  blockchain_web3:
+    name: "Blockchain & Web3"
+    description: >
+      Companies involved in blockchain technology, cryptocurrency infrastructure,
+      decentralized finance (DeFi), and Web3 applications.
+    constituents:
+      - COIN # Coinbase - Crypto exchange
+      - MSTR # MicroStrategy - Bitcoin treasury
+      - MARA # Marathon Digital - Bitcoin mining
+      - RIOT # Riot Platforms - Bitcoin mining
+      - SQ # Block - Bitcoin/crypto payments
+      - PYPL # PayPal - Crypto integration
+      - IBM # IBM - Enterprise blockchain
+      - GLXY # Galaxy Digital - Crypto asset management
+      - SI # Silvergate Capital - Crypto banking
+      - HUT # Hut 8 Mining - Crypto mining
+    reference_etfs:
+      - BLOK # Amplify Transformational Data Sharing ETF
+      - BKCH # Global X Blockchain ETF
+      - BITQ # Bitwise Crypto Industry Innovators ETF
+    sector_tags:
+      - Technology
+      - Financials
+    risk_level: "Very High"
+    growth_stage: "Early Growth"
+
+# Benchmark definitions for theme comparison
+benchmarks:
+  market:
+    symbol: "SPY"
+    name: "S&P 500"
+  tech:
+    symbol: "QQQ"
+    name: "Nasdaq 100"
+  small_cap:
+    symbol: "IWM"
+    name: "Russell 2000"
+
+# Performance calculation periods
+performance_periods:
+  - period: "1w"
+    label: "1 Week"
+    days: 5
+  - period: "1m"
+    label: "1 Month"
+    days: 21
+  - period: "3m"
+    label: "3 Months"
+    days: 63
+  - period: "6m"
+    label: "6 Months"
+    days: 126
+  - period: "1y"
+    label: "1 Year"
+    days: 252
+  - period: "ytd"
+    label: "Year to Date"
+    days: null # calculated dynamically
+
+# Scoring configuration
+scoring:
+  momentum:
+    short_term_weight: 0.3 # 1-week, 1-month
+    medium_term_weight: 0.4 # 3-month
+    long_term_weight: 0.3 # 6-month, 1-year
+  health:
+    performance_weight: 0.35
+    momentum_weight: 0.25
+    diversification_weight: 0.20
+    risk_weight: 0.20
