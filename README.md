@@ -86,16 +86,17 @@ This AI agent system addresses these challenges by:
 
 ### Core Capabilities
 
-| Feature                         | Description                                     |
-| ------------------------------- | ----------------------------------------------- |
-| 🤖 **Multi-Agent Architecture** | Specialized agents for different analysis tasks |
-| 📊 **Real-time Data Analysis**  | Live market data processing and analysis        |
-| 📈 **Technical Analysis**       | Automated chart pattern and indicator analysis  |
-| 📰 **News Sentiment Analysis**  | NLP-powered news and social media analysis      |
-| 📑 **Report Generation**        | Automated investment research reports           |
-| 🔔 **Alert System**             | Configurable alerts for market conditions       |
-| 🌐 **API Integration**          | REST API for external system integration        |
-| 📱 **Web Dashboard**            | Interactive visualization dashboard             |
+| Feature                            | Description                                                    |
+| ---------------------------------- | -------------------------------------------------------------- |
+| 🤖 **Multi-Agent Architecture**    | Specialized agents for different analysis tasks                |
+| 📊 **Real-time Data Analysis**     | Live market data processing and analysis                       |
+| 📈 **Technical Analysis**          | Automated chart pattern and indicator analysis                 |
+| 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                     |
+| 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.) |
+| 📑 **Report Generation**           | Automated investment research reports                          |
+| 🔔 **Alert System**                | Configurable alerts for market conditions                      |
+| 🌐 **API Integration**             | REST API for external system integration                       |
+| 📱 **Web Dashboard**               | Interactive visualization dashboard                            |
 
 ### Agent Types
 
@@ -103,68 +104,69 @@ This AI agent system addresses these challenges by:
 2. **Technical Analyst Agent**: Performs technical analysis on price data
 3. **Fundamental Analyst Agent**: Analyzes company financials and metrics
 4. **Sentiment Analyst Agent**: Processes news and social media sentiment
-5. **Report Generator Agent**: Compiles insights into structured reports
-6. **Orchestrator Agent**: Coordinates all agents and manages workflow
+5. **Risk Analyst Agent**: Performs risk assessment and VaR calculations
+6. **Thematic Analyst Agent**: Analyzes stocks grouped by investment themes and megatrends
+7. **Report Generator Agent**: Compiles insights into structured reports
+8. **Orchestrator Agent**: Coordinates all agents and manages workflow
 
 ---
 
 ## 🏗 Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         FINANCIAL RESEARCH ANALYST AGENT                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                      ORCHESTRATOR AGENT                          │   │
-│  │  • Task Planning & Decomposition                                  │   │
-│  │  • Agent Coordination                                             │   │
-│  │  • Result Aggregation                                             │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                    │                                     │
-│                    ┌───────────────┼───────────────┐                    │
-│                    │               │               │                    │
-│  ┌─────────────────▼──┐  ┌────────▼────────┐  ┌──▼─────────────────┐  │
-│  │ DATA COLLECTOR     │  │ TECHNICAL       │  │ FUNDAMENTAL        │  │
-│  │ AGENT              │  │ ANALYST AGENT   │  │ ANALYST AGENT      │  │
-│  │                    │  │                 │  │                    │  │
-│  │ • Yahoo Finance    │  │ • RSI, MACD     │  │ • P/E Ratio        │  │
-│  │ • Alpha Vantage    │  │ • Moving Avg    │  │ • EPS Growth       │  │
-│  │ • News APIs        │  │ • Patterns      │  │ • Debt Metrics     │  │
-│  └────────────────────┘  └─────────────────┘  └────────────────────┘  │
-│                                                                          │
-│  ┌────────────────────┐  ┌─────────────────┐  ┌────────────────────┐  │
-│  │ SENTIMENT          │  │ RISK            │  │ REPORT             │  │
-│  │ ANALYST AGENT      │  │ ANALYST AGENT   │  │ GENERATOR AGENT    │  │
-│  │                    │  │                 │  │                    │  │
-│  │ • News Sentiment   │  │ • VaR Calc      │  │ • PDF Reports      │  │
-│  │ • Social Media     │  │ • Volatility    │  │ • JSON Output      │  │
-│  │ • Trend Analysis   │  │ • Correlation   │  │ • Recommendations  │  │
-│  └────────────────────┘  └─────────────────┘  └────────────────────┘  │
-│                                                                          │
-├─────────────────────────────────────────────────────────────────────────┤
-│                              DATA LAYER                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
-│  │ Vector Store │  │ Cache Layer  │  │ Database     │  │ File Store │ │
-│  │ (ChromaDB)   │  │ (Redis)      │  │ (PostgreSQL) │  │ (S3/Local) │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                          FINANCIAL RESEARCH ANALYST AGENT                        │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│  ┌────────────────────────────────────────────────────────────────────────────┐  │
+│  │                          ORCHESTRATOR AGENT                                │  │
+│  │  • Task Planning & Decomposition  • Agent Coordination  • Aggregation     │  │
+│  └────────────────────────────────────────────────────────────────────────────┘  │
+│                                       │                                          │
+│           ┌───────────────┬───────────┼───────────┬───────────────┐              │
+│           │               │           │           │               │              │
+│  ┌────────▼───────┐ ┌─────▼─────┐ ┌───▼───┐ ┌────▼────┐ ┌────────▼───────┐     │
+│  │ DATA COLLECTOR │ │ TECHNICAL │ │ FUNDA │ │ SENTI-  │ │ RISK           │     │
+│  │ AGENT          │ │ ANALYST   │ │ MENTAL│ │ MENT    │ │ ANALYST AGENT  │     │
+│  │                │ │ AGENT     │ │ AGENT │ │ AGENT   │ │                │     │
+│  │ • Yahoo Finance│ │ • RSI     │ │ • P/E │ │ • News  │ │ • VaR Calc     │     │
+│  │ • Alpha Vantage│ │ • MACD    │ │ • EPS │ │ • Social│ │ • Volatility   │     │
+│  │ • News APIs    │ │ • SMA/EMA │ │ • ROE │ │ • Trend │ │ • Correlation  │     │
+│  └────────────────┘ └───────────┘ └───────┘ └─────────┘ └────────────────┘     │
+│                                                                                  │
+│  ┌─────────────────────────────────┐  ┌──────────────────────────────────────┐  │
+│  │ THEMATIC ANALYST AGENT          │  │ REPORT GENERATOR AGENT               │  │
+│  │                                 │  │                                      │  │
+│  │ • Theme-to-Ticker Mapping       │  │ • PDF / Markdown / JSON Reports      │  │
+│  │ • Multi-Horizon Performance     │  │ • Actionable Recommendations         │  │
+│  │ • Momentum & Health Scoring     │  │ • Executive Summaries                │  │
+│  │ • Correlation & Diversification │  │                                      │  │
+│  │ • Sector Overlap Analysis       │  │                                      │  │
+│  └─────────────────────────────────┘  └──────────────────────────────────────┘  │
+│                                                                                  │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│                                  DATA LAYER                                      │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐ ┌──────────┐ │
+│  │ Vector Store │ │ Cache Layer  │ │ Database     │ │ File Store │ │ Theme    │ │
+│  │ (ChromaDB)   │ │ (Redis)      │ │ (PostgreSQL) │ │ (S3/Local) │ │ Config   │ │
+│  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘ └──────────┘ │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Technology Stack
 
-| Component           | Technology                                        |
-| ------------------- | ------------------------------------------------- |
-| **AI Framework**    | LangChain, LangGraph                              |
-| **LLM**             | Ollama (Llama 4, Mistral) / Groq / LM Studio      |
-| **Embeddings**      | Sentence Transformers / HuggingFace / Ollama      |
-| **Vector Store**    | ChromaDB / Qdrant / Milvus / Weaviate             |
-| **Backend**         | FastAPI, Python 3.14+                             |
-| **Data Processing** | Pandas, NumPy                                     |
-| **Visualization**   | Plotly, Matplotlib                                |
-| **Frontend**        | HTML5, CSS3, JavaScript                           |
-| **Database**        | PostgreSQL / SQLite                               |
-| **Caching**         | Redis                                             |
+| Component           | Technology                                   |
+| ------------------- | -------------------------------------------- |
+| **AI Framework**    | LangChain, LangGraph                         |
+| **LLM**             | Ollama (Llama 4, Mistral) / Groq / LM Studio |
+| **Embeddings**      | Sentence Transformers / HuggingFace / Ollama |
+| **Vector Store**    | ChromaDB / Qdrant / Milvus / Weaviate        |
+| **Backend**         | FastAPI, Python 3.14+                        |
+| **Data Processing** | Pandas, NumPy                                |
+| **Visualization**   | Plotly, Matplotlib                           |
+| **Frontend**        | HTML5, CSS3, JavaScript                      |
+| **Database**        | PostgreSQL / SQLite                          |
+| **Caching**         | Redis                                        |
 
 ---
 
@@ -321,6 +323,19 @@ curl "http://localhost:8000/api/v1/technical/AAPL"
 curl -X POST "http://localhost:8000/api/v1/reports" \
   -H "Content-Type: application/json" \
   -d '{"symbols": ["AAPL", "GOOGL"], "format": "pdf"}'
+
+# List available investment themes
+curl "http://localhost:8000/api/v1/themes"
+
+# Analyze an investment theme
+curl -X POST "http://localhost:8000/api/v1/theme/ai_machine_learning" \
+  -H "Content-Type: application/json" \
+  -d '{"theme_id": "ai_machine_learning", "include_narrative": false}'
+
+# Compare multiple themes
+curl -X POST "http://localhost:8000/api/v1/themes/compare" \
+  -H "Content-Type: application/json" \
+  -d '{"theme_ids": ["ai_machine_learning", "cybersecurity", "electric_vehicles"]}'
 ```
 
 ### Command Line Interface
@@ -342,16 +357,19 @@ python -m src.cli dashboard --port 8080
 
 ### Endpoints
 
-| Method      | Endpoint                       | Description              |
-| ----------- | ------------------------------ | ------------------------ |
-| `POST`      | `/api/v1/analyze`              | Analyze a stock symbol   |
-| `GET`       | `/api/v1/technical/{symbol}`   | Get technical analysis   |
-| `GET`       | `/api/v1/fundamental/{symbol}` | Get fundamental analysis |
-| `GET`       | `/api/v1/sentiment/{symbol}`   | Get sentiment analysis   |
-| `POST`      | `/api/v1/portfolio`            | Analyze a portfolio      |
-| `POST`      | `/api/v1/reports`              | Generate a report        |
-| `GET`       | `/api/v1/market/summary`       | Get market summary       |
-| `WebSocket` | `/ws/alerts`                   | Real-time alerts         |
+| Method      | Endpoint                       | Description                          |
+| ----------- | ------------------------------ | ------------------------------------ |
+| `POST`      | `/api/v1/analyze`              | Analyze a stock symbol               |
+| `GET`       | `/api/v1/technical/{symbol}`   | Get technical analysis               |
+| `GET`       | `/api/v1/fundamental/{symbol}` | Get fundamental analysis             |
+| `GET`       | `/api/v1/sentiment/{symbol}`   | Get sentiment analysis               |
+| `POST`      | `/api/v1/portfolio`            | Analyze a portfolio                  |
+| `POST`      | `/api/v1/reports`              | Generate a report                    |
+| `GET`       | `/api/v1/market/summary`       | Get market summary                   |
+| `GET`       | `/api/v1/themes`               | List all available investment themes |
+| `POST`      | `/api/v1/theme/{theme_id}`     | Analyze an investment theme          |
+| `POST`      | `/api/v1/themes/compare`       | Compare multiple themes side by side |
+| `WebSocket` | `/ws/alerts`                   | Real-time alerts                     |
 
 ### Response Schema
 
@@ -436,6 +454,27 @@ Sources:
 - Insider trading activity
 ```
 
+### 5. Thematic Analyst Agent
+
+```python
+Capabilities:
+- Analyze stocks grouped by investment themes (AI, EV, Green Energy, etc.)
+- Multi-horizon performance tracking (1W, 1M, 3M, 6M, 1Y, YTD)
+- Intra-theme correlation and diversification scoring
+- Momentum scoring (0-100) with configurable weights
+- Theme health scoring (0-100) combining performance, momentum, risk
+- Sector overlap breakdown
+- Top performer and laggard identification
+- LLM-generated narrative outlook (optional)
+
+Available Themes:
+- AI & Machine Learning          - Electric Vehicles
+- Green Energy & Clean Tech       - Cybersecurity
+- Aging Population & Healthcare   - Cloud Computing & SaaS
+- Fintech & Digital Payments      - Space Economy & Aerospace
+- Digital Entertainment & Gaming  - Blockchain & Web3
+```
+
 ---
 
 ## 📊 Sample Analysis
@@ -502,11 +541,14 @@ pytest tests/ -v
 # Run specific test suite
 pytest tests/test_agents.py -v
 
+# Run thematic investing tests
+pytest tests/test_thematic.py -v
+
 # Run with coverage
 pytest tests/ --cov=src --cov-report=html
 
-# Run integration tests
-pytest tests/integration/ -v --integration
+# Run integration tests (requires network access for yfinance)
+pytest tests/ -v -m integration
 ```
 
 ---
@@ -570,21 +612,23 @@ financial-research-analyst-agent/
 │   │   ├── fundamental.py      # Fundamental analysis agent
 │   │   ├── sentiment.py        # Sentiment analysis agent
 │   │   ├── risk.py             # Risk analysis agent
+│   │   ├── thematic.py         # Thematic investing analysis agent ✨
 │   │   └── report_generator.py # Report generation agent
 │   ├── tools/
 │   │   ├── __init__.py
 │   │   ├── market_data.py      # Market data fetching tools
 │   │   ├── news_fetcher.py     # News fetching tools
 │   │   ├── technical_indicators.py
-│   │   └── financial_metrics.py
+│   │   ├── financial_metrics.py
+│   │   └── theme_mapper.py     # Theme-to-ticker mapping & analysis tools ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
 │   │   └── report.py           # Report data models
 │   ├── api/
 │   │   ├── __init__.py
-│   │   ├── routes.py           # API routes
-│   │   └── schemas.py          # Pydantic schemas
+│   │   ├── routes.py           # API routes (incl. thematic endpoints)
+│   │   └── schemas.py          # Pydantic schemas (incl. theme schemas)
 │   └── utils/
 │       ├── __init__.py
 │       ├── logger.py           # Logging utility
@@ -593,18 +637,21 @@ financial-research-analyst-agent/
 │   ├── __init__.py
 │   ├── test_agents.py
 │   ├── test_tools.py
-│   └── test_api.py
+│   ├── test_api.py
+│   └── test_thematic.py        # Thematic investing tests ✨
 ├── data/
 │   └── sample_data.csv
 ├── docs/
 │   ├── architecture.md
-│   └── api_reference.md
+│   ├── api_reference.md
+│   └── SCOPE.md                # Feature scope & enhancement roadmap
 ├── notebooks/
 │   └── exploration.ipynb
 ├── static/
 │   └── dashboard/
 ├── config/
-│   └── agents.yaml
+│   ├── agents.yaml             # Agent configuration
+│   └── themes.yaml             # Investment theme definitions ✨
 ├── .env.example
 ├── requirements.txt
 ├── Dockerfile
