@@ -19,10 +19,19 @@ from src.api.schemas import (
     ReportResponse,
     HealthResponse,
     ErrorResponse,
+    ThemeAnalysisRequest,
+    ThemeAnalysisResponse,
+    ThemeCompareRequest,
+    ThemeListResponse,
+    ThemeSummary,
+    PeerComparisonRequest,
+    PeerComparisonResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
 from src.tools.technical_indicators import calculate_rsi, calculate_macd, calculate_moving_averages
+from src.tools.theme_mapper import list_available_themes, analyze_theme, get_theme_definition
+from src.tools.peer_comparison import compare_peers
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -363,6 +372,186 @@ async def get_market_summary():
         },
         "timestamp": datetime.utcnow().isoformat(),
     }
+
+
+# ─────────────────────────────────────────────────────────────
+# Thematic Investing Endpoints (Feature 1)
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/themes", response_model=ThemeListResponse)
+async def get_themes():
+    """
+    List all available investment themes.
+
+    Returns summary information for each theme including name,
+    description, constituent count, sector tags, and risk level.
+    """
+    try:
+        themes_raw = list_available_themes()
+        themes = [ThemeSummary(**t) for t in themes_raw]
+        return ThemeListResponse(
+            themes=themes,
+            total_themes=len(themes),
+            timestamp=datetime.utcnow(),
+        )
+    except Exception as e:
+        logger.error(f"Error listing themes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/theme/{theme_id}", response_model=ThemeAnalysisResponse)
+async def analyze_investment_theme(theme_id: str, request: ThemeAnalysisRequest = None):
+    """
+    Analyze an investment theme.
+
+    Performs comprehensive thematic analysis including:
+    - Multi-horizon performance (1W, 1M, 3M, 6M, 1Y, YTD)
+    - Top performers and laggards
+    - Intra-theme correlation and diversification scoring
+    - Momentum scoring (0-100)
+    - Theme health score (0-100)
+    - Sector overlap breakdown
+    - Optional LLM-generated narrative outlook
+    """
+    start_time = time.time()
+
+    try:
+        # Validate theme exists
+        theme_def = get_theme_definition(theme_id)
+        if theme_def is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Theme '{theme_id}' not found. Use GET /api/v1/themes to list available themes.",
+            )
+
+        # Run analysis
+        result = analyze_theme(theme_id)
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        # Optionally generate narrative via the thematic agent
+        if request and request.include_narrative:
+            try:
+                from src.agents.thematic import ThematicAnalystAgent
+                agent = ThematicAnalystAgent()
+                enriched = await agent.analyze_with_narrative(theme_id)
+                result["outlook"] = enriched.get("outlook")
+            except Exception as narrative_err:
+                logger.warning(f"Narrative generation failed: {narrative_err}")
+                result["outlook"] = "Unable to generate narrative outlook"
+
+        result["execution_time_seconds"] = round(time.time() - start_time, 2)
+        result["analyzed_at"] = datetime.utcnow().isoformat()
+
+        return ThemeAnalysisResponse(**result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Theme analysis error for '{theme_id}': {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/themes/compare")
+async def compare_investment_themes(request: ThemeCompareRequest):
+    """
+    Compare multiple investment themes side by side.
+
+    Provides performance, momentum, correlation, and health scores
+    for each theme to help with allocation decisions.
+    """
+    start_time = time.time()
+
+    try:
+        if len(request.theme_ids) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="At least 2 theme IDs are required for comparison.",
+            )
+        if len(request.theme_ids) > 5:
+            raise HTTPException(
+                status_code=400,
+                detail="Maximum 5 themes can be compared at once.",
+            )
+
+        comparison = []
+        for tid in request.theme_ids:
+            result = analyze_theme(tid)
+            if "error" not in result:
+                comparison.append({
+                    "theme": result.get("theme"),
+                    "theme_id": tid,
+                    "performance": result.get("theme_performance", {}),
+                    "momentum_score": result.get("momentum_score", 0),
+                    "health_score": result.get("theme_health_score", 0),
+                    "diversification": result.get("theme_risk", {}).get(
+                        "diversification_score", "N/A"
+                    ),
+                    "intra_correlation": result.get("theme_risk", {}).get(
+                        "intra_correlation"
+                    ),
+                    "risk_level": result.get("risk_level", "Unknown"),
+                    "top_performers": result.get("top_performers", [])[:2],
+                    "laggards": result.get("laggards", [])[:2],
+                })
+            else:
+                comparison.append({"theme_id": tid, "error": result["error"]})
+
+        return {
+            "themes_compared": len(request.theme_ids),
+            "comparison": comparison,
+            "execution_time_seconds": round(time.time() - start_time, 2),
+            "analyzed_at": datetime.utcnow().isoformat(),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Theme comparison error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+# Peer Comparison Endpoints (Feature 2)
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/peers/{symbol}", response_model=PeerComparisonResponse)
+async def get_peer_comparison(symbol: str):
+    """
+    Get peer comparison for a symbol.
+
+    Automatically discovers peers based on sector, industry, and market cap,
+    and compares key financial metrics.
+    """
+    try:
+        result = await compare_peers(symbol)
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Peer comparison error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/peers/compare", response_model=PeerComparisonResponse)
+async def compare_peers_custom(request: PeerComparisonRequest):
+    """
+    Compare a stock against a specific list of peers.
+    """
+    try:
+        result = await compare_peers(request.symbol, request.peers)
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Custom peer comparison error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Include router in app

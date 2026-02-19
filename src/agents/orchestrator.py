@@ -15,6 +15,7 @@ from src.agents.fundamental import FundamentalAnalystAgent
 from src.agents.sentiment import SentimentAnalystAgent
 from src.agents.risk import RiskAnalystAgent
 from src.agents.report_generator import ReportGeneratorAgent
+from src.agents.thematic import ThematicAnalystAgent
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,6 +32,7 @@ class OrchestratorAgent(BaseAgent):
         self.sentiment_analyst = SentimentAnalystAgent()
         self.risk_analyst = RiskAnalystAgent()
         self.report_generator = ReportGeneratorAgent()
+        self.thematic_analyst = ThematicAnalystAgent()
         
         super().__init__(
             name="Orchestrator",
@@ -61,8 +63,14 @@ class OrchestratorAgent(BaseAgent):
             """Coordinate multiple analysis types for a symbol."""
             return f"Coordinating {analysis_types} analysis for {symbol}"
         
+        @tool("delegate_to_thematic_analyst")
+        def delegate_thematic_tool(theme_id: str) -> str:
+            """Delegate thematic investing analysis to the Thematic Analyst Agent."""
+            return f"Delegating thematic analysis for theme '{theme_id}' to ThematicAnalystAgent"
+        
         return [delegate_data_collector_tool, delegate_technical_tool, 
-                delegate_fundamental_tool, coordinate_analysis_tool]
+                delegate_fundamental_tool, coordinate_analysis_tool,
+                delegate_thematic_tool]
     
     def _get_system_prompt(self) -> str:
         return """You are the Orchestrator Agent, the central coordinator for financial analysis.
@@ -80,6 +88,7 @@ Available agents:
 - SentimentAnalystAgent: Sentiment analysis
 - RiskAnalystAgent: Risk assessment
 - ReportGeneratorAgent: Report creation
+- ThematicAnalystAgent: Thematic investing analysis across investment themes
 
 Coordinate efficiently and ensure comprehensive analysis."""
     
@@ -122,6 +131,22 @@ Coordinate efficiently and ensure comprehensive analysis."""
             results["success"] = False
         
         return results
+
+    async def analyze_theme(self, theme_id: str, include_narrative: bool = False) -> Dict[str, Any]:
+        """
+        Run thematic investing analysis on a theme.
+
+        Args:
+            theme_id: Theme identifier (e.g., 'ai_machine_learning').
+            include_narrative: Whether to generate an LLM narrative outlook.
+
+        Returns:
+            Theme analysis results dict.
+        """
+        logger.info(f"Starting thematic analysis for theme '{theme_id}'")
+        if include_narrative:
+            return await self.thematic_analyst.analyze_with_narrative(theme_id)
+        return await self.thematic_analyst.analyze_theme_direct(theme_id)
 
 
 class FinancialResearchAgent:

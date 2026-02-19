@@ -93,6 +93,7 @@ This AI agent system addresses these challenges by:
 | 📈 **Technical Analysis**          | Automated chart pattern and indicator analysis                 |
 | 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                     |
 | 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.) |
+| 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics   |
 | 📑 **Report Generation**           | Automated investment research reports                          |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                      |
 | 🌐 **API Integration**             | REST API for external system integration                       |
@@ -369,6 +370,8 @@ python -m src.cli dashboard --port 8080
 | `GET`       | `/api/v1/themes`               | List all available investment themes |
 | `POST`      | `/api/v1/theme/{theme_id}`     | Analyze an investment theme          |
 | `POST`      | `/api/v1/themes/compare`       | Compare multiple themes side by side |
+| `GET`       | `/api/v1/peers/{symbol}`       | Get peer comparison (auto-discovery) |
+| `POST`      | `/api/v1/peers/compare`        | Compare stock against specific peers |
 | `WebSocket` | `/ws/alerts`                   | Real-time alerts                     |
 
 ### Response Schema
@@ -620,6 +623,7 @@ financial-research-analyst-agent/
 │   │   ├── news_fetcher.py     # News fetching tools
 │   │   ├── technical_indicators.py
 │   │   ├── financial_metrics.py
+│   │   ├── peer_comparison.py  # Peer discovery & comparison tools ✨
 │   │   └── theme_mapper.py     # Theme-to-ticker mapping & analysis tools ✨
 │   ├── models/
 │   │   ├── __init__.py
@@ -638,12 +642,13 @@ financial-research-analyst-agent/
 │   ├── test_agents.py
 │   ├── test_tools.py
 │   ├── test_api.py
+│   ├── test_peer_comparison.py # Peer comparison tests ✨
 │   └── test_thematic.py        # Thematic investing tests ✨
 ├── data/
 │   └── sample_data.csv
 ├── docs/
 │   ├── architecture.md
-│   ├── api_reference.md
+│   ├── api_reference.md        # API reference (incl. peer comparison endpoints)
 │   └── SCOPE.md                # Feature scope & enhancement roadmap
 ├── notebooks/
 │   └── exploration.ipynb

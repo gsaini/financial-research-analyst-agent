@@ -25,6 +25,22 @@ from src.tools.financial_metrics import (
     analyze_financial_health,
     compare_to_industry,
 )
+from src.tools.theme_mapper import (
+    list_available_themes,
+    get_theme_definition,
+    get_theme_constituents,
+    analyze_theme,
+    fetch_theme_stock_data,
+    calculate_theme_performance,
+    calculate_theme_correlation,
+    calculate_momentum_score,
+    calculate_sector_overlap,
+    calculate_theme_health_score,
+)
+from src.tools.peer_comparison import (
+    discover_peers,
+    compare_peers,
+)
 
 __all__ = [
     "get_stock_price",
@@ -45,4 +61,16 @@ __all__ = [
     "calculate_growth_metrics",
     "analyze_financial_health",
     "compare_to_industry",
+    "list_available_themes",
+    "get_theme_definition",
+    "get_theme_constituents",
+    "analyze_theme",
+    "fetch_theme_stock_data",
+    "calculate_theme_performance",
+    "calculate_theme_correlation",
+    "calculate_momentum_score",
+    "calculate_sector_overlap",
+    "calculate_theme_health_score",
+    "discover_peers",
+    "compare_peers",
 ]

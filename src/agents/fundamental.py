@@ -20,6 +20,8 @@ from src.tools.financial_metrics import (
     analyze_financial_health,
     compare_to_industry,
 )
+from src.tools.peer_comparison import compare_peers
+import json
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,7 +36,8 @@ class FundamentalAnalystAgent(BaseAgent):
     - Calculate valuation ratios (P/E, P/B, P/S, EV/EBITDA)
     - Assess profitability (ROE, ROA, margins)
     - Evaluate financial health (debt ratios, liquidity)
-    - Compare to industry peers
+    - Evaluate financial health (debt ratios, liquidity)
+    - Compare to industry peers (Real-time Peer Analysis)
     - Determine intrinsic value
     """
     
@@ -135,9 +138,21 @@ class FundamentalAnalystAgent(BaseAgent):
             Returns:
                 Dictionary with comparison results and relative positioning
             """
-            import json
             data = json.loads(company_data) if isinstance(company_data, str) else company_data
             return compare_to_industry(data, industry)
+        
+        @tool("analyze_peer_group")
+        async def analyze_peer_group_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Compare a company against its industry peers using real-time data.
+            
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+                
+            Returns:
+                Dictionary with peer comparison metrics, rankings, and valuation
+            """
+            return await compare_peers(symbol)
         
         return [
             calculate_valuation_ratios_tool,
@@ -146,6 +161,7 @@ class FundamentalAnalystAgent(BaseAgent):
             calculate_growth_metrics_tool,
             analyze_financial_health_tool,
             compare_to_industry_tool,
+            analyze_peer_group_tool,
         ]
     
     def _get_system_prompt(self) -> str:
@@ -159,7 +175,7 @@ Your responsibilities:
 3. Assess profitability metrics (ROE, ROA, profit margins)
 4. Evaluate financial health (debt levels, liquidity, solvency)
 5. Analyze growth trends and future prospects
-6. Compare company metrics to industry peers
+6. Compare company metrics to industry peers using real-time data
 7. Determine if a stock is undervalued, fairly valued, or overvalued
 
 When performing analysis:

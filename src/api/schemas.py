@@ -15,6 +15,7 @@ class AnalysisType(str, Enum):
     FUNDAMENTAL = "fundamental"
     SENTIMENT = "sentiment"
     RISK = "risk"
+    THEMATIC = "thematic"
 
 
 class AnalysisRequest(BaseModel):
@@ -129,8 +130,124 @@ class HealthResponse(BaseModel):
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
+class ThemeAnalysisRequest(BaseModel):
+    """Request for thematic investing analysis."""
+    theme_id: str = Field(
+        ...,
+        description="Theme identifier (e.g., 'ai_machine_learning', 'electric_vehicles')",
+        example="ai_machine_learning",
+    )
+    include_narrative: bool = Field(
+        default=False,
+        description="Include LLM-generated narrative outlook",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "theme_id": "ai_machine_learning",
+                "include_narrative": False,
+            }
+        }
+
+
+class ThemeCompareRequest(BaseModel):
+    """Request to compare multiple themes."""
+    theme_ids: List[str] = Field(
+        ...,
+        description="List of theme identifiers to compare",
+        example=["ai_machine_learning", "cybersecurity"],
+    )
+
+
+class ThemePerformance(BaseModel):
+    """Theme performance across time horizons."""
+    period_1w: Optional[str] = Field(None, alias="1w")
+    period_1m: Optional[str] = Field(None, alias="1m")
+    period_3m: Optional[str] = Field(None, alias="3m")
+    period_6m: Optional[str] = Field(None, alias="6m")
+    period_1y: Optional[str] = Field(None, alias="1y")
+    period_ytd: Optional[str] = Field(None, alias="ytd")
+
+
+class ThemeRisk(BaseModel):
+    """Theme risk metrics."""
+    intra_correlation: Optional[float] = None
+    diversification_score: str = "N/A"
+    diversification_description: str = ""
+
+
+class ThemeAnalysisResponse(BaseModel):
+    """Response containing thematic analysis results."""
+    theme: str
+    theme_id: str
+    description: str = ""
+    constituents: List[str]
+    reference_etfs: List[str] = []
+    risk_level: str = "Unknown"
+    growth_stage: str = "Unknown"
+    theme_performance: Dict[str, Any] = {}
+    momentum_score: int = 0
+    top_performers: List[Dict[str, Any]] = []
+    laggards: List[Dict[str, Any]] = []
+    sector_overlap: Dict[str, str] = {}
+    theme_risk: Dict[str, Any] = {}
+    theme_health_score: int = 0
+    health_components: Dict[str, Any] = {}
+    constituent_details: Dict[str, Any] = {}
+    failed_constituents: List[str] = []
+    outlook: Optional[str] = None
+    analyzed_at: datetime
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class ThemeSummary(BaseModel):
+    """Summary information for a single theme."""
+    theme_id: str
+    name: str
+    description: str = ""
+    constituent_count: int = 0
+    constituents: List[str] = []
+    reference_etfs: List[str] = []
+    sector_tags: List[str] = []
+    risk_level: str = "Unknown"
+    growth_stage: str = "Unknown"
+
+
+class ThemeListResponse(BaseModel):
+    """Response listing all available themes."""
+    themes: List[ThemeSummary]
+    total_themes: int
+    timestamp: datetime
+
+
 class ErrorResponse(BaseModel):
     """Error response schema."""
     error: str
     detail: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PeerComparisonRequest(BaseModel):
+    """Request for peer group analysis."""
+    symbol: str = Field(..., description="Target stock symbol")
+    peers: Optional[List[str]] = Field(None, description="Optional list of specific peers to compare against")
+
+
+class PeerComparisonResponse(BaseModel):
+    """Response containing peer comparison analysis."""
+    target: str
+    peer_group: List[str]
+    metrics: Dict[str, Dict[str, Any]]
+    peer_aggregates: Dict[str, Dict[str, float]]
+    percentile_rankings: Dict[str, str]
+    relative_valuation: Dict[str, str]
+    strengths: List[str]
+    weaknesses: List[str]
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
