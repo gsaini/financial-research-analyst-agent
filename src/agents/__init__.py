@@ -13,6 +13,7 @@ from src.agents.sentiment import SentimentAnalystAgent
 from src.agents.risk import RiskAnalystAgent
 from src.agents.report_generator import ReportGeneratorAgent
 from src.agents.thematic import ThematicAnalystAgent
+from src.agents.disruption import DisruptionAnalystAgent
 
 __all__ = [
     "BaseAgent",
@@ -25,4 +26,5 @@ __all__ = [
     "RiskAnalystAgent",
     "ReportGeneratorAgent",
     "ThematicAnalystAgent",
+    "DisruptionAnalystAgent",
 ]

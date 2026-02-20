@@ -16,6 +16,7 @@ from src.agents.sentiment import SentimentAnalystAgent
 from src.agents.risk import RiskAnalystAgent
 from src.agents.report_generator import ReportGeneratorAgent
 from src.agents.thematic import ThematicAnalystAgent
+from src.agents.disruption import DisruptionAnalystAgent
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,7 +34,8 @@ class OrchestratorAgent(BaseAgent):
         self.risk_analyst = RiskAnalystAgent()
         self.report_generator = ReportGeneratorAgent()
         self.thematic_analyst = ThematicAnalystAgent()
-        
+        self.disruption_analyst = DisruptionAnalystAgent()
+
         super().__init__(
             name="Orchestrator",
             description="Coordinates all agents and manages the analysis workflow",
@@ -67,10 +69,15 @@ class OrchestratorAgent(BaseAgent):
         def delegate_thematic_tool(theme_id: str) -> str:
             """Delegate thematic investing analysis to the Thematic Analyst Agent."""
             return f"Delegating thematic analysis for theme '{theme_id}' to ThematicAnalystAgent"
-        
-        return [delegate_data_collector_tool, delegate_technical_tool, 
+
+        @tool("delegate_to_disruption_analyst")
+        def delegate_disruption_tool(symbol: str) -> str:
+            """Delegate market disruption analysis to the Disruption Analyst Agent."""
+            return f"Delegating disruption analysis for {symbol} to DisruptionAnalystAgent"
+
+        return [delegate_data_collector_tool, delegate_technical_tool,
                 delegate_fundamental_tool, coordinate_analysis_tool,
-                delegate_thematic_tool]
+                delegate_thematic_tool, delegate_disruption_tool]
     
     def _get_system_prompt(self) -> str:
         return """You are the Orchestrator Agent, the central coordinator for financial analysis.
@@ -89,6 +96,7 @@ Available agents:
 - RiskAnalystAgent: Risk assessment
 - ReportGeneratorAgent: Report creation
 - ThematicAnalystAgent: Thematic investing analysis across investment themes
+- DisruptionAnalystAgent: Market disruption analysis (R&D intensity, growth trajectory, disruptor vs at-risk)
 
 Coordinate efficiently and ensure comprehensive analysis."""
     
@@ -147,6 +155,43 @@ Coordinate efficiently and ensure comprehensive analysis."""
         if include_narrative:
             return await self.thematic_analyst.analyze_with_narrative(theme_id)
         return await self.thematic_analyst.analyze_theme_direct(theme_id)
+
+    async def analyze_disruption(self, symbol: str, include_narrative: bool = False) -> Dict[str, Any]:
+        """
+        Run market disruption analysis on a company.
+
+        Evaluates whether the company is a market disruptor or at risk of disruption
+        based on R&D intensity, revenue acceleration, and margin trajectory.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., 'TSLA', 'NVDA').
+            include_narrative: Whether to generate an LLM qualitative assessment.
+
+        Returns:
+            Disruption analysis results dict.
+        """
+        logger.info(f"Starting disruption analysis for '{symbol}'")
+        if include_narrative:
+            return await self.disruption_analyst.analyze_with_narrative(symbol)
+        return await self.disruption_analyst.analyze_company_direct(symbol)
+
+    async def compare_disruption(
+        self, symbols: List[str], include_narrative: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Compare disruption profiles across multiple companies.
+
+        Args:
+            symbols: List of stock ticker symbols.
+            include_narrative: Whether to generate competitive dynamics narrative.
+
+        Returns:
+            Comparison dict with disruption rankings.
+        """
+        logger.info(f"Starting disruption comparison for {symbols}")
+        if include_narrative:
+            return await self.disruption_analyst.analyze_with_competitive_narrative(symbols)
+        return await self.disruption_analyst.compare_companies_direct(symbols)
 
 
 class FinancialResearchAgent:

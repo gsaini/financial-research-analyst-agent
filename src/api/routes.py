@@ -26,12 +26,17 @@ from src.api.schemas import (
     ThemeSummary,
     PeerComparisonRequest,
     PeerComparisonResponse,
+    DisruptionAnalysisRequest,
+    DisruptionAnalysisResponse,
+    DisruptionCompareRequest,
+    DisruptionCompareResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
 from src.tools.technical_indicators import calculate_rsi, calculate_macd, calculate_moving_averages
 from src.tools.theme_mapper import list_available_themes, analyze_theme, get_theme_definition
 from src.tools.peer_comparison import compare_peers
+from src.tools.disruption_metrics import analyze_disruption, compare_disruption
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -551,6 +556,139 @@ async def compare_peers_custom(request: PeerComparisonRequest):
         raise
     except Exception as e:
         logger.error(f"Custom peer comparison error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+# Market Disruption Analysis Endpoints (Feature 3)
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/disruption/{symbol}", response_model=DisruptionAnalysisResponse)
+async def get_disruption_analysis(symbol: str):
+    """
+    Analyze a company's market disruption profile.
+
+    Evaluates whether the company is a market disruptor or at risk
+    of being disrupted based on:
+    - R&D intensity and investment trends
+    - Revenue growth acceleration/deceleration
+    - Gross margin trajectory
+    - Competitive positioning
+
+    Returns a disruption score (0-100) and classification:
+    - Active Disruptor (70+): High R&D, accelerating growth, expanding margins
+    - Moderate Innovator (50-70): Some disruptive signals, mixed trajectory
+    - Stable Incumbent (30-50): Established position, limited innovation
+    - At Risk (<30): Low innovation, weak growth, margin pressure
+    """
+    start_time = time.time()
+
+    try:
+        result = analyze_disruption(symbol.upper())
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        result["execution_time_seconds"] = round(time.time() - start_time, 2)
+        return DisruptionAnalysisResponse(**result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Disruption analysis error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/disruption/analyze", response_model=DisruptionAnalysisResponse)
+async def analyze_disruption_profile(request: DisruptionAnalysisRequest):
+    """
+    Analyze a company's market disruption profile with optional narrative.
+
+    Same as GET /disruption/{symbol} but allows including an LLM-generated
+    qualitative assessment of competitive positioning and disruption dynamics.
+    """
+    start_time = time.time()
+
+    try:
+        symbol = request.symbol.upper()
+
+        if request.include_narrative:
+            # Use the agent for narrative generation
+            try:
+                from src.agents.disruption import DisruptionAnalystAgent
+                agent = DisruptionAnalystAgent()
+                result = await agent.analyze_with_narrative(symbol)
+            except Exception as agent_err:
+                logger.warning(f"Agent narrative failed, falling back to basic: {agent_err}")
+                result = analyze_disruption(symbol)
+                result["qualitative_assessment"] = "Unable to generate qualitative assessment"
+        else:
+            result = analyze_disruption(symbol)
+
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        result["execution_time_seconds"] = round(time.time() - start_time, 2)
+        return DisruptionAnalysisResponse(**result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Disruption analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/disruption/compare", response_model=DisruptionCompareResponse)
+async def compare_disruption_profiles(request: DisruptionCompareRequest):
+    """
+    Compare disruption profiles across multiple companies.
+
+    Useful for comparing a company against its competitors to identify:
+    - Who is disrupting whom
+    - Relative innovation investment levels
+    - Growth trajectory differences
+    - Competitive dynamics
+
+    Returns companies ranked by disruption score with optional competitive narrative.
+    """
+    start_time = time.time()
+
+    try:
+        if len(request.symbols) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="At least 2 symbols are required for comparison.",
+            )
+        if len(request.symbols) > 10:
+            raise HTTPException(
+                status_code=400,
+                detail="Maximum 10 companies can be compared at once.",
+            )
+
+        symbols = [s.upper() for s in request.symbols]
+
+        if request.include_narrative:
+            try:
+                from src.agents.disruption import DisruptionAnalystAgent
+                agent = DisruptionAnalystAgent()
+                result = await agent.analyze_with_competitive_narrative(symbols)
+            except Exception as agent_err:
+                logger.warning(f"Agent narrative failed, falling back to basic: {agent_err}")
+                result = compare_disruption(symbols)
+                result["competitive_narrative"] = "Unable to generate competitive narrative"
+        else:
+            result = compare_disruption(symbols)
+
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        result["execution_time_seconds"] = round(time.time() - start_time, 2)
+        return DisruptionCompareResponse(**result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Disruption comparison error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

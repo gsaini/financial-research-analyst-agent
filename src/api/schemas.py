@@ -16,6 +16,7 @@ class AnalysisType(str, Enum):
     SENTIMENT = "sentiment"
     RISK = "risk"
     THEMATIC = "thematic"
+    DISRUPTION = "disruption"
 
 
 class AnalysisRequest(BaseModel):
@@ -248,6 +249,102 @@ class PeerComparisonResponse(BaseModel):
     strengths: List[str]
     weaknesses: List[str]
     generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 3: Market Disruption Analysis Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class DisruptionAnalysisRequest(BaseModel):
+    """Request for market disruption analysis."""
+    symbol: str = Field(
+        ...,
+        description="Stock ticker symbol to analyze",
+        example="TSLA",
+    )
+    include_narrative: bool = Field(
+        default=False,
+        description="Include LLM-generated qualitative assessment",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "TSLA",
+                "include_narrative": False,
+            }
+        }
+
+
+class DisruptionCompareRequest(BaseModel):
+    """Request to compare disruption profiles across companies."""
+    symbols: List[str] = Field(
+        ...,
+        description="List of stock symbols to compare",
+        example=["TSLA", "F", "GM", "TM"],
+    )
+    include_narrative: bool = Field(
+        default=False,
+        description="Include LLM-generated competitive narrative",
+    )
+
+
+class DisruptionAnalysisResponse(BaseModel):
+    """Response containing market disruption analysis results."""
+    symbol: str
+    name: str = ""
+    sector: str = ""
+    industry: str = ""
+    disruption_score: int = Field(
+        ...,
+        description="Disruption score from 0-100",
+        ge=0,
+        le=100,
+    )
+    classification: str = Field(
+        ...,
+        description="Active Disruptor, Moderate Innovator, Stable Incumbent, or At Risk",
+    )
+    classification_description: str = ""
+    score_components: Dict[str, float] = {}
+    score_weights: Dict[str, float] = {}
+    quantitative_signals: Dict[str, Any] = {}
+    strengths: List[str] = []
+    risk_factors: List[str] = []
+    financial_summary: Dict[str, Any] = {}
+    qualitative_assessment: Optional[str] = None
+    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DisruptionComparisonItem(BaseModel):
+    """Single company's disruption profile in comparison."""
+    symbol: str
+    name: Optional[str] = None
+    industry: Optional[str] = None
+    disruption_score: Optional[int] = None
+    classification: Optional[str] = None
+    rd_intensity: Optional[str] = None
+    revenue_growth: Optional[str] = None
+    margin_trend: Optional[str] = None
+    error: Optional[str] = None
+
+
+class DisruptionCompareResponse(BaseModel):
+    """Response containing disruption comparison results."""
+    companies_compared: int
+    comparison: List[DisruptionComparisonItem]
+    most_disruptive: Optional[str] = None
+    competitive_narrative: Optional[str] = None
+    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_seconds: Optional[float] = None
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
