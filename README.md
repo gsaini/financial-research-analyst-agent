@@ -94,6 +94,7 @@ This AI agent system addresses these challenges by:
 | 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                     |
 | 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.) |
 | 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics   |
+| 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption        |
 | 📑 **Report Generation**           | Automated investment research reports                          |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                      |
 | 🌐 **API Integration**             | REST API for external system integration                       |
@@ -107,8 +108,9 @@ This AI agent system addresses these challenges by:
 4. **Sentiment Analyst Agent**: Processes news and social media sentiment
 5. **Risk Analyst Agent**: Performs risk assessment and VaR calculations
 6. **Thematic Analyst Agent**: Analyzes stocks grouped by investment themes and megatrends
-7. **Report Generator Agent**: Compiles insights into structured reports
-8. **Orchestrator Agent**: Coordinates all agents and manages workflow
+7. **Disruption Analyst Agent**: Identifies market disruptors and at-risk companies via R&D, growth, and margin analysis
+8. **Report Generator Agent**: Compiles insights into structured reports
+9. **Orchestrator Agent**: Coordinates all agents and manages workflow
 
 ---
 
@@ -136,14 +138,21 @@ This AI agent system addresses these challenges by:
 │  └────────────────┘ └───────────┘ └───────┘ └─────────┘ └────────────────┘     │
 │                                                                                  │
 │  ┌─────────────────────────────────┐  ┌──────────────────────────────────────┐  │
-│  │ THEMATIC ANALYST AGENT          │  │ REPORT GENERATOR AGENT               │  │
+│  │ THEMATIC ANALYST AGENT          │  │ DISRUPTION ANALYST AGENT             │  │
 │  │                                 │  │                                      │  │
-│  │ • Theme-to-Ticker Mapping       │  │ • PDF / Markdown / JSON Reports      │  │
-│  │ • Multi-Horizon Performance     │  │ • Actionable Recommendations         │  │
-│  │ • Momentum & Health Scoring     │  │ • Executive Summaries                │  │
-│  │ • Correlation & Diversification │  │                                      │  │
-│  │ • Sector Overlap Analysis       │  │                                      │  │
+│  │ • Theme-to-Ticker Mapping       │  │ • R&D Intensity Analysis             │  │
+│  │ • Multi-Horizon Performance     │  │ • Revenue Growth Acceleration        │  │
+│  │ • Momentum & Health Scoring     │  │ • Gross Margin Trajectory            │  │
+│  │ • Correlation & Diversification │  │ • Disruption Score (0-100)           │  │
+│  │ • Sector Overlap Analysis       │  │ • Disruptor vs At-Risk Classification│  │
 │  └─────────────────────────────────┘  └──────────────────────────────────────┘  │
+│                                                                                  │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │ REPORT GENERATOR AGENT                                                    │  │
+│  │                                                                           │  │
+│  │ • PDF / Markdown / JSON Reports  • Actionable Recommendations             │  │
+│  │ • Executive Summaries            • Multi-Agent Insight Aggregation        │  │
+│  └───────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                  │
 ├──────────────────────────────────────────────────────────────────────────────────┤
 │                                  DATA LAYER                                      │
@@ -337,6 +346,19 @@ curl -X POST "http://localhost:8000/api/v1/theme/ai_machine_learning" \
 curl -X POST "http://localhost:8000/api/v1/themes/compare" \
   -H "Content-Type: application/json" \
   -d '{"theme_ids": ["ai_machine_learning", "cybersecurity", "electric_vehicles"]}'
+
+# Analyze market disruption profile
+curl "http://localhost:8000/api/v1/disruption/TSLA"
+
+# Disruption analysis with LLM narrative
+curl -X POST "http://localhost:8000/api/v1/disruption/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{"symbol": "NVDA", "include_narrative": true}'
+
+# Compare disruption profiles across competitors
+curl -X POST "http://localhost:8000/api/v1/disruption/compare" \
+  -H "Content-Type: application/json" \
+  -d '{"symbols": ["TSLA", "F", "GM", "TM"], "include_narrative": false}'
 ```
 
 ### Command Line Interface
@@ -358,21 +380,24 @@ python -m src.cli dashboard --port 8080
 
 ### Endpoints
 
-| Method      | Endpoint                       | Description                          |
-| ----------- | ------------------------------ | ------------------------------------ |
-| `POST`      | `/api/v1/analyze`              | Analyze a stock symbol               |
-| `GET`       | `/api/v1/technical/{symbol}`   | Get technical analysis               |
-| `GET`       | `/api/v1/fundamental/{symbol}` | Get fundamental analysis             |
-| `GET`       | `/api/v1/sentiment/{symbol}`   | Get sentiment analysis               |
-| `POST`      | `/api/v1/portfolio`            | Analyze a portfolio                  |
-| `POST`      | `/api/v1/reports`              | Generate a report                    |
-| `GET`       | `/api/v1/market/summary`       | Get market summary                   |
-| `GET`       | `/api/v1/themes`               | List all available investment themes |
-| `POST`      | `/api/v1/theme/{theme_id}`     | Analyze an investment theme          |
-| `POST`      | `/api/v1/themes/compare`       | Compare multiple themes side by side |
-| `GET`       | `/api/v1/peers/{symbol}`       | Get peer comparison (auto-discovery) |
-| `POST`      | `/api/v1/peers/compare`        | Compare stock against specific peers |
-| `WebSocket` | `/ws/alerts`                   | Real-time alerts                     |
+| Method      | Endpoint                       | Description                                    |
+| ----------- | ------------------------------ | ---------------------------------------------- |
+| `POST`      | `/api/v1/analyze`              | Analyze a stock symbol                         |
+| `GET`       | `/api/v1/technical/{symbol}`   | Get technical analysis                         |
+| `GET`       | `/api/v1/fundamental/{symbol}` | Get fundamental analysis                       |
+| `GET`       | `/api/v1/sentiment/{symbol}`   | Get sentiment analysis                         |
+| `POST`      | `/api/v1/portfolio`            | Analyze a portfolio                            |
+| `POST`      | `/api/v1/reports`              | Generate a report                              |
+| `GET`       | `/api/v1/market/summary`       | Get market summary                             |
+| `GET`       | `/api/v1/themes`               | List all available investment themes           |
+| `POST`      | `/api/v1/theme/{theme_id}`     | Analyze an investment theme                    |
+| `POST`      | `/api/v1/themes/compare`       | Compare multiple themes side by side           |
+| `GET`       | `/api/v1/peers/{symbol}`       | Get peer comparison (auto-discovery)           |
+| `POST`      | `/api/v1/peers/compare`        | Compare stock against specific peers           |
+| `GET`       | `/api/v1/disruption/{symbol}`  | Get market disruption analysis                 |
+| `POST`      | `/api/v1/disruption/analyze`   | Analyze disruption with optional LLM narrative |
+| `POST`      | `/api/v1/disruption/compare`   | Compare disruption profiles across companies   |
+| `WebSocket` | `/ws/alerts`                   | Real-time alerts                               |
 
 ### Response Schema
 
@@ -478,6 +503,33 @@ Available Themes:
 - Digital Entertainment & Gaming  - Blockchain & Web3
 ```
 
+### 6. Disruption Analyst Agent
+
+```python
+Capabilities:
+- Analyze whether a company is a market disruptor or at risk of disruption
+- R&D intensity analysis (R&D/Revenue ratio, trend vs industry benchmarks)
+- Revenue growth acceleration/deceleration tracking
+- Gross margin trajectory analysis (expansion = competitive moat)
+- Disruption scoring (0-100) with weighted components
+- Classification: Active Disruptor, Moderate Innovator, Stable Incumbent, At Risk
+- Industry-specific benchmarks for 18+ industries
+- Risk factor and competitive strength identification
+- Multi-company disruption comparison with ranking
+- LLM-generated qualitative competitive assessment (optional)
+
+Disruption Classification:
+- Active Disruptor (70+)    : High R&D, accelerating growth, expanding margins
+- Moderate Innovator (50-70): Some disruptive signals, mixed trajectory
+- Stable Incumbent (30-50)  : Established position, limited innovation
+- At Risk (<30)             : Low innovation, weak growth, margin pressure
+
+Scoring Components:
+- R&D Intensity Score     (35% weight): Innovation investment vs industry
+- Revenue Growth Score    (40% weight): Growth rate and acceleration
+- Margin Trajectory Score (25% weight): Gross margin expansion/contraction
+```
+
 ---
 
 ## 📊 Sample Analysis
@@ -546,6 +598,12 @@ pytest tests/test_agents.py -v
 
 # Run thematic investing tests
 pytest tests/test_thematic.py -v
+
+# Run market disruption analysis tests
+pytest tests/test_disruption.py -v
+
+# Run peer comparison tests
+pytest tests/test_peer_comparison.py -v
 
 # Run with coverage
 pytest tests/ --cov=src --cov-report=html
@@ -616,6 +674,7 @@ financial-research-analyst-agent/
 │   │   ├── sentiment.py        # Sentiment analysis agent
 │   │   ├── risk.py             # Risk analysis agent
 │   │   ├── thematic.py         # Thematic investing analysis agent ✨
+│   │   ├── disruption.py       # Market disruption analysis agent ✨
 │   │   └── report_generator.py # Report generation agent
 │   ├── tools/
 │   │   ├── __init__.py
@@ -624,7 +683,8 @@ financial-research-analyst-agent/
 │   │   ├── technical_indicators.py
 │   │   ├── financial_metrics.py
 │   │   ├── peer_comparison.py  # Peer discovery & comparison tools ✨
-│   │   └── theme_mapper.py     # Theme-to-ticker mapping & analysis tools ✨
+│   │   ├── theme_mapper.py     # Theme-to-ticker mapping & analysis tools ✨
+│   │   └── disruption_metrics.py # R&D, growth, margin & disruption scoring ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -643,7 +703,8 @@ financial-research-analyst-agent/
 │   ├── test_tools.py
 │   ├── test_api.py
 │   ├── test_peer_comparison.py # Peer comparison tests ✨
-│   └── test_thematic.py        # Thematic investing tests ✨
+│   ├── test_thematic.py        # Thematic investing tests ✨
+│   └── test_disruption.py      # Market disruption analysis tests ✨
 ├── data/
 │   └── sample_data.csv
 ├── docs/
