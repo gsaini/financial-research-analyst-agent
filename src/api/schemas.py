@@ -17,6 +17,7 @@ class AnalysisType(str, Enum):
     RISK = "risk"
     THEMATIC = "thematic"
     DISRUPTION = "disruption"
+    EARNINGS = "earnings"
 
 
 class AnalysisRequest(BaseModel):
@@ -343,6 +344,148 @@ class DisruptionCompareResponse(BaseModel):
     comparison: List[DisruptionComparisonItem]
     most_disruptive: Optional[str] = None
     competitive_narrative: Optional[str] = None
+    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 4: Quarterly Earnings Analysis Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class EarningsAnalysisRequest(BaseModel):
+    """Request for quarterly earnings analysis."""
+    symbol: str = Field(
+        ...,
+        description="Stock ticker symbol to analyze",
+        example="AAPL",
+    )
+    include_narrative: bool = Field(
+        default=False,
+        description="Include LLM-generated qualitative assessment",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AAPL",
+                "include_narrative": False,
+            }
+        }
+
+
+class EarningsCompareRequest(BaseModel):
+    """Request to compare earnings profiles across companies."""
+    symbols: List[str] = Field(
+        ...,
+        description="List of stock symbols to compare",
+        example=["AAPL", "MSFT", "GOOGL"],
+    )
+    include_narrative: bool = Field(
+        default=False,
+        description="Include LLM-generated comparative narrative",
+    )
+
+
+class QuarterData(BaseModel):
+    """Single quarter earnings data."""
+    quarter: str
+    date: Optional[str] = None
+    revenue_actual: Optional[float] = None
+    net_income: Optional[float] = None
+    eps_calculated: Optional[float] = None
+    eps_actual: Optional[float] = None
+    eps_estimate: Optional[float] = None
+    eps_surprise_pct: Optional[float] = None
+    verdict: Optional[str] = None
+
+
+class SurprisePattern(BaseModel):
+    """Earnings surprise pattern analysis."""
+    total_quarters: int = 0
+    beats: int = 0
+    misses: int = 0
+    inline: int = 0
+    beat_rate: str = "0%"
+    average_surprise: str = "0%"
+    pattern: str = "Insufficient data"
+
+
+class QuarterlyTrends(BaseModel):
+    """Quarter-over-quarter trend analysis."""
+    revenue_qoq_growth: List[str] = []
+    revenue_trend: str = "N/A"
+    net_income_qoq_growth: List[str] = []
+    income_trend: str = "N/A"
+    margin_trajectory: str = "N/A"
+    gross_margins_by_quarter: List[str] = []
+
+
+class YoYComparison(BaseModel):
+    """Year-over-year comparison data."""
+    comparison_period: Optional[str] = None
+    revenue_growth: Optional[str] = None
+    net_income_growth: Optional[str] = None
+
+
+class EarningsQuality(BaseModel):
+    """Earnings quality assessment."""
+    score: float = Field(..., ge=1.0, le=10.0, description="Quality score from 1-10")
+    assessment: str
+    factors: List[str] = []
+
+
+class NextEarnings(BaseModel):
+    """Upcoming earnings information."""
+    date: Optional[str] = None
+    days_until: Optional[int] = None
+    eps_estimate: Optional[float] = None
+    revenue_estimate: Optional[float] = None
+    number_of_analysts: Optional[int] = None
+
+
+class EarningsAnalysisResponse(BaseModel):
+    """Response containing quarterly earnings analysis results."""
+    symbol: str
+    name: str = ""
+    currency: str = "USD"
+    last_4_quarters: List[QuarterData] = []
+    earnings_surprise_history: Dict[str, Any] = {}
+    quarterly_trends: Dict[str, Any] = {}
+    yoy_comparison: Dict[str, Any] = {}
+    next_earnings: Dict[str, Any] = {}
+    earnings_quality: Dict[str, Any] = {}
+    qualitative_assessment: Optional[str] = None
+    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class EarningsComparisonItem(BaseModel):
+    """Single company's earnings profile in comparison."""
+    symbol: str
+    name: Optional[str] = None
+    beat_rate: Optional[str] = None
+    average_surprise: Optional[str] = None
+    pattern: Optional[str] = None
+    revenue_trend: Optional[str] = None
+    income_trend: Optional[str] = None
+    earnings_quality_score: Optional[float] = None
+    next_earnings_date: Optional[str] = None
+    error: Optional[str] = None
+
+
+class EarningsCompareResponse(BaseModel):
+    """Response containing earnings comparison results."""
+    companies_compared: int
+    comparison: List[EarningsComparisonItem]
+    best_earnings_quality: Optional[str] = None
+    comparative_narrative: Optional[str] = None
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     execution_time_seconds: Optional[float] = None
 

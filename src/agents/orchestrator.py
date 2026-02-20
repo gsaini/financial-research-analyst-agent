@@ -17,6 +17,7 @@ from src.agents.risk import RiskAnalystAgent
 from src.agents.report_generator import ReportGeneratorAgent
 from src.agents.thematic import ThematicAnalystAgent
 from src.agents.disruption import DisruptionAnalystAgent
+from src.agents.earnings import EarningsAnalystAgent
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -35,6 +36,7 @@ class OrchestratorAgent(BaseAgent):
         self.report_generator = ReportGeneratorAgent()
         self.thematic_analyst = ThematicAnalystAgent()
         self.disruption_analyst = DisruptionAnalystAgent()
+        self.earnings_analyst = EarningsAnalystAgent()
 
         super().__init__(
             name="Orchestrator",
@@ -75,9 +77,15 @@ class OrchestratorAgent(BaseAgent):
             """Delegate market disruption analysis to the Disruption Analyst Agent."""
             return f"Delegating disruption analysis for {symbol} to DisruptionAnalystAgent"
 
+        @tool("delegate_to_earnings_analyst")
+        def delegate_earnings_tool(symbol: str) -> str:
+            """Delegate quarterly earnings analysis to the Earnings Analyst Agent."""
+            return f"Delegating earnings analysis for {symbol} to EarningsAnalystAgent"
+
         return [delegate_data_collector_tool, delegate_technical_tool,
                 delegate_fundamental_tool, coordinate_analysis_tool,
-                delegate_thematic_tool, delegate_disruption_tool]
+                delegate_thematic_tool, delegate_disruption_tool,
+                delegate_earnings_tool]
     
     def _get_system_prompt(self) -> str:
         return """You are the Orchestrator Agent, the central coordinator for financial analysis.
@@ -97,6 +105,7 @@ Available agents:
 - ReportGeneratorAgent: Report creation
 - ThematicAnalystAgent: Thematic investing analysis across investment themes
 - DisruptionAnalystAgent: Market disruption analysis (R&D intensity, growth trajectory, disruptor vs at-risk)
+- EarningsAnalystAgent: Quarterly earnings analysis (EPS surprises, beat/miss patterns, earnings quality)
 
 Coordinate efficiently and ensure comprehensive analysis."""
     
@@ -192,6 +201,43 @@ Coordinate efficiently and ensure comprehensive analysis."""
         if include_narrative:
             return await self.disruption_analyst.analyze_with_competitive_narrative(symbols)
         return await self.disruption_analyst.compare_companies_direct(symbols)
+
+    async def analyze_earnings(self, symbol: str, include_narrative: bool = False) -> Dict[str, Any]:
+        """
+        Run quarterly earnings analysis on a company.
+
+        Evaluates EPS actual vs estimates, beat/miss patterns,
+        quarterly trends, and earnings quality.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., 'AAPL', 'MSFT').
+            include_narrative: Whether to generate an LLM qualitative assessment.
+
+        Returns:
+            Earnings analysis results dict.
+        """
+        logger.info(f"Starting earnings analysis for '{symbol}'")
+        if include_narrative:
+            return await self.earnings_analyst.analyze_with_narrative(symbol)
+        return await self.earnings_analyst.analyze_company_direct(symbol)
+
+    async def compare_earnings(
+        self, symbols: List[str], include_narrative: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Compare earnings profiles across multiple companies.
+
+        Args:
+            symbols: List of stock ticker symbols.
+            include_narrative: Whether to generate comparative earnings narrative.
+
+        Returns:
+            Comparison dict with earnings rankings.
+        """
+        logger.info(f"Starting earnings comparison for {symbols}")
+        if include_narrative:
+            return await self.earnings_analyst.analyze_with_comparative_narrative(symbols)
+        return await self.earnings_analyst.compare_companies_direct(symbols)
 
 
 class FinancialResearchAgent:

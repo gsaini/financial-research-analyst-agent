@@ -30,6 +30,10 @@ from src.api.schemas import (
     DisruptionAnalysisResponse,
     DisruptionCompareRequest,
     DisruptionCompareResponse,
+    EarningsAnalysisRequest,
+    EarningsAnalysisResponse,
+    EarningsCompareRequest,
+    EarningsCompareResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -37,6 +41,7 @@ from src.tools.technical_indicators import calculate_rsi, calculate_macd, calcul
 from src.tools.theme_mapper import list_available_themes, analyze_theme, get_theme_definition
 from src.tools.peer_comparison import compare_peers
 from src.tools.disruption_metrics import analyze_disruption, compare_disruption
+from src.tools.earnings_data import analyze_earnings, compare_earnings
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -692,6 +697,140 @@ async def compare_disruption_profiles(request: DisruptionCompareRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─────────────────────────────────────────────────────────────
+# Quarterly Earnings Analysis Endpoints (Feature 4)
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/earnings/{symbol}", response_model=EarningsAnalysisResponse)
+async def get_earnings_analysis(symbol: str):
+    """
+    Analyze a company's quarterly earnings profile.
+
+    Evaluates earnings consistency and quality based on:
+    - EPS actuals vs estimates (last 4-8 quarters)
+    - Beat/miss patterns and surprise percentages
+    - Quarter-over-quarter and year-over-year trends
+    - Earnings quality score (operational vs one-time items)
+    - Upcoming earnings date and analyst estimates
+
+    Returns comprehensive earnings analysis with:
+    - Beat rate percentage and pattern classification
+    - Revenue and income trend analysis
+    - Earnings quality score (1-10)
+    - Next earnings date and expectations
+    """
+    start_time = time.time()
+
+    try:
+        result = analyze_earnings(symbol.upper())
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        result["execution_time_seconds"] = round(time.time() - start_time, 2)
+        return EarningsAnalysisResponse(**result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Earnings analysis error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/earnings/analyze", response_model=EarningsAnalysisResponse)
+async def analyze_earnings_profile(request: EarningsAnalysisRequest):
+    """
+    Analyze a company's quarterly earnings profile with optional narrative.
+
+    Same as GET /earnings/{symbol} but allows including an LLM-generated
+    qualitative assessment of earnings consistency and investor implications.
+    """
+    start_time = time.time()
+
+    try:
+        symbol = request.symbol.upper()
+
+        if request.include_narrative:
+            # Use the agent for narrative generation
+            try:
+                from src.agents.earnings import EarningsAnalystAgent
+                agent = EarningsAnalystAgent()
+                result = await agent.analyze_with_narrative(symbol)
+            except Exception as agent_err:
+                logger.warning(f"Agent narrative failed, falling back to basic: {agent_err}")
+                result = analyze_earnings(symbol)
+                result["qualitative_assessment"] = "Unable to generate qualitative assessment"
+        else:
+            result = analyze_earnings(symbol)
+
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        result["execution_time_seconds"] = round(time.time() - start_time, 2)
+        return EarningsAnalysisResponse(**result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Earnings analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/earnings/compare", response_model=EarningsCompareResponse)
+async def compare_earnings_profiles(request: EarningsCompareRequest):
+    """
+    Compare earnings profiles across multiple companies.
+
+    Useful for comparing earnings consistency and quality across peers:
+    - Beat rate comparison
+    - Average surprise percentages
+    - Earnings pattern classification
+    - Revenue and income trends
+    - Earnings quality scores
+
+    Returns companies ranked by earnings quality score with optional narrative.
+    """
+    start_time = time.time()
+
+    try:
+        if len(request.symbols) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="At least 2 symbols are required for comparison.",
+            )
+        if len(request.symbols) > 10:
+            raise HTTPException(
+                status_code=400,
+                detail="Maximum 10 companies can be compared at once.",
+            )
+
+        symbols = [s.upper() for s in request.symbols]
+
+        if request.include_narrative:
+            try:
+                from src.agents.earnings import EarningsAnalystAgent
+                agent = EarningsAnalystAgent()
+                result = await agent.analyze_with_comparative_narrative(symbols)
+            except Exception as agent_err:
+                logger.warning(f"Agent narrative failed, falling back to basic: {agent_err}")
+                result = compare_earnings(symbols)
+                result["comparative_narrative"] = "Unable to generate comparative narrative"
+        else:
+            result = compare_earnings(symbols)
+
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        result["execution_time_seconds"] = round(time.time() - start_time, 2)
+        return EarningsCompareResponse(**result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Earnings comparison error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include router in app
 app.include_router(router)
 
@@ -704,7 +843,7 @@ async def http_exception_handler(request, exc):
         content=ErrorResponse(
             error=exc.detail,
             detail=str(exc),
-        ).model_dump(),
+        ).model_dump(mode='json'),
     )
 
 
@@ -716,5 +855,5 @@ async def general_exception_handler(request, exc):
         content=ErrorResponse(
             error="Internal server error",
             detail=str(exc),
-        ).model_dump(),
+        ).model_dump(mode='json'),
     )

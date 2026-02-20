@@ -95,6 +95,7 @@ This AI agent system addresses these challenges by:
 | 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.) |
 | 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics   |
 | 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption        |
+| 📅 **Quarterly Earnings Analysis** | Track EPS surprises, beat/miss patterns, and earnings quality  |
 | 📑 **Report Generation**           | Automated investment research reports                          |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                      |
 | 🌐 **API Integration**             | REST API for external system integration                       |
@@ -109,8 +110,9 @@ This AI agent system addresses these challenges by:
 5. **Risk Analyst Agent**: Performs risk assessment and VaR calculations
 6. **Thematic Analyst Agent**: Analyzes stocks grouped by investment themes and megatrends
 7. **Disruption Analyst Agent**: Identifies market disruptors and at-risk companies via R&D, growth, and margin analysis
-8. **Report Generator Agent**: Compiles insights into structured reports
-9. **Orchestrator Agent**: Coordinates all agents and manages workflow
+8. **Earnings Analyst Agent**: Tracks quarterly EPS surprises, beat/miss patterns, and earnings quality
+9. **Report Generator Agent**: Compiles insights into structured reports
+10. **Orchestrator Agent**: Coordinates all agents and manages workflow
 
 ---
 
@@ -146,6 +148,14 @@ This AI agent system addresses these challenges by:
 │  │ • Correlation & Diversification │  │ • Disruption Score (0-100)           │  │
 │  │ • Sector Overlap Analysis       │  │ • Disruptor vs At-Risk Classification│  │
 │  └─────────────────────────────────┘  └──────────────────────────────────────┘  │
+│                                                                                  │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │ EARNINGS ANALYST AGENT                                                    │  │
+│  │                                                                           │  │
+│  │ • EPS Actual vs Estimate Tracking    • Quarterly Trend Analysis (QoQ/YoY)│  │
+│  │ • Beat/Miss Pattern Recognition      • Earnings Quality Scoring (1-10)   │  │
+│  │ • Surprise % Calculation             • Upcoming Earnings Dates           │  │
+│  └───────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                  │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │ REPORT GENERATOR AGENT                                                    │  │
@@ -359,6 +369,19 @@ curl -X POST "http://localhost:8000/api/v1/disruption/analyze" \
 curl -X POST "http://localhost:8000/api/v1/disruption/compare" \
   -H "Content-Type: application/json" \
   -d '{"symbols": ["TSLA", "F", "GM", "TM"], "include_narrative": false}'
+
+# Analyze quarterly earnings
+curl "http://localhost:8000/api/v1/earnings/AAPL"
+
+# Earnings analysis with LLM narrative
+curl -X POST "http://localhost:8000/api/v1/earnings/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{"symbol": "MSFT", "include_narrative": true}'
+
+# Compare earnings profiles across companies
+curl -X POST "http://localhost:8000/api/v1/earnings/compare" \
+  -H "Content-Type: application/json" \
+  -d '{"symbols": ["AAPL", "MSFT", "GOOGL"], "include_narrative": false}'
 ```
 
 ### Command Line Interface
@@ -397,6 +420,9 @@ python -m src.cli dashboard --port 8080
 | `GET`       | `/api/v1/disruption/{symbol}`  | Get market disruption analysis                 |
 | `POST`      | `/api/v1/disruption/analyze`   | Analyze disruption with optional LLM narrative |
 | `POST`      | `/api/v1/disruption/compare`   | Compare disruption profiles across companies   |
+| `GET`       | `/api/v1/earnings/{symbol}`    | Get quarterly earnings analysis                |
+| `POST`      | `/api/v1/earnings/analyze`     | Analyze earnings with optional LLM narrative   |
+| `POST`      | `/api/v1/earnings/compare`     | Compare earnings profiles across companies     |
 | `WebSocket` | `/ws/alerts`                   | Real-time alerts                               |
 
 ### Response Schema
@@ -530,6 +556,39 @@ Scoring Components:
 - Margin Trajectory Score (25% weight): Gross margin expansion/contraction
 ```
 
+### 7. Earnings Analyst Agent
+
+```python
+Capabilities:
+- Track quarterly EPS actuals vs analyst estimates
+- Analyze beat/miss patterns and management guidance accuracy
+- Calculate quarter-over-quarter and year-over-year trends
+- Assess earnings quality (operational vs one-time items)
+- Identify upcoming earnings dates and estimate trends
+- Compare earnings profiles across sector peers
+- LLM-generated earnings narrative (optional)
+
+Earnings Pattern Classification:
+- Consistent Beater (80%+ beat rate): Management under-promises, reliable execution
+- Regular Beater (60-80%)           : Tends to exceed expectations
+- Mixed Results (40-60%)            : Unpredictable earnings, higher risk
+- Regular Misser (20-40%)           : Tends to disappoint
+- Consistent Misser (<20%)          : Credibility concerns
+
+Earnings Quality Score (1-10):
+- High Quality (8-10)     : Driven by operations, sustainable
+- Good Quality (6.5-8)    : Primarily operational with minor concerns
+- Average Quality (5-6.5) : Some non-operational factors present
+- Below Average (3.5-5)   : Significant non-operational items
+- Low Quality (1-3.5)     : Earnings not reflective of core operations
+
+Key Metrics:
+- Beat Rate %           : Percentage of quarters exceeding estimates
+- Average Surprise %    : Mean EPS surprise across quarters
+- Revenue/Income Trends : QoQ and YoY growth trajectory
+- Margin Trajectory     : Gross margin expansion/contraction pattern
+```
+
 ---
 
 ## 📊 Sample Analysis
@@ -601,6 +660,9 @@ pytest tests/test_thematic.py -v
 
 # Run market disruption analysis tests
 pytest tests/test_disruption.py -v
+
+# Run quarterly earnings analysis tests
+pytest tests/test_earnings.py -v
 
 # Run peer comparison tests
 pytest tests/test_peer_comparison.py -v
@@ -675,6 +737,7 @@ financial-research-analyst-agent/
 │   │   ├── risk.py             # Risk analysis agent
 │   │   ├── thematic.py         # Thematic investing analysis agent ✨
 │   │   ├── disruption.py       # Market disruption analysis agent ✨
+│   │   ├── earnings.py         # Quarterly earnings analysis agent ✨
 │   │   └── report_generator.py # Report generation agent
 │   ├── tools/
 │   │   ├── __init__.py
@@ -684,7 +747,8 @@ financial-research-analyst-agent/
 │   │   ├── financial_metrics.py
 │   │   ├── peer_comparison.py  # Peer discovery & comparison tools ✨
 │   │   ├── theme_mapper.py     # Theme-to-ticker mapping & analysis tools ✨
-│   │   └── disruption_metrics.py # R&D, growth, margin & disruption scoring ✨
+│   │   ├── disruption_metrics.py # R&D, growth, margin & disruption scoring ✨
+│   │   └── earnings_data.py    # Quarterly earnings data & quality scoring ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -704,7 +768,8 @@ financial-research-analyst-agent/
 │   ├── test_api.py
 │   ├── test_peer_comparison.py # Peer comparison tests ✨
 │   ├── test_thematic.py        # Thematic investing tests ✨
-│   └── test_disruption.py      # Market disruption analysis tests ✨
+│   ├── test_disruption.py      # Market disruption analysis tests ✨
+│   └── test_earnings.py        # Quarterly earnings analysis tests ✨
 ├── data/
 │   └── sample_data.csv
 ├── docs/
