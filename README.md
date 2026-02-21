@@ -30,6 +30,7 @@
 - [Installation](#-installation)
 - [Configuration](#-configuration)
 - [Usage](#-usage)
+- [Interactive API Documentation](#-interactive-api-documentation)
 - [API Reference](#-api-reference)
 - [Agent Capabilities](#-agent-capabilities)
 - [Sample Analysis](#-sample-analysis)
@@ -99,6 +100,7 @@ This AI agent system addresses these challenges by:
 | 📑 **Report Generation**           | Automated investment research reports                          |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                      |
 | 🌐 **API Integration**             | REST API for external system integration                       |
+| 📖 **Interactive API Docs**        | Swagger UI & ReDoc with OpenAPI 3.0 specification              |
 | 📱 **Web Dashboard**               | Interactive visualization dashboard                            |
 
 ### Agent Types
@@ -396,6 +398,41 @@ python -m src.cli portfolio AAPL GOOGL MSFT --output report.pdf
 # Start web dashboard
 python -m src.cli dashboard --port 8080
 ```
+
+---
+
+## 📚 Interactive API Documentation
+
+The API includes built-in interactive documentation powered by **OpenAPI 3.0** specification.
+
+### Swagger UI
+
+Access the interactive Swagger UI at: **http://localhost:8000/docs**
+
+Features:
+- Interactive API explorer with "Try it out" functionality
+- Auto-generated request/response examples
+- Authentication testing
+- Schema validation
+
+### ReDoc
+
+Access the ReDoc documentation at: **http://localhost:8000/redoc**
+
+Features:
+- Clean, responsive three-panel design
+- Deep linking to specific endpoints
+- Code samples in multiple languages
+- Search functionality
+
+### OpenAPI JSON Schema
+
+Download the raw OpenAPI specification: **http://localhost:8000/openapi.json**
+
+Use this to:
+- Generate client SDKs (Python, TypeScript, Go, etc.)
+- Import into Postman or Insomnia
+- Create automated API tests
 
 ---
 
