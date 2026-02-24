@@ -269,6 +269,199 @@ themes:
     risk_level: "Very High"
     growth_stage: "Early Growth"
 
+  biotech_genomics:
+    name: "Biotech & Genomics"
+    description: >
+      Companies pioneering biotechnology innovation including gene therapy,
+      CRISPR gene editing, mRNA platforms, precision medicine, genomic
+      sequencing, and next-generation drug discovery.
+    constituents:
+      - MRNA # Moderna - mRNA therapeutics
+      - CRSP # CRISPR Therapeutics - Gene editing
+      - ILMN # Illumina - Genomic sequencing
+      - REGN # Regeneron - Biotech pharma
+      - GILD # Gilead Sciences - Antiviral biotech
+      - BIIB # Biogen - Neuroscience biotech
+      - BEAM # Beam Therapeutics - Base editing
+      - NTLA # Intellia Therapeutics - CRISPR in vivo
+      - EDIT # Editas Medicine - Gene editing
+      - TWST # Twist Bioscience - Synthetic biology
+    reference_etfs:
+      - XBI # SPDR S&P Biotech ETF
+      - IBB # iShares Biotechnology ETF
+      - ARKG # ARK Genomic Revolution ETF
+    sector_tags:
+      - Healthcare
+      - Biotechnology
+    risk_level: "Very High"
+    growth_stage: "Early Growth"
+
+  semiconductors:
+    name: "Semiconductors & Chip Technology"
+    description: >
+      Companies designing, manufacturing, and supplying semiconductors
+      including advanced logic chips, memory, analog, EDA tools, and
+      semiconductor equipment powering AI, data centers, and consumer devices.
+    constituents:
+      - NVDA # NVIDIA - GPU, AI accelerators
+      - TSM # TSMC - Foundry leader
+      - AVGO # Broadcom - Networking, custom chips
+      - ASML # ASML - Lithography equipment
+      - AMD # AMD - CPUs, GPUs, data center
+      - INTC # Intel - IDM, foundry
+      - QCOM # Qualcomm - Mobile, automotive chips
+      - MRVL # Marvell - Data infrastructure semis
+      - LRCX # Lam Research - Etch equipment
+      - KLAC # KLA Corp - Process control equipment
+    reference_etfs:
+      - SMH # VanEck Semiconductor ETF
+      - SOXX # iShares Semiconductor ETF
+      - XSD # SPDR S&P Semiconductor ETF
+    sector_tags:
+      - Technology
+      - Industrials
+    risk_level: "Medium-High"
+    growth_stage: "Mid Growth"
+
+  robotics_automation:
+    name: "Robotics & Automation"
+    description: >
+      Companies building industrial robots, warehouse automation, autonomous
+      systems, computer vision, and intelligent automation platforms
+      transforming manufacturing, logistics, and services.
+    constituents:
+      - ISRG # Intuitive Surgical - Surgical robotics
+      - ROK # Rockwell Automation - Industrial automation
+      - ABB # ABB Ltd - Industrial robots
+      - FANUY # Fanuc - Industrial robotics
+      - TER # Teradyne - Collaborative robots (Universal Robots)
+      - PATH # UiPath - Software automation (RPA)
+      - CGNX # Cognex - Machine vision
+      - BRKS # Brooks Automation - Semiconductor automation
+      - IRBT # iRobot - Consumer robotics
+      - NVDA # NVIDIA - Robotics AI platform
+    reference_etfs:
+      - BOTZ # Global X Robotics & AI ETF
+      - ROBO # Robo Global Robotics & Automation ETF
+      - ARKQ # ARK Autonomous Technology & Robotics ETF
+    sector_tags:
+      - Industrials
+      - Technology
+      - Healthcare
+    risk_level: "Medium-High"
+    growth_stage: "Early-to-Mid Growth"
+
+  connectivity_5g:
+    name: "5G & Next-Gen Connectivity"
+    description: >
+      Companies driving 5G network deployment, infrastructure buildout,
+      edge computing, IoT connectivity, and next-generation telecom
+      technologies enabling smart cities and connected devices.
+    constituents:
+      - T # AT&T - 5G carrier
+      - VZ # Verizon - 5G carrier
+      - TMUS # T-Mobile - 5G leader
+      - ERIC # Ericsson - 5G infrastructure
+      - NOK # Nokia - 5G equipment
+      - QCOM # Qualcomm - 5G modems and chipsets
+      - AMT # American Tower - Cell towers
+      - CCI # Crown Castle - Cell infrastructure
+      - KEYS # Keysight Technologies - 5G testing
+      - SWKS # Skyworks Solutions - RF semiconductors
+    reference_etfs:
+      - FIVG # Defiance Next Gen Connectivity ETF
+      - NXTG # First Trust Indxx NextG ETF
+      - WFIG # WisdomTree BioRevolution Fund
+    sector_tags:
+      - Communication Services
+      - Technology
+      - Real Estate
+    risk_level: "Medium"
+    growth_stage: "Mid Growth"
+
+  ecommerce_retail:
+    name: "E-Commerce & Digital Retail"
+    description: >
+      Companies leading online retail, marketplace platforms, social commerce,
+      last-mile delivery, and digital consumer experience technologies
+      reshaping how the world shops.
+    constituents:
+      - AMZN # Amazon - E-commerce leader
+      - SHOP # Shopify - E-commerce platform
+      - BABA # Alibaba - Chinese e-commerce
+      - MELI # MercadoLibre - Latin America e-commerce
+      - SE # Sea Limited - Southeast Asia e-commerce
+      - ETSY # Etsy - Handmade marketplace
+      - CHWY # Chewy - Pet e-commerce
+      - W # Wayfair - Furniture e-commerce
+      - PINS # Pinterest - Visual commerce
+      - CPNG # Coupang - Korean e-commerce
+    reference_etfs:
+      - IBUY # Amplify Online Retail ETF
+      - ONLN # ProShares Online Retail ETF
+      - EBIZ # Global X E-commerce ETF
+    sector_tags:
+      - Consumer Discretionary
+      - Technology
+      - Communication Services
+    risk_level: "Medium-High"
+    growth_stage: "Mid-to-Late Growth"
+
+  quantum_computing:
+    name: "Quantum Computing"
+    description: >
+      Companies developing quantum hardware, quantum software, quantum-safe
+      cryptography, and hybrid quantum-classical computing solutions poised
+      to revolutionize computation, simulation, and optimization.
+    constituents:
+      - IBM # IBM - Quantum hardware and Qiskit
+      - GOOGL # Alphabet - Quantum AI (Sycamore, Willow)
+      - IONQ # IonQ - Trapped-ion quantum computers
+      - RGTI # Rigetti Computing - Superconducting qubits
+      - QBTS # D-Wave Quantum - Quantum annealing
+      - MSFT # Microsoft - Azure Quantum
+      - AMZN # Amazon - Amazon Braket quantum
+      - HON # Honeywell - Quantinuum (trapped-ion)
+      - QUBT # Quantum Computing Inc
+      - ARQQ # Arqit Quantum - Quantum encryption
+    reference_etfs:
+      - QTUM # Defiance Quantum ETF
+      - QQQJ # Invesco NASDAQ Next Gen 100 ETF
+      - ARKQ # ARK Autonomous Technology & Robotics ETF
+    sector_tags:
+      - Technology
+      - Industrials
+    risk_level: "Very High"
+    growth_stage: "Early Growth"
+
+  infrastructure_smart_cities:
+    name: "Infrastructure & Smart Cities"
+    description: >
+      Companies benefiting from global infrastructure spending, smart city
+      technologies, construction modernization, grid modernization, and
+      digital infrastructure powering urban transformation.
+    constituents:
+      - CAT # Caterpillar - Heavy equipment
+      - DE # Deere & Company - Smart agriculture/construction
+      - VMC # Vulcan Materials - Construction aggregates
+      - MLM # Martin Marietta - Building materials
+      - PWR # Quanta Services - Infrastructure services
+      - EMR # Emerson Electric - Industrial automation
+      - TRMB # Trimble - Construction technology
+      - JCI # Johnson Controls - Building efficiency
+      - APH # Amphenol - Connectivity solutions
+      - ETN # Eaton Corporation - Electrical infrastructure
+    reference_etfs:
+      - PAVE # Global X U.S. Infrastructure Development ETF
+      - IFRA # iShares U.S. Infrastructure ETF
+      - GRID # First Trust NASDAQ Clean Edge Smart Grid
+    sector_tags:
+      - Industrials
+      - Materials
+      - Technology
+    risk_level: "Low-Medium"
+    growth_stage: "Mid-to-Late Growth"
+
 # Benchmark definitions for theme comparison
 benchmarks:
   market:
