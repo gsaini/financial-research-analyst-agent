@@ -68,34 +68,94 @@ def fetch_news(query: str, days_back: int = 7) -> List[Dict[str, Any]]:
 def fetch_company_news(symbol: str) -> List[Dict[str, Any]]:
     """
     Fetch news specifically about a company.
-    
+
     Args:
         symbol: Stock ticker symbol
-        
+
     Returns:
         List of company-specific news
     """
     try:
         import yfinance as yf
-        
+
         ticker = yf.Ticker(symbol)
         news = ticker.news
-        
+
+        if not news:
+            return _get_sample_news(symbol)
+
         articles = []
         for item in news[:20]:
+            # Newer yfinance wraps data under a "content" key
+            content = item.get("content", item)
+
+            title = (
+                content.get("title")
+                or item.get("title")
+                or ""
+            )
+            summary = (
+                content.get("summary")
+                or content.get("description")
+                or item.get("title")
+                or ""
+            )
+            # Strip any residual HTML tags from description
+            if "<" in summary:
+                import re
+                summary = re.sub(r"<[^>]+>", "", summary)
+
+            provider = content.get("provider") or {}
+            source = (
+                provider.get("displayName")
+                if isinstance(provider, dict)
+                else item.get("publisher", "")
+            )
+
+            # URL: try canonical, then clickThrough, then legacy "link"
+            url = ""
+            for url_key in ("canonicalUrl", "clickThroughUrl"):
+                url_obj = content.get(url_key)
+                if isinstance(url_obj, dict) and url_obj.get("url"):
+                    url = url_obj["url"]
+                    break
+                elif isinstance(url_obj, str) and url_obj:
+                    url = url_obj
+                    break
+            if not url:
+                url = content.get("previewUrl") or item.get("link", "")
+
+            # Published date
+            pub_date = content.get("pubDate") or content.get("displayTime") or ""
+            if not pub_date and item.get("providerPublishTime"):
+                pub_date = datetime.fromtimestamp(
+                    item["providerPublishTime"]
+                ).isoformat()
+
+            # Thumbnail
+            thumbnail = ""
+            thumb_obj = content.get("thumbnail")
+            if isinstance(thumb_obj, dict):
+                resolutions = thumb_obj.get("resolutions", [])
+                if resolutions:
+                    thumbnail = resolutions[0].get("url", "")
+                elif thumb_obj.get("originalUrl"):
+                    thumbnail = thumb_obj["originalUrl"]
+
+            content_type = content.get("contentType", item.get("type", "STORY"))
+
             articles.append({
-                "title": item.get("title", ""),
-                "description": item.get("title", ""),  # Yahoo doesn't provide description
-                "source": item.get("publisher", ""),
-                "url": item.get("link", ""),
-                "published_at": datetime.fromtimestamp(
-                    item.get("providerPublishTime", 0)
-                ).isoformat() if item.get("providerPublishTime") else "",
-                "type": item.get("type", ""),
+                "title": title,
+                "description": summary,
+                "source": source,
+                "url": url,
+                "published_at": pub_date,
+                "type": content_type,
+                "thumbnail": thumbnail,
             })
-        
+
         return articles
-        
+
     except Exception as e:
         logger.error(f"Error fetching company news for {symbol}: {e}")
         return _get_sample_news(symbol)

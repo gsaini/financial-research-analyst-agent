@@ -175,19 +175,40 @@ def fetch_upcoming_earnings(symbol: str) -> Dict[str, Any]:
         }
 
         # Get earnings date from calendar
-        if calendar is not None and not calendar.empty:
-            if "Earnings Date" in calendar.index:
-                earnings_dates = calendar.loc["Earnings Date"]
-                if hasattr(earnings_dates, "__iter__") and len(earnings_dates) > 0:
-                    next_date = earnings_dates.iloc[0] if hasattr(earnings_dates, "iloc") else earnings_dates[0]
-                    if pd.notna(next_date):
-                        if hasattr(next_date, "strftime"):
-                            result["next_earnings_date"] = next_date.strftime("%Y-%m-%d")
-                            days_until = (next_date - datetime.now()).days
-                            result["days_until_earnings"] = max(0, days_until)
+        # yfinance may return calendar as a dict or a DataFrame depending on version
+        earnings_dates_raw = None
+        if calendar is not None:
+            if isinstance(calendar, dict):
+                # Newer yfinance returns dict with "Earnings Date" key
+                earnings_dates_raw = calendar.get("Earnings Date", None)
+            elif hasattr(calendar, "empty") and not calendar.empty:
+                # Older yfinance returns a DataFrame
+                if "Earnings Date" in calendar.index:
+                    earnings_dates_raw = calendar.loc["Earnings Date"]
+
+        if earnings_dates_raw is not None:
+            # Normalize to a list
+            if not isinstance(earnings_dates_raw, (list, tuple)):
+                if hasattr(earnings_dates_raw, "tolist"):
+                    earnings_dates_raw = earnings_dates_raw.tolist()
+                else:
+                    earnings_dates_raw = [earnings_dates_raw]
+
+            for next_date in earnings_dates_raw:
+                if next_date is not None and pd.notna(next_date):
+                    if hasattr(next_date, "strftime"):
+                        result["next_earnings_date"] = next_date.strftime("%Y-%m-%d")
+                        # Ensure both sides are date objects for subtraction
+                        if hasattr(next_date, "date"):
+                            next_date_date = next_date.date()
                         else:
-                            result["next_earnings_date"] = str(next_date)
-                            result["days_until_earnings"] = None
+                            next_date_date = next_date
+                        days_until = (next_date_date - datetime.now().date()).days
+                        result["days_until_earnings"] = max(0, days_until)
+                    else:
+                        result["next_earnings_date"] = str(next_date)
+                        result["days_until_earnings"] = None
+                    break
 
         # Get analyst estimates
         result["eps_estimate"] = info.get("forwardEps", None)

@@ -21,24 +21,34 @@ logger = get_logger(__name__)
 # ─────────────────────────────────────────────────────────────
 
 _themes_cache: Optional[Dict[str, Any]] = None
+_themes_cache_mtime: Optional[float] = None
 
 
 def _load_themes_config() -> Dict[str, Any]:
     """
     Load theme definitions from config/themes.yaml.
-    Caches the config after first load for performance.
+    Re-reads from disk when the file has been modified.
 
     Returns:
         Parsed YAML as a dictionary.
     """
-    global _themes_cache
-    if _themes_cache is not None:
-        return _themes_cache
+    global _themes_cache, _themes_cache_mtime
 
     config_path = Path(__file__).resolve().parent.parent.parent / "config" / "themes.yaml"
+
+    # Check if file has been modified since last load
+    try:
+        current_mtime = config_path.stat().st_mtime
+    except OSError:
+        current_mtime = None
+
+    if _themes_cache is not None and current_mtime == _themes_cache_mtime:
+        return _themes_cache
+
     try:
         with open(config_path, "r") as f:
             _themes_cache = yaml.safe_load(f)
+        _themes_cache_mtime = current_mtime
         logger.info(f"Loaded {len(_themes_cache.get('themes', {}))} theme definitions")
         return _themes_cache
     except Exception as e:
@@ -48,8 +58,9 @@ def _load_themes_config() -> Dict[str, Any]:
 
 def reload_themes_config() -> Dict[str, Any]:
     """Force reload of theme configuration (useful after edits)."""
-    global _themes_cache
+    global _themes_cache, _themes_cache_mtime
     _themes_cache = None
+    _themes_cache_mtime = None
     return _load_themes_config()
 
 
