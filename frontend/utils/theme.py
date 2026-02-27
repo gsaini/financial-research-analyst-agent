@@ -8,34 +8,37 @@ import streamlit as st
 
 # Design color constants for use in Plotly charts and dynamic styling
 COLORS = {
-    "bg_primary": "#0a0e17",
-    "bg_secondary": "#111827",
-    "bg_card": "#1a2235",
-    "bg_card_hover": "#1f2a42",
-    "text_primary": "#f9fafb",
-    "text_secondary": "#9ca3af",
-    "text_muted": "#6b7280",
-    "accent_blue": "#3b82f6",
-    "accent_violet": "#8b5cf6",
-    "success": "#10b981",
-    "warning": "#f59e0b",
+    "bg_base": "#09090b",
+    "bg_primary": "#0c0c0f",
+    "bg_secondary": "#131316",
+    "bg_card": "#1c1c21",
+    "bg_card_hover": "#222228",
+    "text_primary": "#fafafa",
+    "text_secondary": "#a1a1aa",
+    "text_muted": "#71717a",
+    "accent_primary": "#6366f1",
+    "accent_secondary": "#8b5cf6",
+    "success": "#22c55e",
+    "warning": "#eab308",
     "danger": "#ef4444",
-    "border": "#374151",
-    "border_light": "#1f2937",
+    "border": "rgba(255, 255, 255, 0.08)",
+    "border_light": "rgba(255, 255, 255, 0.06)",
 }
 
 # Plotly chart template
 PLOTLY_LAYOUT = {
     "paper_bgcolor": "rgba(0,0,0,0)",
     "plot_bgcolor": COLORS["bg_secondary"],
-    "font": {"color": COLORS["text_primary"], "family": "Inter, sans-serif"},
+    "font": {"color": COLORS["text_primary"], "family": "Inter, -apple-system, sans-serif"},
     "xaxis": {
         "gridcolor": COLORS["border_light"],
         "zerolinecolor": COLORS["border"],
+        "tickfont": {"color": COLORS["text_muted"]},
     },
     "yaxis": {
         "gridcolor": COLORS["border_light"],
         "zerolinecolor": COLORS["border"],
+        "tickfont": {"color": COLORS["text_muted"]},
     },
     "margin": {"l": 40, "r": 20, "t": 40, "b": 40},
 }

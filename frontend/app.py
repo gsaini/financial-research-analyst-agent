@@ -25,19 +25,38 @@ render_sidebar()
 # Hero section
 st.markdown(
     """
-    <div style="text-align: center; padding: 3rem 1rem 2rem;">
-        <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem; line-height: 1.1;">
-            AI-Powered
-            <span style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    <div style="text-align: center; padding: 4rem 1rem 2.5rem; position: relative;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    width: 500px; height: 500px; background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+                    pointer-events: none; z-index: 0;"></div>
+        <h1 style="font-family: 'Inter', -apple-system, sans-serif; font-size: 2.75rem; font-weight: 800;
+                   margin-bottom: 0.75rem; line-height: 1.15; position: relative; z-index: 1; letter-spacing: -0.03em;">
+            <span style="color: #fafafa;">Financial</span>
+            <span style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                          background-clip: text;">
-                Financial Research
+                AI Platform
             </span>
         </h1>
-        <p style="color: #9ca3af; font-size: 1.1rem; max-width: 600px; margin: 0 auto 2rem;">
-            Comprehensive stock analysis, thematic investing, disruption scoring,
-            earnings tracking, and portfolio management — powered by intelligent agents.
+        <p style="font-family: 'Inter', sans-serif; color: #a1a1aa; font-size: 1.05rem;
+                  max-width: 600px; margin: 0 auto 2rem; line-height: 1.6; position: relative; z-index: 1; font-weight: 400;">
+            Advanced stock analysis, thematic investing, disruption scoring, earnings intelligence,
+            and portfolio optimization — powered by AI agents.
         </p>
+        <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; position: relative; z-index: 1;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: #a1a1aa; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; font-weight: 500;">
+                <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%;"></span>
+                Real-time Data
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: #a1a1aa; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; font-weight: 500;">
+                <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%;"></span>
+                10 AI Agents
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: #a1a1aa; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; font-weight: 500;">
+                <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%;"></span>
+                LLM Powered
+            </div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -81,7 +100,15 @@ with col_search:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # Market indices KPIs
-st.markdown("### Market Overview")
+st.markdown("""
+<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+    <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
+    <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: #fafafa; font-size: 0.9rem; font-weight: 600; letter-spacing: -0.01em;">
+        Market Pulse
+    </h3>
+    <div style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent);"></div>
+</div>
+""", unsafe_allow_html=True)
 from utils.data_service import get_stock_price
 from utils.formatters import format_currency, format_percent
 
@@ -107,10 +134,18 @@ for col, (ticker, label) in zip(cols, indices):
         else:
             col.metric(label=label, value="--", delta="N/A")
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br><br>", unsafe_allow_html=True)
 
 # Feature cards
-st.markdown("### Explore")
+st.markdown("""
+<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+    <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
+    <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: #fafafa; font-size: 0.9rem; font-weight: 600; letter-spacing: -0.01em;">
+        Features
+    </h3>
+    <div style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent);"></div>
+</div>
+""", unsafe_allow_html=True)
 
 features = [
     ("Stock Analysis", "Comprehensive technical, fundamental & sentiment analysis", "pages/2_Stock_Analysis.py"),
@@ -128,27 +163,30 @@ for i, (title, desc, page) in enumerate(features):
     with cols[i % 3]:
         st.markdown(
             f"""
-            <div class="card" style="min-height: 120px;">
-                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.375rem; color: #f9fafb;">
+            <div class="card" style="min-height: 120px; cursor: pointer;">
+                <div style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem;
+                            margin-bottom: 0.4rem; color: #fafafa; letter-spacing: -0.01em;">
                     {title}
                 </div>
-                <div style="font-size: 0.8rem; color: #9ca3af; line-height: 1.4;">
+                <div style="font-family: 'Inter', sans-serif; font-size: 0.825rem; color: #a1a1aa; line-height: 1.5;">
                     {desc}
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        if st.button(f"Open {title}", key=f"nav_{i}", use_container_width=True):
+        if st.button(f"Launch", key=f"nav_{i}", use_container_width=True):
             st.switch_page(page)
 
 # Footer
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown(
     """
-    <div style="text-align: center; padding: 1rem; border-top: 1px solid #1f2937;">
-        <p style="font-size: 0.7rem; color: #6b7280;">
-            For informational purposes only. Not financial advice. Data sourced from Yahoo Finance.
+    <div style="text-align: center; padding: 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); position: relative;">
+        <div style="position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+                    width: 80px; height: 1px; background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
+        <p style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: #52525b; font-weight: 400;">
+            Financial AI Platform v1.0 · For informational purposes only · Data: Yahoo Finance
         </p>
     </div>
     """,
