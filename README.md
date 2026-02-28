@@ -97,6 +97,7 @@ This AI agent system addresses these challenges by:
 | 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics   |
 | 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption        |
 | 📅 **Quarterly Earnings Analysis** | Track EPS surprises, beat/miss patterns, and earnings quality  |
+| 📉 **Performance Tracking**        | Multi-horizon returns, benchmark comparison & drawdown analysis|
 | 📑 **Report Generation**           | Automated investment research reports                          |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                      |
 | 🌐 **API Integration**             | REST API for external system integration                       |
@@ -113,8 +114,9 @@ This AI agent system addresses these challenges by:
 6. **Thematic Analyst Agent**: Analyzes stocks grouped by investment themes and megatrends
 7. **Disruption Analyst Agent**: Identifies market disruptors and at-risk companies via R&D, growth, and margin analysis
 8. **Earnings Analyst Agent**: Tracks quarterly EPS surprises, beat/miss patterns, and earnings quality
-9. **Report Generator Agent**: Compiles insights into structured reports
-10. **Orchestrator Agent**: Coordinates all agents and manages workflow
+9. **Performance Analyst Agent**: Tracks multi-horizon returns, benchmark comparison, risk-adjusted metrics, and drawdown analysis
+10. **Report Generator Agent**: Compiles insights into structured reports
+11. **Orchestrator Agent**: Coordinates all agents and manages workflow
 
 ---
 
@@ -160,6 +162,14 @@ This AI agent system addresses these challenges by:
 │  └───────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                  │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │ PERFORMANCE ANALYST AGENT                                                 │  │
+│  │                                                                           │  │
+│  │ • Multi-Horizon Absolute Returns     • Benchmark vs S&P 500/Nasdaq/Sector│  │
+│  │ • Sharpe & Sortino Ratios            • Beta & Volatility Analysis        │  │
+│  │ • Rolling 30-Day Returns             • Drawdown & Recovery Analysis      │  │
+│  └───────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                  │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │ REPORT GENERATOR AGENT                                                    │  │
 │  │                                                                           │  │
 │  │ • PDF / Markdown / JSON Reports  • Actionable Recommendations             │  │
@@ -185,8 +195,8 @@ This AI agent system addresses these challenges by:
 | **Vector Store**    | ChromaDB / Qdrant / Milvus / Weaviate        |
 | **Backend**         | FastAPI, Python 3.14+                        |
 | **Data Processing** | Pandas, NumPy                                |
-| **Visualization**   | Plotly, Matplotlib                           |
-| **Frontend**        | HTML5, CSS3, JavaScript                      |
+| **Visualization**   | Plotly, TradingView Lightweight Charts       |
+| **Frontend**        | Streamlit, HTML5, CSS3                       |
 | **Database**        | PostgreSQL / SQLite                          |
 | **Caching**         | Redis                                        |
 
@@ -386,6 +396,18 @@ curl -X POST "http://localhost:8000/api/v1/earnings/compare" \
   -d '{"symbols": ["AAPL", "MSFT", "GOOGL"], "include_narrative": false}'
 ```
 
+### Streamlit Dashboard
+
+```bash
+# Install frontend dependencies
+pip install -r frontend/requirements.txt
+
+# Launch the interactive dashboard (no LLM required)
+streamlit run frontend/app.py
+```
+
+The dashboard provides 10 interactive pages covering stock analysis, thematic investing, peer comparison, market disruption, quarterly earnings, portfolio analysis, reports, financial news, and historical performance tracking.
+
 ### Command Line Interface
 
 ```bash
@@ -460,6 +482,7 @@ Use this to:
 | `GET`       | `/api/v1/earnings/{symbol}`    | Get quarterly earnings analysis                |
 | `POST`      | `/api/v1/earnings/analyze`     | Analyze earnings with optional LLM narrative   |
 | `POST`      | `/api/v1/earnings/compare`     | Compare earnings profiles across companies     |
+| `GET`       | `/api/v1/performance/{symbol}` | Get historical performance tracking            |
 | `WebSocket` | `/ws/alerts`                   | Real-time alerts                               |
 
 ### Response Schema
@@ -626,6 +649,37 @@ Key Metrics:
 - Margin Trajectory     : Gross margin expansion/contraction pattern
 ```
 
+### 8. Performance Analyst Agent
+
+```python
+Capabilities:
+- Multi-horizon absolute returns (1D, 1W, 1M, 3M, 6M, YTD, 1Y, 3Y, 5Y)
+- Benchmark comparison vs S&P 500 (SPY), Nasdaq 100 (QQQ), and sector ETF
+- Auto-detection of sector ETF based on company sector (12 sector mappings)
+- Alpha calculation across horizons with outperform/underperform assessment
+- Risk-adjusted metrics: Sharpe ratio, Sortino ratio, Beta, volatility
+- Rolling 30-day returns with momentum trend analysis
+- Drawdown analysis: max drawdown, recovery time, current drawdown
+- Daily return statistics: mean, median, best/worst day, positive day %
+
+Risk-Adjusted Ratings:
+- Excellent (2.0+)  : Superior risk-adjusted performance
+- Good (1.0-2.0)    : Above-average risk-adjusted returns
+- Moderate (0.5-1.0): Acceptable risk-reward balance
+- Poor (<0.5)       : Risk not adequately compensated
+
+Benchmark Comparison:
+- vs S&P 500 (SPY)          : Broad market comparison
+- vs Nasdaq 100 (QQQ)       : Growth/tech benchmark
+- vs Sector ETF (XLK, etc.) : Industry-specific comparison
+
+Sector ETF Mappings:
+- Technology: XLK     - Healthcare: XLV      - Financials: XLF
+- Consumer Cyclical: XLY - Consumer Defensive: XLP - Communication: XLC
+- Industrials: XLI    - Energy: XLE          - Utilities: XLU
+- Real Estate: XLRE   - Basic Materials: XLB
+```
+
 ---
 
 ## 📊 Sample Analysis
@@ -785,7 +839,8 @@ financial-research-analyst-agent/
 │   │   ├── peer_comparison.py  # Peer discovery & comparison tools ✨
 │   │   ├── theme_mapper.py     # Theme-to-ticker mapping & analysis tools ✨
 │   │   ├── disruption_metrics.py # R&D, growth, margin & disruption scoring ✨
-│   │   └── earnings_data.py    # Quarterly earnings data & quality scoring ✨
+│   │   ├── earnings_data.py    # Quarterly earnings data & quality scoring ✨
+│   │   └── performance_tracker.py # Multi-horizon returns & benchmark comparison ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -807,6 +862,32 @@ financial-research-analyst-agent/
 │   ├── test_thematic.py        # Thematic investing tests ✨
 │   ├── test_disruption.py      # Market disruption analysis tests ✨
 │   └── test_earnings.py        # Quarterly earnings analysis tests ✨
+├── frontend/                       # Streamlit web dashboard ✨
+│   ├── app.py                      # Main entry point & landing page
+│   ├── requirements.txt            # Streamlit dependencies
+│   ├── assets/style.css            # Bloomberg-inspired dark theme CSS
+│   ├── pages/
+│   │   ├── 1_Dashboard.py          # Market overview & quick analysis
+│   │   ├── 2_Stock_Analysis.py     # Technical + fundamental + sentiment
+│   │   ├── 3_Thematic_Investing.py # Theme browser & analysis
+│   │   ├── 4_Peer_Comparison.py    # Side-by-side peer metrics
+│   │   ├── 5_Market_Disruption.py  # Disruption scoring
+│   │   ├── 6_Quarterly_Earnings.py # EPS tracking & quality
+│   │   ├── 7_Portfolio_Analysis.py # Multi-stock portfolio
+│   │   ├── 8_Reports.py           # Generate & download reports
+│   │   ├── 9_News.py             # Financial news feed
+│   │   └── 10_Performance.py      # Historical performance tracking ✨
+│   ├── components/                 # Reusable UI components
+│   │   ├── sidebar.py              # Navigation sidebar
+│   │   ├── charts.py               # TradingView chart wrappers
+│   │   ├── plotly_charts.py        # Plotly visualizations
+│   │   ├── metrics_cards.py        # KPI cards & badges
+│   │   └── data_tables.py          # Styled dataframes
+│   └── utils/
+│       ├── data_service.py         # Cached tool wrappers
+│       ├── formatters.py           # Number/date formatting
+│       ├── theme.py                # CSS injection & color constants
+│       └── session.py              # Session state management
 ├── data/
 │   └── sample_data.csv
 ├── docs/

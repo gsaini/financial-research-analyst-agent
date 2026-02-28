@@ -278,6 +278,13 @@ def compare_earnings(symbols: tuple) -> dict:
 
 # ─── Peer Comparison ──────────────────────────────────────────
 
+@st.cache_data(ttl=1800, show_spinner="Analyzing performance...")
+def track_performance(symbol: str) -> dict:
+    """Track comprehensive historical performance for a symbol."""
+    from src.tools.performance_tracker import track_performance as _fn
+    return _fn(symbol.upper())
+
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def compare_peers(symbol: str, peers: tuple = None) -> dict:
     """Compare a stock against peers. Wraps async function."""

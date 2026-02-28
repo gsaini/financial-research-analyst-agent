@@ -265,6 +265,131 @@ def create_earnings_surprise_chart(quarters, surprises, verdicts, height=300):
     return fig
 
 
+def create_line_chart(
+    dates,
+    values,
+    title="",
+    line_color=None,
+    fill=False,
+    height=300,
+    y_suffix="%",
+    show_zero_line=False,
+):
+    """Create a line chart for time-series data (rolling returns, trends)."""
+    if line_color is None:
+        line_color = COLORS.get("accent_primary", COLORS.get("accent_blue", "#6366f1"))
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=dates,
+        y=values,
+        mode="lines",
+        line={"color": line_color, "width": 2},
+        fill="tozeroy" if fill else "none",
+        fillcolor=f"rgba(99, 102, 241, 0.08)" if fill else None,
+        hovertemplate=f"%{{x}}<br>%{{y:.2f}}{y_suffix}<extra></extra>",
+    ))
+
+    if show_zero_line:
+        fig.add_hline(y=0, line_color=COLORS["border"], line_width=1, line_dash="dash")
+
+    fig.update_layout(
+        **get_plotly_layout(margin={"l": 50, "r": 20, "t": 50, "b": 40}),
+        height=height,
+        title={"text": title, "font": {"size": 14}},
+    )
+
+    return fig
+
+
+def create_area_chart(
+    dates,
+    values,
+    title="",
+    positive_color=None,
+    negative_color=None,
+    height=300,
+):
+    """Create an area chart with color based on positive/negative values (e.g., drawdowns)."""
+    if positive_color is None:
+        positive_color = COLORS.get("accent_primary", "#6366f1")
+    if negative_color is None:
+        negative_color = COLORS["danger"]
+
+    colors = [positive_color if v >= 0 else negative_color for v in values]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=dates,
+        y=values,
+        mode="lines",
+        line={"color": negative_color, "width": 1.5},
+        fill="tozeroy",
+        fillcolor="rgba(239, 68, 68, 0.15)",
+        hovertemplate="%{x}<br>%{y:.2f}%<extra></extra>",
+    ))
+
+    fig.add_hline(y=0, line_color=COLORS["border"], line_width=1)
+
+    fig.update_layout(
+        **get_plotly_layout(margin={"l": 50, "r": 20, "t": 50, "b": 40}),
+        height=height,
+        title={"text": title, "font": {"size": 14}},
+    )
+
+    return fig
+
+
+def create_benchmark_bar(
+    horizons,
+    stock_values,
+    benchmark_values,
+    stock_label="Stock",
+    benchmark_label="Benchmark",
+    title="",
+    height=350,
+):
+    """Create a grouped bar chart comparing stock vs benchmark returns."""
+    stock_color = COLORS.get("accent_primary", COLORS.get("accent_blue", "#6366f1"))
+    bench_color = COLORS.get("accent_secondary", COLORS.get("accent_violet", "#8b5cf6"))
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        name=stock_label,
+        x=horizons,
+        y=stock_values,
+        marker_color=stock_color,
+        text=[f"{v:+.1f}%" for v in stock_values],
+        textposition="outside",
+        textfont={"size": 10, "family": "JetBrains Mono"},
+    ))
+
+    fig.add_trace(go.Bar(
+        name=benchmark_label,
+        x=horizons,
+        y=benchmark_values,
+        marker_color=bench_color,
+        text=[f"{v:+.1f}%" for v in benchmark_values],
+        textposition="outside",
+        textfont={"size": 10, "family": "JetBrains Mono"},
+    ))
+
+    fig.add_hline(y=0, line_color=COLORS["border"], line_width=1)
+
+    fig.update_layout(
+        **get_plotly_layout(margin={"l": 50, "r": 20, "t": 50, "b": 60}),
+        height=height,
+        title={"text": title, "font": {"size": 14}},
+        barmode="group",
+        legend={"font": {"color": COLORS["text_secondary"]}},
+    )
+
+    return fig
+
+
 def create_donut_chart(labels, values, title="", colors=None, height=300):
     """Create a donut/pie chart."""
     if colors is None:
