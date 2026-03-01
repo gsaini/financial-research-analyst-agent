@@ -6,9 +6,11 @@ This agent specializes in risk assessment and portfolio risk management.
 
 from typing import Any, Dict, List, Optional
 from datetime import datetime
+import json
 import numpy as np
 from langchain_core.tools import BaseTool, tool
 from src.agents.base import BaseAgent
+from src.tools.performance_tracker import track_performance
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,7 +32,6 @@ class RiskAnalystAgent(BaseAgent):
         @tool("calculate_volatility")
         def calculate_volatility_tool(returns: str) -> Dict[str, Any]:
             """Calculate historical volatility from returns."""
-            import json
             return_list = json.loads(returns) if isinstance(returns, str) else returns
             returns_array = np.array(return_list)
             
@@ -46,7 +47,6 @@ class RiskAnalystAgent(BaseAgent):
         @tool("calculate_var")
         def calculate_var_tool(returns: str, confidence: float = 0.95) -> Dict[str, Any]:
             """Calculate Value at Risk (VaR)."""
-            import json
             return_list = json.loads(returns) if isinstance(returns, str) else returns
             returns_array = np.array(return_list)
             
@@ -62,7 +62,6 @@ class RiskAnalystAgent(BaseAgent):
         @tool("calculate_sharpe_ratio")
         def calculate_sharpe_ratio_tool(returns: str, risk_free_rate: float = 0.05) -> Dict[str, Any]:
             """Calculate Sharpe Ratio."""
-            import json
             return_list = json.loads(returns) if isinstance(returns, str) else returns
             returns_array = np.array(return_list)
             
@@ -79,7 +78,6 @@ class RiskAnalystAgent(BaseAgent):
         @tool("calculate_max_drawdown")
         def calculate_max_drawdown_tool(prices: str) -> Dict[str, Any]:
             """Calculate maximum drawdown."""
-            import json
             price_list = json.loads(prices) if isinstance(prices, str) else prices
             prices_array = np.array(price_list)
             
@@ -92,16 +90,110 @@ class RiskAnalystAgent(BaseAgent):
                 "current_drawdown": round(drawdown[-1] * 100, 2),
                 "risk_assessment": "High Risk" if max_dd < -0.3 else "Moderate Risk" if max_dd < -0.15 else "Low Risk"
             }
-        
-        return [calculate_volatility_tool, calculate_var_tool, calculate_sharpe_ratio_tool, calculate_max_drawdown_tool]
+
+        @tool("calculate_sortino_ratio")
+        def calculate_sortino_ratio_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Calculate the Sortino Ratio for a stock.
+
+            Sortino Ratio measures risk-adjusted return using only downside
+            deviation (negative returns), making it a better measure than
+            Sharpe for asymmetric return distributions.
+
+            Args:
+                symbol: Stock ticker symbol (e.g., 'AAPL').
+
+            Returns:
+                Dictionary with Sortino ratio value, rating, and interpretation.
+            """
+            result = track_performance(symbol)
+            if "error" in result:
+                return result
+            metrics = result.get("risk_adjusted_metrics", {})
+            sortino = metrics.get("sortino_ratio", 0)
+            rating = metrics.get("sortino_rating", "N/A")
+            return {
+                "symbol": symbol,
+                "sortino_ratio": sortino,
+                "rating": rating,
+                "interpretation": (
+                    f"Sortino of {sortino}: {rating}. "
+                    "Values above 1.0 indicate good downside-risk-adjusted returns."
+                ),
+            }
+
+        @tool("calculate_beta")
+        def calculate_beta_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Calculate Beta for a stock (vs S&P 500).
+
+            Beta measures a stock's volatility relative to the market.
+            Beta > 1 means more volatile than the market, < 1 means less volatile.
+
+            Args:
+                symbol: Stock ticker symbol (e.g., 'AAPL').
+
+            Returns:
+                Dictionary with Beta value and interpretation.
+            """
+            result = track_performance(symbol)
+            if "error" in result:
+                return result
+            metrics = result.get("risk_adjusted_metrics", {})
+            beta = metrics.get("beta", None)
+            interpretation = metrics.get("beta_interpretation", "Unable to compute")
+            return {
+                "symbol": symbol,
+                "beta": beta,
+                "benchmark": "S&P 500 (SPY)",
+                "interpretation": interpretation,
+            }
+
+        @tool("track_stock_performance")
+        def track_stock_performance_tool(symbol: str) -> str:
+            """
+            Get comprehensive performance tracking for a stock.
+
+            Returns multi-horizon returns (1D to 5Y), benchmark comparison
+            (SPY, QQQ, sector ETF), risk-adjusted metrics (Sharpe, Sortino,
+            Beta), rolling returns, and drawdown analysis.
+
+            Args:
+                symbol: Stock ticker symbol (e.g., 'AAPL').
+
+            Returns:
+                JSON string with comprehensive performance data.
+            """
+            result = track_performance(symbol)
+            return json.dumps(result, indent=2, default=str)
+
+        return [
+            calculate_volatility_tool,
+            calculate_var_tool,
+            calculate_sharpe_ratio_tool,
+            calculate_max_drawdown_tool,
+            calculate_sortino_ratio_tool,
+            calculate_beta_tool,
+            track_stock_performance_tool,
+        ]
     
     def _get_system_prompt(self) -> str:
         return """You are a Risk Analysis Expert Agent. Calculate risk metrics including:
 1. Volatility (daily and annualized)
 2. Value at Risk (VaR) and Conditional VaR
 3. Sharpe Ratio for risk-adjusted returns
-4. Maximum Drawdown analysis
-Provide clear risk assessments and recommendations."""
+4. Sortino Ratio for downside-risk-adjusted returns
+5. Beta (sensitivity to market movements vs S&P 500)
+6. Maximum Drawdown analysis
+7. Comprehensive performance tracking with benchmark comparison
+
+When analyzing risk:
+- Use calculate_sortino_ratio and calculate_beta for individual stock risk profiles
+- Use track_stock_performance for a complete picture including returns, benchmarks, and drawdowns
+- Compare the stock's Beta to understand market sensitivity
+- Consider both upside and downside risk (Sharpe vs Sortino)
+
+Provide clear risk assessments and actionable recommendations."""
     
     async def analyze_risk(self, symbol: str, price_data: Dict) -> Dict[str, Any]:
         """Perform comprehensive risk analysis."""

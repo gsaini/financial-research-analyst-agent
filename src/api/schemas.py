@@ -491,3 +491,30 @@ class EarningsCompareResponse(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 5: Historical Stock Performance Tracking Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class PerformanceResponse(BaseModel):
+    """Response containing comprehensive stock performance tracking."""
+    symbol: str
+    sector: Optional[str] = None
+    sector_etf: Optional[str] = None
+    data_points: int = 0
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    current_price: Optional[float] = None
+    absolute_returns: Dict[str, float] = {}
+    benchmark_comparison: Dict[str, Any] = {}
+    risk_adjusted_metrics: Dict[str, Any] = {}
+    rolling_returns: Dict[str, Any] = {}
+    drawdown_analysis: Dict[str, Any] = {}
+    return_statistics: Dict[str, Any] = {}
+    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

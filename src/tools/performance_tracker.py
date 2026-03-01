@@ -302,7 +302,9 @@ def track_performance(symbol: str) -> Dict[str, Any]:
     # ── Return Statistics ─────────────────────────────
     import numpy as np
 
-    daily_returns = np.diff([float(p) for p in prices[-252:]]) / np.array([float(p) for p in prices[-253:-1]]) * 100
+    price_slice = [float(p) for p in prices[-252:]]
+    price_arr = np.array(price_slice)
+    daily_returns = np.diff(price_arr) / price_arr[:-1] * 100
     return_stats = {}
     if len(daily_returns) > 0:
         return_stats = {

@@ -87,22 +87,22 @@ This AI agent system addresses these challenges by:
 
 ### Core Capabilities
 
-| Feature                            | Description                                                    |
-| ---------------------------------- | -------------------------------------------------------------- |
-| 🤖 **Multi-Agent Architecture**    | Specialized agents for different analysis tasks                |
-| 📊 **Real-time Data Analysis**     | Live market data processing and analysis                       |
-| 📈 **Technical Analysis**          | Automated chart pattern and indicator analysis                 |
-| 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                     |
-| 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.) |
-| 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics   |
-| 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption        |
-| 📅 **Quarterly Earnings Analysis** | Track EPS surprises, beat/miss patterns, and earnings quality  |
-| 📉 **Performance Tracking**        | Multi-horizon returns, benchmark comparison & drawdown analysis|
-| 📑 **Report Generation**           | Automated investment research reports                          |
-| 🔔 **Alert System**                | Configurable alerts for market conditions                      |
-| 🌐 **API Integration**             | REST API for external system integration                       |
-| 📖 **Interactive API Docs**        | Swagger UI & ReDoc with OpenAPI 3.0 specification              |
-| 📱 **Web Dashboard**               | Interactive visualization dashboard                            |
+| Feature                            | Description                                                     |
+| ---------------------------------- | --------------------------------------------------------------- |
+| 🤖 **Multi-Agent Architecture**    | Specialized agents for different analysis tasks                 |
+| 📊 **Real-time Data Analysis**     | Live market data processing and analysis                        |
+| 📈 **Technical Analysis**          | Automated chart pattern and indicator analysis                  |
+| 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                      |
+| 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.)  |
+| 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics    |
+| 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption         |
+| 📅 **Quarterly Earnings Analysis** | Track EPS surprises, beat/miss patterns, and earnings quality   |
+| 📉 **Performance Tracking**        | Multi-horizon returns, benchmark comparison & drawdown analysis |
+| 📑 **Report Generation**           | Automated investment research reports                           |
+| 🔔 **Alert System**                | Configurable alerts for market conditions                       |
+| 🌐 **API Integration**             | REST API for external system integration                        |
+| 📖 **Interactive API Docs**        | Swagger UI & ReDoc with OpenAPI 3.0 specification               |
+| 📱 **Web Dashboard**               | Interactive visualization dashboard                             |
 
 ### Agent Types
 
@@ -432,6 +432,7 @@ The API includes built-in interactive documentation powered by **OpenAPI 3.0** s
 Access the interactive Swagger UI at: **http://localhost:8000/docs**
 
 Features:
+
 - Interactive API explorer with "Try it out" functionality
 - Auto-generated request/response examples
 - Authentication testing
@@ -442,6 +443,7 @@ Features:
 Access the ReDoc documentation at: **http://localhost:8000/redoc**
 
 Features:
+
 - Clean, responsive three-panel design
 - Deep linking to specific endpoints
 - Code samples in multiple languages
@@ -452,6 +454,7 @@ Features:
 Download the raw OpenAPI specification: **http://localhost:8000/openapi.json**
 
 Use this to:
+
 - Generate client SDKs (Python, TypeScript, Go, etc.)
 - Import into Postman or Insomnia
 - Create automated API tests
@@ -861,7 +864,8 @@ financial-research-analyst-agent/
 │   ├── test_peer_comparison.py # Peer comparison tests ✨
 │   ├── test_thematic.py        # Thematic investing tests ✨
 │   ├── test_disruption.py      # Market disruption analysis tests ✨
-│   └── test_earnings.py        # Quarterly earnings analysis tests ✨
+│   ├── test_earnings.py        # Quarterly earnings analysis tests ✨
+│   └── test_performance.py     # Performance tracking tests ✨
 ├── frontend/                       # Streamlit web dashboard ✨
 │   ├── app.py                      # Main entry point & landing page
 │   ├── requirements.txt            # Streamlit dependencies

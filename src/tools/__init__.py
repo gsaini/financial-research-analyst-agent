@@ -41,6 +41,7 @@ from src.tools.peer_comparison import (
     discover_peers,
     compare_peers,
 )
+from src.tools.performance_tracker import track_performance
 
 __all__ = [
     "get_stock_price",
@@ -73,4 +74,5 @@ __all__ = [
     "calculate_theme_health_score",
     "discover_peers",
     "compare_peers",
+    "track_performance",
 ]

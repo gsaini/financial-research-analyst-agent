@@ -34,6 +34,7 @@ from src.api.schemas import (
     EarningsAnalysisResponse,
     EarningsCompareRequest,
     EarningsCompareResponse,
+    PerformanceResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -42,6 +43,7 @@ from src.tools.theme_mapper import list_available_themes, analyze_theme, get_the
 from src.tools.peer_comparison import compare_peers
 from src.tools.disruption_metrics import analyze_disruption, compare_disruption
 from src.tools.earnings_data import analyze_earnings, compare_earnings
+from src.tools.performance_tracker import track_performance
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -828,6 +830,33 @@ async def compare_earnings_profiles(request: EarningsCompareRequest):
         raise
     except Exception as e:
         logger.error(f"Earnings comparison error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+# Performance Tracking Endpoints (Feature 5)
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/performance/{symbol}", response_model=PerformanceResponse)
+async def get_performance(symbol: str):
+    """
+    Get comprehensive performance tracking for a stock symbol.
+
+    Returns multi-horizon returns, benchmark comparison (SPY, QQQ, sector ETF),
+    risk-adjusted metrics (Sharpe, Sortino, Beta), rolling returns,
+    drawdown analysis, and daily return statistics.
+    """
+    try:
+        result = track_performance(symbol.upper())
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        result["analyzed_at"] = datetime.utcnow().isoformat()
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Performance tracking error for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
