@@ -35,6 +35,7 @@ from src.api.schemas import (
     EarningsCompareRequest,
     EarningsCompareResponse,
     PerformanceResponse,
+    EventAnalysisResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -44,6 +45,7 @@ from src.tools.peer_comparison import compare_peers
 from src.tools.disruption_metrics import analyze_disruption, compare_disruption
 from src.tools.earnings_data import analyze_earnings, compare_earnings
 from src.tools.performance_tracker import track_performance
+from src.tools.event_analyzer import analyze_events
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -857,6 +859,35 @@ async def get_performance(symbol: str):
         raise
     except Exception as e:
         logger.error(f"Performance tracking error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+# Event-Driven Performance Endpoints (Feature 7)
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/events/{symbol}", response_model=EventAnalysisResponse)
+async def get_event_analysis(symbol: str, event_type: str = "earnings"):
+    """
+    Get event-driven performance analysis for a stock.
+
+    Analyzes stock price behaviour in a ±5-day window around significant
+    events (earnings, dividends, splits). Identifies repeating patterns
+    and correlates EPS surprise with price reaction.
+
+    Query params:
+        event_type: "earnings" (default), "dividends", or "splits"
+    """
+    try:
+        result = analyze_events(symbol.upper(), event_type=event_type)
+        if "error" in result and result.get("events_analyzed", 0) == 0:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Event analysis error for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

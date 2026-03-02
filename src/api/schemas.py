@@ -518,3 +518,24 @@ class PerformanceResponse(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 7: Event-Driven Performance Analysis Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class EventAnalysisResponse(BaseModel):
+    """Response containing event-driven performance analysis."""
+    symbol: str
+    name: str = ""
+    event_type: str = "earnings"
+    events_analyzed: int = 0
+    events: List[Dict[str, Any]] = []
+    historical_patterns: Dict[str, Any] = {}
+    correlation_with_surprise: Optional[Dict[str, Any]] = None
+    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

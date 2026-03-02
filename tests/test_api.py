@@ -55,7 +55,7 @@ class TestAnalyzeEndpoint:
             "change_percent": 1.5,
         }
         mock_hist.return_value = {
-            "closes": list(range(150, 200)),
+            "closes": [float(x) for x in range(150, 200)],
         }
         
         response = client.post(
@@ -89,7 +89,7 @@ class TestTechnicalEndpoint:
     def test_get_technical(self, mock_hist, client):
         """Test technical analysis endpoint."""
         mock_hist.return_value = {
-            "closes": list(range(100, 200)),
+            "closes": [float(x) for x in range(100, 200)],
         }
         
         response = client.get("/api/v1/technical/AAPL")

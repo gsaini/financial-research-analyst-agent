@@ -42,6 +42,7 @@ from src.tools.peer_comparison import (
     compare_peers,
 )
 from src.tools.performance_tracker import track_performance
+from src.tools.event_analyzer import analyze_events, get_event_calendar
 
 __all__ = [
     "get_stock_price",
@@ -75,4 +76,6 @@ __all__ = [
     "discover_peers",
     "compare_peers",
     "track_performance",
+    "analyze_events",
+    "get_event_calendar",
 ]

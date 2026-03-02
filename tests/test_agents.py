@@ -82,7 +82,7 @@ class TestDataCollectorAgent:
     
     def test_agent_initialization(self):
         """Test agent initializes correctly."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = DataCollectorAgent()
             
             assert agent.name == "DataCollector"
@@ -90,7 +90,7 @@ class TestDataCollectorAgent:
     
     def test_agent_has_tools(self):
         """Test agent has required tools."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = DataCollectorAgent()
             
             tool_names = [t.name for t in agent.tools]
@@ -103,14 +103,14 @@ class TestTechnicalAnalystAgent:
     
     def test_agent_initialization(self):
         """Test agent initializes correctly."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = TechnicalAnalystAgent()
             
             assert agent.name == "TechnicalAnalyst"
     
     def test_generate_signals(self):
         """Test signal generation from indicators."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = TechnicalAnalystAgent()
             
             indicators = {
@@ -132,14 +132,14 @@ class TestRiskAnalystAgent:
     
     def test_agent_initialization(self):
         """Test agent initializes correctly."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = RiskAnalystAgent()
             
             assert agent.name == "RiskAnalyst"
     
     def test_agent_has_risk_tools(self):
         """Test agent has risk calculation tools."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = RiskAnalystAgent()
             
             tool_names = [t.name for t in agent.tools]
@@ -153,14 +153,14 @@ class TestFundamentalAnalystAgent:
     
     def test_agent_initialization(self):
         """Test agent initializes correctly."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = FundamentalAnalystAgent()
             
             assert agent.name == "FundamentalAnalyst"
     
     def test_calculate_intrinsic_value(self):
         """Test intrinsic value calculation."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = FundamentalAnalystAgent()
             
             financial_data = {
@@ -182,7 +182,7 @@ class TestSentimentAnalystAgent:
     
     def test_agent_initialization(self):
         """Test agent initializes correctly."""
-        with patch('src.agents.base.ChatOpenAI'):
+        with patch('src.agents.base.BaseAgent._create_default_llm'):
             agent = SentimentAnalystAgent()
             
             assert agent.name == "SentimentAnalyst"

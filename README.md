@@ -87,22 +87,23 @@ This AI agent system addresses these challenges by:
 
 ### Core Capabilities
 
-| Feature                            | Description                                                     |
-| ---------------------------------- | --------------------------------------------------------------- |
-| 🤖 **Multi-Agent Architecture**    | Specialized agents for different analysis tasks                 |
-| 📊 **Real-time Data Analysis**     | Live market data processing and analysis                        |
-| 📈 **Technical Analysis**          | Automated chart pattern and indicator analysis                  |
-| 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                      |
-| 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.)  |
-| 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics    |
-| 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption         |
-| 📅 **Quarterly Earnings Analysis** | Track EPS surprises, beat/miss patterns, and earnings quality   |
-| 📉 **Performance Tracking**        | Multi-horizon returns, benchmark comparison & drawdown analysis |
-| 📑 **Report Generation**           | Automated investment research reports                           |
-| 🔔 **Alert System**                | Configurable alerts for market conditions                       |
-| 🌐 **API Integration**             | REST API for external system integration                        |
-| 📖 **Interactive API Docs**        | Swagger UI & ReDoc with OpenAPI 3.0 specification               |
-| 📱 **Web Dashboard**               | Interactive visualization dashboard                             |
+| Feature                            | Description                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| 🤖 **Multi-Agent Architecture**    | Specialized agents for different analysis tasks                         |
+| 📊 **Real-time Data Analysis**     | Live market data processing and analysis                                |
+| 📈 **Technical Analysis**          | Automated chart pattern and indicator analysis                          |
+| 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                              |
+| 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.)          |
+| 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics            |
+| 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption                 |
+| 📅 **Quarterly Earnings Analysis** | Track EPS surprises, beat/miss patterns, and earnings quality           |
+| 📉 **Performance Tracking**        | Multi-horizon returns, benchmark comparison & drawdown analysis         |
+| 📅 **Event-Driven Performance**    | Post-earnings price reactions, ±5 day windows, and surprise correlation |
+| 📑 **Report Generation**           | Automated investment research reports                                   |
+| 🔔 **Alert System**                | Configurable alerts for market conditions                               |
+| 🌐 **API Integration**             | REST API for external system integration                                |
+| 📖 **Interactive API Docs**        | Swagger UI & ReDoc with OpenAPI 3.0 specification                       |
+| 📱 **Web Dashboard**               | Interactive visualization dashboard                                     |
 
 ### Agent Types
 
@@ -486,6 +487,7 @@ Use this to:
 | `POST`      | `/api/v1/earnings/analyze`     | Analyze earnings with optional LLM narrative   |
 | `POST`      | `/api/v1/earnings/compare`     | Compare earnings profiles across companies     |
 | `GET`       | `/api/v1/performance/{symbol}` | Get historical performance tracking            |
+| `GET`       | `/api/v1/events/{symbol}`      | Get event-driven performance analysis          |
 | `WebSocket` | `/ws/alerts`                   | Real-time alerts                               |
 
 ### Response Schema
@@ -843,7 +845,8 @@ financial-research-analyst-agent/
 │   │   ├── theme_mapper.py     # Theme-to-ticker mapping & analysis tools ✨
 │   │   ├── disruption_metrics.py # R&D, growth, margin & disruption scoring ✨
 │   │   ├── earnings_data.py    # Quarterly earnings data & quality scoring ✨
-│   │   └── performance_tracker.py # Multi-horizon returns & benchmark comparison ✨
+│   │   ├── performance_tracker.py # Multi-horizon returns & benchmark comparison ✨
+│   │   └── event_analyzer.py   # Event calendar, price windows & pattern analysis ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -865,7 +868,8 @@ financial-research-analyst-agent/
 │   ├── test_thematic.py        # Thematic investing tests ✨
 │   ├── test_disruption.py      # Market disruption analysis tests ✨
 │   ├── test_earnings.py        # Quarterly earnings analysis tests ✨
-│   └── test_performance.py     # Performance tracking tests ✨
+│   ├── test_performance.py     # Performance tracking tests ✨
+│   └── test_events.py          # Event-driven performance tests ✨
 ├── frontend/                       # Streamlit web dashboard ✨
 │   ├── app.py                      # Main entry point & landing page
 │   ├── requirements.txt            # Streamlit dependencies

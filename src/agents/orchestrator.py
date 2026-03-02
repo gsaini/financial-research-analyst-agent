@@ -18,6 +18,7 @@ from src.agents.report_generator import ReportGeneratorAgent
 from src.agents.thematic import ThematicAnalystAgent
 from src.agents.disruption import DisruptionAnalystAgent
 from src.agents.earnings import EarningsAnalystAgent
+from src.tools.event_analyzer import analyze_events as run_event_analysis
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -238,6 +239,25 @@ Coordinate efficiently and ensure comprehensive analysis."""
         if include_narrative:
             return await self.earnings_analyst.analyze_with_comparative_narrative(symbols)
         return await self.earnings_analyst.compare_companies_direct(symbols)
+
+    async def analyze_events(
+        self, symbol: str, event_type: str = "earnings"
+    ) -> Dict[str, Any]:
+        """
+        Run event-driven performance analysis on a company.
+
+        Analyzes stock price behaviour in a ±5-day window around
+        significant events and identifies repeating patterns.
+
+        Args:
+            symbol: Stock ticker symbol.
+            event_type: Type of event — "earnings", "dividends", or "splits".
+
+        Returns:
+            Event analysis results dict.
+        """
+        logger.info(f"Starting event analysis for {symbol} ({event_type})")
+        return run_event_analysis(symbol, event_type=event_type)
 
 
 class FinancialResearchAgent:
