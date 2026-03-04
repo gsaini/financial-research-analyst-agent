@@ -99,6 +99,7 @@ This AI agent system addresses these challenges by:
 | 📅 **Quarterly Earnings Analysis** | Track EPS surprises, beat/miss patterns, and earnings quality           |
 | 📉 **Performance Tracking**        | Multi-horizon returns, benchmark comparison & drawdown analysis         |
 | 📅 **Event-Driven Performance**    | Post-earnings price reactions, ±5 day windows, and surprise correlation |
+| 🔄 **Backtesting Engine**          | Simulate trading strategies against historical data with trade logs     |
 | 📑 **Report Generation**           | Automated investment research reports                                   |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                               |
 | 🌐 **API Integration**             | REST API for external system integration                                |
@@ -488,6 +489,8 @@ Use this to:
 | `POST`      | `/api/v1/earnings/compare`     | Compare earnings profiles across companies     |
 | `GET`       | `/api/v1/performance/{symbol}` | Get historical performance tracking            |
 | `GET`       | `/api/v1/events/{symbol}`      | Get event-driven performance analysis          |
+| `POST`      | `/api/v1/backtest`             | Run a backtesting simulation                   |
+| `GET`       | `/api/v1/strategies`           | List available backtesting strategies          |
 | `WebSocket` | `/ws/alerts`                   | Real-time alerts                               |
 
 ### Response Schema
@@ -846,7 +849,9 @@ financial-research-analyst-agent/
 │   │   ├── disruption_metrics.py # R&D, growth, margin & disruption scoring ✨
 │   │   ├── earnings_data.py    # Quarterly earnings data & quality scoring ✨
 │   │   ├── performance_tracker.py # Multi-horizon returns & benchmark comparison ✨
-│   │   └── event_analyzer.py   # Event calendar, price windows & pattern analysis ✨
+│   │   ├── event_analyzer.py   # Event calendar, price windows & pattern analysis ✨
+│   │   ├── strategy_definitions.py # 5 predefined trading strategies ✨
+│   │   └── backtesting_engine.py  # Strategy simulation & performance metrics ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -869,7 +874,8 @@ financial-research-analyst-agent/
 │   ├── test_disruption.py      # Market disruption analysis tests ✨
 │   ├── test_earnings.py        # Quarterly earnings analysis tests ✨
 │   ├── test_performance.py     # Performance tracking tests ✨
-│   └── test_events.py          # Event-driven performance tests ✨
+│   ├── test_events.py          # Event-driven performance tests ✨
+│   └── test_backtest.py        # Backtesting engine tests ✨
 ├── frontend/                       # Streamlit web dashboard ✨
 │   ├── app.py                      # Main entry point & landing page
 │   ├── requirements.txt            # Streamlit dependencies
