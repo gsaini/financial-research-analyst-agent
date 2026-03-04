@@ -36,6 +36,8 @@ from src.api.schemas import (
     EarningsCompareResponse,
     PerformanceResponse,
     EventAnalysisResponse,
+    BacktestRequest,
+    BacktestResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -46,6 +48,7 @@ from src.tools.disruption_metrics import analyze_disruption, compare_disruption
 from src.tools.earnings_data import analyze_earnings, compare_earnings
 from src.tools.performance_tracker import track_performance
 from src.tools.event_analyzer import analyze_events
+from src.tools.backtesting_engine import run_backtest, list_strategies
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -889,6 +892,44 @@ async def get_event_analysis(symbol: str, event_type: str = "earnings"):
     except Exception as e:
         logger.error(f"Event analysis error for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 8: Backtesting Engine Endpoints
+# ─────────────────────────────────────────────────────────────
+
+
+@router.post("/backtest", response_model=BacktestResponse)
+async def run_backtest_endpoint(request: BacktestRequest):
+    """
+    Run a backtesting simulation for a stock using a predefined strategy.
+
+    Simulates the strategy against historical price data and returns
+    trade log, performance metrics, risk metrics, and a verdict.
+    """
+    try:
+        result = run_backtest(
+            symbol=request.symbol.upper(),
+            strategy=request.strategy,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            period=request.period,
+            initial_capital=request.initial_capital,
+        )
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Backtest error for {request.symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/strategies")
+async def get_strategies():
+    """List all available backtesting strategies."""
+    return {"strategies": list_strategies()}
 
 
 # Include router in app

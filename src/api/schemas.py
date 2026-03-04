@@ -2,7 +2,7 @@
 API request/response schemas.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from enum import Enum
 from pydantic import BaseModel, Field
@@ -535,6 +535,53 @@ class EventAnalysisResponse(BaseModel):
     historical_patterns: Dict[str, Any] = {}
     correlation_with_surprise: Optional[Dict[str, Any]] = None
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 8: Backtesting Engine Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class BacktestRequest(BaseModel):
+    """Request to run a backtesting simulation."""
+    symbol: str = Field(..., description="Stock ticker symbol")
+    strategy: str = Field(
+        default="rsi_reversal",
+        description="Strategy key (e.g. rsi_reversal, macd_crossover)",
+    )
+    start_date: Optional[str] = Field(None, description="Start date YYYY-MM-DD")
+    end_date: Optional[str] = Field(None, description="End date YYYY-MM-DD")
+    period: str = Field(default="5y", description="yfinance period if dates omitted")
+    initial_capital: float = Field(default=10000.0, description="Starting capital ($)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AAPL",
+                "strategy": "rsi_reversal",
+                "period": "5y",
+                "initial_capital": 10000.0,
+            }
+        }
+
+
+class BacktestResponse(BaseModel):
+    """Response containing backtesting results."""
+    symbol: str
+    strategy: str = ""
+    strategy_key: str = ""
+    strategy_description: str = ""
+    period: str = ""
+    initial_capital: float = 10000.0
+    data_points: int = 0
+    trade_log: List[Dict[str, Any]] = []
+    performance: Dict[str, Any] = {}
+    verdict: str = ""
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 
     class Config:

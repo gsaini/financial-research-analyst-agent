@@ -19,6 +19,7 @@ from src.agents.thematic import ThematicAnalystAgent
 from src.agents.disruption import DisruptionAnalystAgent
 from src.agents.earnings import EarningsAnalystAgent
 from src.tools.event_analyzer import analyze_events as run_event_analysis
+from src.tools.backtesting_engine import run_backtest as execute_backtest
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -258,6 +259,23 @@ Coordinate efficiently and ensure comprehensive analysis."""
         """
         logger.info(f"Starting event analysis for {symbol} ({event_type})")
         return run_event_analysis(symbol, event_type=event_type)
+
+    async def run_backtest(
+        self, symbol: str, strategy: str = "rsi_reversal", **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Run a backtesting simulation for a stock.
+
+        Args:
+            symbol: Stock ticker symbol.
+            strategy: Strategy key from the registry.
+            **kwargs: Forwarded to run_backtest (period, initial_capital, etc.).
+
+        Returns:
+            Backtest results dict.
+        """
+        logger.info(f"Starting backtest for {symbol} ({strategy})")
+        return execute_backtest(symbol, strategy=strategy, **kwargs)
 
 
 class FinancialResearchAgent:
