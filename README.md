@@ -92,7 +92,7 @@ This AI agent system addresses these challenges by:
 | 🤖 **Multi-Agent Architecture**    | Specialized agents for different analysis tasks                         |
 | 📊 **Real-time Data Analysis**     | Live market data processing and analysis                                |
 | 📈 **Technical Analysis**          | Automated chart pattern and indicator analysis                          |
-| 📰 **News Sentiment Analysis**     | NLP-powered news and social media analysis                              |
+| 📰 **News Sentiment Analysis**     | AI-powered sentiment scoring (FinBERT/VADER), trends & volume tracking  |
 | 🎯 **Thematic Investing Analysis** | Group stocks by investment themes (AI, EV, Green Energy, etc.)          |
 | 👥 **Peer Group Comparison**       | Compare stocks against industry peers with real-time metrics            |
 | 🚀 **Market Disruption Analysis**  | Identify disruptors and companies at risk of disruption                 |
@@ -169,6 +169,14 @@ This AI agent system addresses these challenges by:
 │  │ • Multi-Horizon Absolute Returns     • Benchmark vs S&P 500/Nasdaq/Sector│  │
 │  │ • Sharpe & Sortino Ratios            • Beta & Volatility Analysis        │  │
 │  │ • Rolling 30-Day Returns             • Drawdown & Recovery Analysis      │  │
+│  └───────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                  │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │ SENTIMENT ENGINE                                                          │  │
+│  │                                                                           │  │
+│  │ • FinBERT / VADER Financial Scoring  • Per-Article Confidence Scores     │  │
+│  │ • News Volume & Spike Detection      • Sentiment Trend Analysis          │  │
+│  │ • Topic Extraction                   • Source Diversity Assessment       │  │
 │  └───────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                  │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
@@ -408,7 +416,7 @@ pip install -r frontend/requirements.txt
 streamlit run frontend/app.py
 ```
 
-The dashboard provides 10 interactive pages covering stock analysis, thematic investing, peer comparison, market disruption, quarterly earnings, portfolio analysis, reports, financial news, and historical performance tracking.
+The dashboard provides 11 interactive pages covering stock analysis, thematic investing, peer comparison, market disruption, quarterly earnings, portfolio analysis, reports, financial news, historical performance tracking, and AI-powered sentiment analysis.
 
 ### Command Line Interface
 
@@ -688,6 +696,34 @@ Sector ETF Mappings:
 - Real Estate: XLRE   - Basic Materials: XLB
 ```
 
+### 9. Sentiment Engine
+
+```python
+Capabilities:
+- FinBERT financial-domain sentiment analysis (when transformers installed)
+- VADER with 60+ financial-domain lexicon enhancements (default fallback)
+- Per-article scoring with confidence and label (Positive/Negative/Neutral)
+- Time-weighted aggregate scoring (recent articles weighted higher)
+- News volume tracking with spike detection (2.5x+ normal = significant)
+- Sentiment trend analysis over time with direction/momentum
+- Source diversity assessment (broad/moderate/limited/single-source)
+- Topic extraction for key themes (earnings, analyst, product, regulation, etc.)
+- News-price correlation signal
+
+Sentiment Engines:
+- FinBERT (ProsusAI/finbert)  : Financial-domain transformer, high accuracy
+- VADER + Financial Lexicon   : Fast, no GPU required, enhanced with 60+ terms
+
+Financial Lexicon Additions:
+- Positive: beat, outperform, upgrade, bullish, rally, surge, catalyst, tailwind
+- Negative: miss, downgrade, bearish, selloff, plunge, bankruptcy, headwind, fraud
+
+Volume Spike Detection:
+- 2.5x+ normal  : Significant event coverage
+- 1.5x+ normal  : Elevated interest
+- Below 1.5x    : Normal news flow
+```
+
 ---
 
 ## 📊 Sample Analysis
@@ -849,6 +885,8 @@ financial-research-analyst-agent/
 │   │   ├── disruption_metrics.py # R&D, growth, margin & disruption scoring ✨
 │   │   ├── earnings_data.py    # Quarterly earnings data & quality scoring ✨
 │   │   ├── performance_tracker.py # Multi-horizon returns & benchmark comparison ✨
+│   │   ├── sentiment_engine.py  # FinBERT/VADER financial sentiment scoring ✨
+│   │   ├── news_impact.py       # News volume, trends & source diversity ✨
 │   │   ├── event_analyzer.py   # Event calendar, price windows & pattern analysis ✨
 │   │   ├── strategy_definitions.py # 5 predefined trading strategies ✨
 │   │   └── backtesting_engine.py  # Strategy simulation & performance metrics ✨
@@ -890,7 +928,8 @@ financial-research-analyst-agent/
 │   │   ├── 7_Portfolio_Analysis.py # Multi-stock portfolio
 │   │   ├── 8_Reports.py           # Generate & download reports
 │   │   ├── 9_News.py             # Financial news feed
-│   │   └── 10_Performance.py      # Historical performance tracking ✨
+│   │   ├── 10_Performance.py      # Historical performance tracking ✨
+│   │   └── 11_Sentiment.py       # Enhanced news & sentiment analysis ✨
 │   ├── components/                 # Reusable UI components
 │   │   ├── sidebar.py              # Navigation sidebar
 │   │   ├── charts.py               # TradingView chart wrappers

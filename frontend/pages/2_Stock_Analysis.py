@@ -15,11 +15,11 @@ from utils.data_service import (
     get_stock_price, get_historical_data, get_company_info,
     get_financial_statements, get_technical_analysis,
     get_financial_health, get_valuation_ratios, get_profitability_ratios,
-    get_company_news,
+    get_company_news, analyze_news_sentiment,
 )
 from components.sidebar import render_sidebar
 from components.charts import render_candlestick_chart
-from components.plotly_charts import create_gauge_chart, create_radar_chart, create_grouped_bar
+from components.plotly_charts import create_gauge_chart, create_radar_chart, create_grouped_bar, create_donut_chart
 from components.metrics_cards import render_company_header, render_news_card, render_score_badge
 from components.data_tables import render_styled_dataframe, render_metrics_table
 
@@ -394,24 +394,87 @@ with tab_fund:
 # ═══ SENTIMENT TAB ═══════════════════════════════════════════
 with tab_sent:
     st.markdown("#### News Sentiment")
-    st.caption(f"Latest news articles for {symbol}")
 
-    news = get_company_news(symbol)
-    if news:
-        cols = st.columns(2)
-        for i, article in enumerate(news[:8]):
-            with cols[i % 2]:
-                render_news_card(
-                    title=article.get("title", "Untitled"),
-                    source=article.get("source", ""),
-                    date=format_date(article.get("published_at", "")),
-                    description=article.get("description", ""),
-                    url=article.get("url", ""),
-                    thumbnail=article.get("thumbnail", ""),
-                    content_type=article.get("type", ""),
+    sent_data = analyze_news_sentiment(symbol)
+    if "error" not in sent_data and sent_data.get("articles_analyzed", 0) > 0:
+        agg_sent = sent_data.get("aggregate_sentiment", {})
+        sent_dist = sent_data.get("distribution", {})
+
+        # Sentiment overview row
+        sc1, sc2, sc3 = st.columns([1, 1, 1])
+        with sc1:
+            agg_score = agg_sent.get("score", 0)
+            gauge_val = (agg_score + 1) / 2 * 100
+            fig = create_gauge_chart(
+                value=round(gauge_val, 1),
+                title="Sentiment Score",
+                min_val=0, max_val=100,
+                ranges=[
+                    {"range": [0, 30], "color": "rgba(239, 68, 68, 0.3)"},
+                    {"range": [30, 45], "color": "rgba(245, 158, 11, 0.3)"},
+                    {"range": [45, 55], "color": "rgba(161, 161, 170, 0.2)"},
+                    {"range": [55, 70], "color": "rgba(59, 130, 246, 0.3)"},
+                    {"range": [70, 100], "color": "rgba(16, 185, 129, 0.3)"},
+                ],
+                height=200,
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            st.caption(f"**{agg_sent.get('label', 'Neutral')}** · {sent_data.get('articles_analyzed', 0)} articles")
+
+        with sc2:
+            if sent_dist:
+                fig = create_donut_chart(
+                    labels=["Positive", "Neutral", "Negative"],
+                    values=[sent_dist.get("positive", 0), sent_dist.get("neutral", 0), sent_dist.get("negative", 0)],
+                    title="Distribution",
+                    colors=["#22c55e", "#71717a", "#ef4444"],
+                    height=200,
                 )
+                st.plotly_chart(fig, use_container_width=True)
+
+        with sc3:
+            vol = sent_data.get("volume", {})
+            st.metric("24h Volume", vol.get("last_24h", 0))
+            st.metric("7d Volume", vol.get("last_7d", 0))
+            trend_dir = sent_data.get("sentiment_trend", {}).get("direction", "Stable")
+            st.metric("Trend", trend_dir)
+
+        # Scored articles
+        scored = sent_data.get("scored_articles", [])
+        if scored:
+            st.markdown("##### Scored Articles")
+            cols = st.columns(2)
+            for i, article in enumerate(scored[:8]):
+                sent = article.get("sentiment", {})
+                score = sent.get("score", 0)
+                label = sent.get("label", "Neutral")
+                with cols[i % 2]:
+                    render_news_card(
+                        title=f"[{score:+.2f}] {article.get('title', 'Untitled')}",
+                        source=article.get("source", ""),
+                        date=format_date(article.get("published_at", "")),
+                        description=article.get("description", ""),
+                        url=article.get("url", ""),
+                        thumbnail=article.get("thumbnail", ""),
+                        content_type=article.get("type", ""),
+                    )
     else:
-        st.info(f"No recent news found for {symbol}.")
+        news = get_company_news(symbol)
+        if news:
+            cols = st.columns(2)
+            for i, article in enumerate(news[:8]):
+                with cols[i % 2]:
+                    render_news_card(
+                        title=article.get("title", "Untitled"),
+                        source=article.get("source", ""),
+                        date=format_date(article.get("published_at", "")),
+                        description=article.get("description", ""),
+                        url=article.get("url", ""),
+                        thumbnail=article.get("thumbnail", ""),
+                        content_type=article.get("type", ""),
+                    )
+        else:
+            st.info(f"No recent news found for {symbol}.")
 
 # ═══ RISK TAB ════════════════════════════════════════════════
 with tab_risk:

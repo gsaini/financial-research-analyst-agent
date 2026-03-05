@@ -157,6 +157,7 @@ features = [
     ("Reports", "Generate downloadable research reports in Markdown or JSON", "pages/8_Reports.py"),
     ("Financial News", "Browse latest headlines across your watchlist and any ticker", "pages/9_News.py"),
     ("Performance Tracking", "Multi-horizon returns, benchmark comparison & drawdown analysis", "pages/10_Performance.py"),
+    ("Sentiment Analysis", "AI-powered news sentiment scoring, trends & source diversity", "pages/11_Sentiment.py"),
 ]
 
 cols = st.columns(3)

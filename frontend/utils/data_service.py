@@ -220,6 +220,15 @@ def get_company_news(symbol: str) -> list:
         return []
 
 
+# ─── Sentiment & News Impact ─────────────────────────────────
+
+@st.cache_data(ttl=600, show_spinner="Analyzing sentiment...")
+def analyze_news_sentiment(symbol: str) -> dict:
+    """Full news & sentiment impact analysis for a symbol."""
+    from src.tools.news_impact import analyze_news_impact as _fn
+    return _fn(symbol.upper())
+
+
 # ─── Theme Analysis ───────────────────────────────────────────
 
 @st.cache_data(ttl=60, show_spinner=False)
