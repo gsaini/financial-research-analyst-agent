@@ -38,6 +38,7 @@ from src.api.schemas import (
     EventAnalysisResponse,
     BacktestRequest,
     BacktestResponse,
+    ObservationsResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -49,6 +50,7 @@ from src.tools.earnings_data import analyze_earnings, compare_earnings
 from src.tools.performance_tracker import track_performance
 from src.tools.event_analyzer import analyze_events
 from src.tools.backtesting_engine import run_backtest, list_strategies
+from src.tools.insight_engine import generate_observations
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -930,6 +932,65 @@ async def run_backtest_endpoint(request: BacktestRequest):
 async def get_strategies():
     """List all available backtesting strategies."""
     return {"strategies": list_strategies()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 11: Key Observations & Insights Endpoints
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/observations/{symbol}", response_model=ObservationsResponse)
+async def get_observations(symbol: str):
+    """
+    Generate key observations and insights for a stock.
+
+    Synthesises technical, fundamental, earnings, performance, and peer
+    data into ranked, cross-dimensional observations.
+    """
+    try:
+        sym = symbol.upper()
+        analyses: dict = {}
+
+        # Gather available analyses (best-effort; missing data is fine)
+        try:
+            price_data = get_historical_data(sym, period="1y")
+            if price_data and len(price_data.get("prices", [])) > 14:
+                rsi = calculate_rsi(price_data["prices"])
+                macd = calculate_macd(price_data["prices"])
+                ma = calculate_moving_averages(price_data["prices"])
+                analyses["technical"] = {"rsi": rsi, "macd": macd, "moving_averages": ma}
+        except Exception:
+            pass
+
+        try:
+            from src.tools.performance_tracker import track_performance
+            perf = track_performance(sym)
+            if perf and "error" not in perf:
+                analyses["performance"] = perf
+        except Exception:
+            pass
+
+        try:
+            from src.tools.earnings_data import analyze_earnings
+            earn = analyze_earnings(sym)
+            if earn and "error" not in earn:
+                analyses["earnings"] = earn
+        except Exception:
+            pass
+
+        try:
+            from src.tools.peer_comparison import compare_peers
+            peers = compare_peers(sym)
+            if peers and "error" not in peers:
+                analyses["peers"] = peers
+        except Exception:
+            pass
+
+        result = generate_observations(sym, analyses)
+        return result
+    except Exception as e:
+        logger.error(f"Observations error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Include router in app

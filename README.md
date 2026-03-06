@@ -100,6 +100,7 @@ This AI agent system addresses these challenges by:
 | 📉 **Performance Tracking**        | Multi-horizon returns, benchmark comparison & drawdown analysis         |
 | 📅 **Event-Driven Performance**    | Post-earnings price reactions, ±5 day windows, and surprise correlation |
 | 🔄 **Backtesting Engine**          | Simulate trading strategies against historical data with trade logs     |
+| 🔍 **Key Observations**            | Cross-dimensional insights, confluences, anomalies & ranked signals     |
 | 📑 **Report Generation**           | Automated investment research reports                                   |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                               |
 | 🌐 **API Integration**             | REST API for external system integration                                |
@@ -475,31 +476,32 @@ Use this to:
 
 ### Endpoints
 
-| Method      | Endpoint                       | Description                                    |
-| ----------- | ------------------------------ | ---------------------------------------------- |
-| `POST`      | `/api/v1/analyze`              | Analyze a stock symbol                         |
-| `GET`       | `/api/v1/technical/{symbol}`   | Get technical analysis                         |
-| `GET`       | `/api/v1/fundamental/{symbol}` | Get fundamental analysis                       |
-| `GET`       | `/api/v1/sentiment/{symbol}`   | Get sentiment analysis                         |
-| `POST`      | `/api/v1/portfolio`            | Analyze a portfolio                            |
-| `POST`      | `/api/v1/reports`              | Generate a report                              |
-| `GET`       | `/api/v1/market/summary`       | Get market summary                             |
-| `GET`       | `/api/v1/themes`               | List all available investment themes           |
-| `POST`      | `/api/v1/theme/{theme_id}`     | Analyze an investment theme                    |
-| `POST`      | `/api/v1/themes/compare`       | Compare multiple themes side by side           |
-| `GET`       | `/api/v1/peers/{symbol}`       | Get peer comparison (auto-discovery)           |
-| `POST`      | `/api/v1/peers/compare`        | Compare stock against specific peers           |
-| `GET`       | `/api/v1/disruption/{symbol}`  | Get market disruption analysis                 |
-| `POST`      | `/api/v1/disruption/analyze`   | Analyze disruption with optional LLM narrative |
-| `POST`      | `/api/v1/disruption/compare`   | Compare disruption profiles across companies   |
-| `GET`       | `/api/v1/earnings/{symbol}`    | Get quarterly earnings analysis                |
-| `POST`      | `/api/v1/earnings/analyze`     | Analyze earnings with optional LLM narrative   |
-| `POST`      | `/api/v1/earnings/compare`     | Compare earnings profiles across companies     |
-| `GET`       | `/api/v1/performance/{symbol}` | Get historical performance tracking            |
-| `GET`       | `/api/v1/events/{symbol}`      | Get event-driven performance analysis          |
-| `POST`      | `/api/v1/backtest`             | Run a backtesting simulation                   |
-| `GET`       | `/api/v1/strategies`           | List available backtesting strategies          |
-| `WebSocket` | `/ws/alerts`                   | Real-time alerts                               |
+| Method      | Endpoint                        | Description                                     |
+| ----------- | ------------------------------- | ----------------------------------------------- |
+| `POST`      | `/api/v1/analyze`               | Analyze a stock symbol                          |
+| `GET`       | `/api/v1/technical/{symbol}`    | Get technical analysis                          |
+| `GET`       | `/api/v1/fundamental/{symbol}`  | Get fundamental analysis                        |
+| `GET`       | `/api/v1/sentiment/{symbol}`    | Get sentiment analysis                          |
+| `POST`      | `/api/v1/portfolio`             | Analyze a portfolio                             |
+| `POST`      | `/api/v1/reports`               | Generate a report                               |
+| `GET`       | `/api/v1/market/summary`        | Get market summary                              |
+| `GET`       | `/api/v1/themes`                | List all available investment themes            |
+| `POST`      | `/api/v1/theme/{theme_id}`      | Analyze an investment theme                     |
+| `POST`      | `/api/v1/themes/compare`        | Compare multiple themes side by side            |
+| `GET`       | `/api/v1/peers/{symbol}`        | Get peer comparison (auto-discovery)            |
+| `POST`      | `/api/v1/peers/compare`         | Compare stock against specific peers            |
+| `GET`       | `/api/v1/disruption/{symbol}`   | Get market disruption analysis                  |
+| `POST`      | `/api/v1/disruption/analyze`    | Analyze disruption with optional LLM narrative  |
+| `POST`      | `/api/v1/disruption/compare`    | Compare disruption profiles across companies    |
+| `GET`       | `/api/v1/earnings/{symbol}`     | Get quarterly earnings analysis                 |
+| `POST`      | `/api/v1/earnings/analyze`      | Analyze earnings with optional LLM narrative    |
+| `POST`      | `/api/v1/earnings/compare`      | Compare earnings profiles across companies      |
+| `GET`       | `/api/v1/performance/{symbol}`  | Get historical performance tracking             |
+| `GET`       | `/api/v1/events/{symbol}`       | Get event-driven performance analysis           |
+| `POST`      | `/api/v1/backtest`              | Run a backtesting simulation                    |
+| `GET`       | `/api/v1/strategies`            | List available backtesting strategies           |
+| `GET`       | `/api/v1/observations/{symbol}` | Key observations and cross-dimensional insights |
+| `WebSocket` | `/ws/alerts`                    | Real-time alerts                                |
 
 ### Response Schema
 
@@ -889,7 +891,8 @@ financial-research-analyst-agent/
 │   │   ├── news_impact.py       # News volume, trends & source diversity ✨
 │   │   ├── event_analyzer.py   # Event calendar, price windows & pattern analysis ✨
 │   │   ├── strategy_definitions.py # 5 predefined trading strategies ✨
-│   │   └── backtesting_engine.py  # Strategy simulation & performance metrics ✨
+│   │   ├── backtesting_engine.py  # Strategy simulation & performance metrics ✨
+│   │   └── insight_engine.py     # Cross-dimensional observations & ranking ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -913,7 +916,8 @@ financial-research-analyst-agent/
 │   ├── test_earnings.py        # Quarterly earnings analysis tests ✨
 │   ├── test_performance.py     # Performance tracking tests ✨
 │   ├── test_events.py          # Event-driven performance tests ✨
-│   └── test_backtest.py        # Backtesting engine tests ✨
+│   ├── test_backtest.py        # Backtesting engine tests ✨
+│   └── test_observations.py    # Key observations & insights tests ✨
 ├── frontend/                       # Streamlit web dashboard ✨
 │   ├── app.py                      # Main entry point & landing page
 │   ├── requirements.txt            # Streamlit dependencies

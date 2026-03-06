@@ -20,6 +20,7 @@ from src.agents.disruption import DisruptionAnalystAgent
 from src.agents.earnings import EarningsAnalystAgent
 from src.tools.event_analyzer import analyze_events as run_event_analysis
 from src.tools.backtesting_engine import run_backtest as execute_backtest
+from src.tools.insight_engine import generate_observations as run_observations
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -276,6 +277,23 @@ Coordinate efficiently and ensure comprehensive analysis."""
         """
         logger.info(f"Starting backtest for {symbol} ({strategy})")
         return execute_backtest(symbol, strategy=strategy, **kwargs)
+
+    async def get_observations(
+        self, symbol: str, analyses: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate key observations and insights for a stock.
+
+        Args:
+            symbol: Stock ticker symbol.
+            analyses: Pre-computed analysis results. If None, observation
+                      engine will work with empty data.
+
+        Returns:
+            Observations results dict.
+        """
+        logger.info(f"Generating observations for {symbol}")
+        return run_observations(symbol, analyses or {})
 
 
 class FinancialResearchAgent:

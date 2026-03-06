@@ -586,3 +586,25 @@ class BacktestResponse(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 11: Key Observations & Insights Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class ObservationsResponse(BaseModel):
+    """Response containing synthesised key observations."""
+    symbol: str
+    total_observations: int = 0
+    overall_bias: str = "Mixed / Neutral"
+    bullish_signals: int = 0
+    bearish_signals: int = 0
+    observations: List[Dict[str, Any]] = []
+    confluences: List[Dict[str, Any]] = []
+    anomalies: List[Dict[str, Any]] = []
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

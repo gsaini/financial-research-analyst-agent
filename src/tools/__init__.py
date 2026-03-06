@@ -44,6 +44,7 @@ from src.tools.peer_comparison import (
 from src.tools.performance_tracker import track_performance
 from src.tools.event_analyzer import analyze_events, get_event_calendar
 from src.tools.backtesting_engine import run_backtest, list_strategies
+from src.tools.insight_engine import generate_observations
 
 __all__ = [
     "get_stock_price",
@@ -81,4 +82,5 @@ __all__ = [
     "get_event_calendar",
     "run_backtest",
     "list_strategies",
+    "generate_observations",
 ]
