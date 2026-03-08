@@ -45,6 +45,7 @@ from src.tools.performance_tracker import track_performance
 from src.tools.event_analyzer import analyze_events, get_event_calendar
 from src.tools.backtesting_engine import run_backtest, list_strategies
 from src.tools.insight_engine import generate_observations
+from src.tools.insider_activity import analyze_smart_money
 
 __all__ = [
     "get_stock_price",
@@ -83,4 +84,5 @@ __all__ = [
     "run_backtest",
     "list_strategies",
     "generate_observations",
+    "analyze_smart_money",
 ]

@@ -21,6 +21,7 @@ from src.agents.earnings import EarningsAnalystAgent
 from src.tools.event_analyzer import analyze_events as run_event_analysis
 from src.tools.backtesting_engine import run_backtest as execute_backtest
 from src.tools.insight_engine import generate_observations as run_observations
+from src.tools.insider_activity import analyze_smart_money as run_smart_money
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -294,6 +295,22 @@ Coordinate efficiently and ensure comprehensive analysis."""
         """
         logger.info(f"Generating observations for {symbol}")
         return run_observations(symbol, analyses or {})
+
+    async def analyze_insider_activity(
+        self, symbol: str, days: int = 90,
+    ) -> Dict[str, Any]:
+        """
+        Analyze insider & institutional activity for a stock.
+
+        Args:
+            symbol: Stock ticker symbol.
+            days: Look-back window for insider transactions.
+
+        Returns:
+            Smart money analysis results dict.
+        """
+        logger.info(f"Analyzing insider activity for {symbol}")
+        return run_smart_money(symbol, days=days)
 
 
 class FinancialResearchAgent:

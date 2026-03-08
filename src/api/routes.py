@@ -39,6 +39,7 @@ from src.api.schemas import (
     BacktestRequest,
     BacktestResponse,
     ObservationsResponse,
+    SmartMoneyResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -51,6 +52,7 @@ from src.tools.performance_tracker import track_performance
 from src.tools.event_analyzer import analyze_events
 from src.tools.backtesting_engine import run_backtest, list_strategies
 from src.tools.insight_engine import generate_observations
+from src.tools.insider_activity import analyze_smart_money
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -990,6 +992,30 @@ async def get_observations(symbol: str):
         return result
     except Exception as e:
         logger.error(f"Observations error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 12: Insider & Institutional Activity Endpoints
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/insiders/{symbol}", response_model=SmartMoneyResponse)
+async def get_insider_institutional(symbol: str, days: int = 90):
+    """
+    Get insider & institutional activity analysis for a stock.
+
+    Includes insider transactions (Form 4 filings), institutional
+    holdings, cluster buying detection, and a combined smart money score.
+
+    Query params:
+        days: Look-back window for insider transactions (default 90).
+    """
+    try:
+        result = analyze_smart_money(symbol.upper(), days=days)
+        return result
+    except Exception as e:
+        logger.error(f"Smart money analysis error for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

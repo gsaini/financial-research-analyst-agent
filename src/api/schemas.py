@@ -608,3 +608,23 @@ class ObservationsResponse(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 12: Insider & Institutional Activity Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class SmartMoneyResponse(BaseModel):
+    """Response containing insider & institutional activity analysis."""
+    symbol: str
+    period_days: int = 90
+    insider_activity: Dict[str, Any] = {}
+    institutional_activity: Dict[str, Any] = {}
+    smart_money_signal: Dict[str, Any] = {}
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
