@@ -102,6 +102,7 @@ This AI agent system addresses these challenges by:
 | 🔄 **Backtesting Engine**          | Simulate trading strategies against historical data with trade logs     |
 | 🔍 **Key Observations**            | Cross-dimensional insights, confluences, anomalies & ranked signals     |
 | 👤 **Insider & Institutional**     | Track insider transactions, institutional holdings & smart money score  |
+| 📊 **Options Flow Analysis**       | Put/Call ratios, implied volatility skew, max pain & unusual activity   |
 | 📑 **Report Generation**           | Automated investment research reports                                   |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                               |
 | 🌐 **API Integration**             | REST API for external system integration                                |
@@ -503,6 +504,7 @@ Use this to:
 | `GET`       | `/api/v1/strategies`            | List available backtesting strategies           |
 | `GET`       | `/api/v1/observations/{symbol}` | Key observations and cross-dimensional insights |
 | `GET`       | `/api/v1/insiders/{symbol}`     | Insider & institutional activity analysis       |
+| `GET`       | `/api/v1/options/{symbol}`      | Options flow and sentiment analysis             |
 | `WebSocket` | `/ws/alerts`                    | Real-time alerts                                |
 
 ### Response Schema
@@ -895,7 +897,8 @@ financial-research-analyst-agent/
 │   │   ├── strategy_definitions.py # 5 predefined trading strategies ✨
 │   │   ├── backtesting_engine.py  # Strategy simulation & performance metrics ✨
 │   │   ├── insight_engine.py     # Cross-dimensional observations & ranking ✨
-│   │   └── insider_activity.py   # Insider txns, institutional holdings & smart money ✨
+│   │   ├── insider_activity.py   # Insider txns, institutional holdings & smart money ✨
+│   │   └── options_analyzer.py   # Options flow, IV skew, max pain & unusual activity ✨
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -921,7 +924,8 @@ financial-research-analyst-agent/
 │   ├── test_events.py          # Event-driven performance tests ✨
 │   ├── test_backtest.py        # Backtesting engine tests ✨
 │   ├── test_observations.py    # Key observations & insights tests ✨
-│   └── test_insiders.py        # Insider & institutional activity tests ✨
+│   ├── test_insiders.py        # Insider & institutional activity tests ✨
+│   └── test_options.py         # Options flow analysis tests ✨
 ├── frontend/                       # Streamlit web dashboard ✨
 │   ├── app.py                      # Main entry point & landing page
 │   ├── requirements.txt            # Streamlit dependencies

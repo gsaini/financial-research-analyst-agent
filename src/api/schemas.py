@@ -628,3 +628,25 @@ class SmartMoneyResponse(BaseModel):
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
 
+
+# ─────────────────────────────────────────────────────────────
+# Feature 13: Options Flow Analysis Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class OptionsAnalysisResponse(BaseModel):
+    """Response containing options flow analysis."""
+    symbol: str
+    current_price: float = 0.0
+    options_sentiment: Dict[str, Any] = {}
+    implied_volatility: Dict[str, Any] = {}
+    max_pain: Dict[str, Any] = {}
+    unusual_activity: List[Dict[str, Any]] = []
+    options_signal: Dict[str, Any] = {}
+    expirations_analyzed: List[str] = []
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+

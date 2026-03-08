@@ -40,6 +40,7 @@ from src.api.schemas import (
     BacktestResponse,
     ObservationsResponse,
     SmartMoneyResponse,
+    OptionsAnalysisResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -53,6 +54,7 @@ from src.tools.event_analyzer import analyze_events
 from src.tools.backtesting_engine import run_backtest, list_strategies
 from src.tools.insight_engine import generate_observations
 from src.tools.insider_activity import analyze_smart_money
+from src.tools.options_analyzer import analyze_options
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -1016,6 +1018,28 @@ async def get_insider_institutional(symbol: str, days: int = 90):
         return result
     except Exception as e:
         logger.error(f"Smart money analysis error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 13: Options Flow Analysis Endpoints
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/options/{symbol}", response_model=OptionsAnalysisResponse)
+async def get_options_flow(symbol: str):
+    """
+    Get options flow analysis for a stock.
+
+    Includes put/call ratios, implied volatility analysis, unusual
+    activity detection, and max pain calculation.
+    """
+    try:
+        result = analyze_options(symbol.upper())
+        return result
+    except Exception as e:
+        logger.error(f"Options analysis error for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

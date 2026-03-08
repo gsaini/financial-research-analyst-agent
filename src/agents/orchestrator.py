@@ -18,6 +18,7 @@ from src.agents.report_generator import ReportGeneratorAgent
 from src.agents.thematic import ThematicAnalystAgent
 from src.agents.disruption import DisruptionAnalystAgent
 from src.agents.earnings import EarningsAnalystAgent
+from src.agents.options import OptionsAnalystAgent
 from src.tools.event_analyzer import analyze_events as run_event_analysis
 from src.tools.backtesting_engine import run_backtest as execute_backtest
 from src.tools.insight_engine import generate_observations as run_observations
@@ -311,6 +312,20 @@ Coordinate efficiently and ensure comprehensive analysis."""
         """
         logger.info(f"Analyzing insider activity for {symbol}")
         return run_smart_money(symbol, days=days)
+
+    async def analyze_options(self, symbol: str) -> Dict[str, Any]:
+        """
+        Run options flow analysis for a stock.
+
+        Args:
+            symbol: Stock ticker symbol.
+
+        Returns:
+            Options analysis results dict.
+        """
+        logger.info(f"Analyzing options flow for {symbol}")
+        agent = OptionsAnalystAgent()
+        return await agent.analyze(symbol)
 
 
 class FinancialResearchAgent:
