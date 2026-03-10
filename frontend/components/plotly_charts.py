@@ -47,7 +47,7 @@ def create_gauge_chart(
                 "tickcolor": COLORS["text_muted"],
                 "tickfont": {"color": COLORS["text_muted"], "size": 10},
             },
-            "bar": {"color": COLORS["accent_blue"], "thickness": 0.3},
+            "bar": {"color": COLORS["accent_primary"], "thickness": 0.3},
             "bgcolor": COLORS["bg_card"],
             "borderwidth": 0,
             "steps": steps,
@@ -90,9 +90,9 @@ def create_radar_chart(
         theta=categories + [categories[0]],
         fill="toself",
         fillcolor="rgba(59, 130, 246, 0.15)",
-        line={"color": COLORS["accent_blue"], "width": 2},
+        line={"color": COLORS["accent_primary"], "width": 2},
         name="Company",
-        marker={"size": 6, "color": COLORS["accent_blue"]},
+        marker={"size": 6, "color": COLORS["accent_primary"]},
     ))
 
     if comparison_values:
@@ -101,9 +101,9 @@ def create_radar_chart(
             theta=categories + [categories[0]],
             fill="toself",
             fillcolor="rgba(139, 92, 246, 0.1)",
-            line={"color": COLORS["accent_violet"], "width": 2, "dash": "dash"},
+            line={"color": COLORS["accent_secondary"], "width": 2, "dash": "dash"},
             name=comparison_label,
-            marker={"size": 6, "color": COLORS["accent_violet"]},
+            marker={"size": 6, "color": COLORS["accent_secondary"]},
         ))
 
     fig.update_layout(
@@ -140,7 +140,7 @@ def create_horizontal_bar(
 ):
     """Create a horizontal bar chart for rankings/comparisons."""
     if colors is None:
-        colors = [COLORS["accent_blue"]] * len(labels)
+        colors = [COLORS["accent_primary"]] * len(labels)
 
     if height is None:
         height = max(250, len(labels) * 40 + 80)
@@ -187,7 +187,7 @@ def create_grouped_bar(
             name=series["name"],
             x=categories,
             y=series["values"],
-            marker_color=series.get("color", COLORS["accent_blue"]),
+            marker_color=series.get("color", COLORS["accent_primary"]),
             text=[f"{v:.1f}" if isinstance(v, (int, float)) and v else "" for v in series["values"]],
             textposition="auto",
             textfont={"size": 10, "family": "JetBrains Mono"},
@@ -394,7 +394,7 @@ def create_donut_chart(labels, values, title="", colors=None, height=300):
     """Create a donut/pie chart."""
     if colors is None:
         colors = [
-            COLORS["accent_blue"], COLORS["accent_violet"], COLORS["success"],
+            COLORS["accent_primary"], COLORS["accent_secondary"], COLORS["success"],
             COLORS["warning"], COLORS["danger"], "#06b6d4", "#ec4899", "#84cc16",
         ]
 
