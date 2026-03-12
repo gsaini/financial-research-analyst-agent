@@ -41,6 +41,10 @@ from src.api.schemas import (
     ObservationsResponse,
     SmartMoneyResponse,
     OptionsAnalysisResponse,
+    DividendAnalysisRequest,
+    DividendAnalysisResponse,
+    DividendCompareRequest,
+    DividendCompareResponse,
 )
 from src.agents import FinancialResearchAgent
 from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
@@ -55,6 +59,7 @@ from src.tools.backtesting_engine import run_backtest, list_strategies
 from src.tools.insight_engine import generate_observations
 from src.tools.insider_activity import analyze_smart_money
 from src.tools.options_analyzer import analyze_options
+from src.tools.dividend_analyzer import analyze_dividends, compare_dividends
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -1040,6 +1045,110 @@ async def get_options_flow(symbol: str):
         return result
     except Exception as e:
         logger.error(f"Options analysis error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 15: Dividend Analysis Endpoints
+# ─────────────────────────────────────────────────────────────
+
+
+@router.get("/dividends/{symbol}", response_model=DividendAnalysisResponse)
+async def get_dividend_analysis(symbol: str):
+    """
+    Get comprehensive dividend analysis for a stock.
+
+    Includes yield, safety score, growth history, and yield comparisons.
+    Useful for income investors evaluating dividend sustainability.
+    """
+    try:
+        result = analyze_dividends(symbol.upper())
+        return result
+    except Exception as e:
+        logger.error(f"Dividend analysis error for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/dividends/analyze", response_model=DividendAnalysisResponse)
+async def analyze_dividend_profile(request: DividendAnalysisRequest):
+    """
+    Analyze a company's dividend profile with optional narrative.
+
+    If include_narrative is True, an LLM-generated qualitative assessment
+    of dividend safety and income investing suitability is included.
+    """
+    try:
+        symbol = request.symbol.upper()
+        result = analyze_dividends(symbol)
+
+        if request.include_narrative and result.get("pays_dividends", False):
+            # Generate narrative assessment
+            current = result.get("current_dividend", {})
+            safety = result.get("dividend_safety", {})
+            growth = result.get("dividend_growth", {})
+
+            narrative = (
+                f"{result.get('name', symbol)} has a dividend yield of {current.get('dividend_yield', 'N/A')}% "
+                f"with a safety score of {safety.get('safety_score', 'N/A')}/100 ({safety.get('rating', 'N/A')}). "
+            )
+
+            if growth.get("consecutive_years_increased", 0) > 0:
+                narrative += f"The company has increased dividends for {growth.get('consecutive_years_increased')} consecutive years, "
+                narrative += f"classified as a {growth.get('classification', 'dividend payer')}. "
+
+            if safety.get("red_flags"):
+                narrative += f"Caution: {'; '.join(safety.get('red_flags', []))}."
+            else:
+                narrative += "No significant red flags detected."
+
+            result["qualitative_assessment"] = narrative
+
+        return result
+    except Exception as e:
+        logger.error(f"Dividend analysis error for {request.symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/dividends/compare", response_model=DividendCompareResponse)
+async def compare_dividend_profiles(request: DividendCompareRequest):
+    """
+    Compare dividend profiles across multiple companies.
+
+    Returns a ranked comparison by dividend safety score, useful for
+    identifying the best income candidates among a group of stocks.
+    """
+    try:
+        symbols = [s.upper() for s in request.symbols]
+        result = compare_dividends(symbols)
+
+        if request.include_narrative and result.get("comparison"):
+            # Generate comparative narrative
+            dividend_payers = [
+                c for c in result["comparison"]
+                if c.get("dividend_yield", 0) > 0 and "error" not in c
+            ]
+
+            if dividend_payers:
+                best = dividend_payers[0]
+                narrative = (
+                    f"Among the {len(symbols)} companies compared, {best['symbol']} "
+                    f"offers the best income profile with a {best.get('safety_score', 'N/A')}/100 safety score "
+                    f"and {best.get('dividend_yield', 'N/A')}% yield. "
+                )
+
+                if len(dividend_payers) > 1:
+                    others = [c['symbol'] for c in dividend_payers[1:3]]
+                    narrative += f"Other strong candidates include {', '.join(others)}. "
+
+                non_payers = [c['symbol'] for c in result["comparison"] if c.get("pays_dividends") is False]
+                if non_payers:
+                    narrative += f"Note: {', '.join(non_payers)} do not currently pay dividends."
+
+                result["comparative_narrative"] = narrative
+
+        return result
+    except Exception as e:
+        logger.error(f"Dividend comparison error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -18,6 +18,7 @@ class AnalysisType(str, Enum):
     THEMATIC = "thematic"
     DISRUPTION = "disruption"
     EARNINGS = "earnings"
+    DIVIDEND = "dividend"
 
 
 class AnalysisRequest(BaseModel):
@@ -644,6 +645,141 @@ class OptionsAnalysisResponse(BaseModel):
     unusual_activity: List[Dict[str, Any]] = []
     options_signal: Dict[str, Any] = {}
     expirations_analyzed: List[str] = []
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# ─────────────────────────────────────────────────────────────
+# Feature 15: Dividend Analysis Schemas
+# ─────────────────────────────────────────────────────────────
+
+
+class DividendAnalysisRequest(BaseModel):
+    """Request for dividend analysis."""
+    symbol: str = Field(..., description="Stock ticker symbol", example="JNJ")
+    include_narrative: bool = Field(
+        default=False,
+        description="Include LLM-generated qualitative assessment",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "JNJ",
+                "include_narrative": False,
+            }
+        }
+
+
+class DividendCompareRequest(BaseModel):
+    """Request to compare dividends across multiple companies."""
+    symbols: List[str] = Field(
+        ...,
+        description="List of stock symbols to compare",
+        example=["JNJ", "PG", "KO"],
+    )
+    include_narrative: bool = Field(
+        default=False,
+        description="Include LLM-generated comparative narrative",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbols": ["JNJ", "PG", "KO"],
+                "include_narrative": False,
+            }
+        }
+
+
+class CurrentDividend(BaseModel):
+    """Current dividend payment details."""
+    annual_dividend: Optional[float] = None
+    dividend_yield: Optional[float] = None
+    frequency: Optional[str] = None
+    payout_ratio: Optional[float] = None
+    ex_dividend_date: Optional[str] = None
+    last_payment_amount: Optional[float] = None
+
+
+class DividendSafetyFactor(BaseModel):
+    """Individual factor in dividend safety assessment."""
+    value: float
+    assessment: str
+
+
+class DividendSafety(BaseModel):
+    """Dividend safety assessment."""
+    safety_score: int = Field(..., ge=0, le=100, description="Safety score 0-100")
+    rating: str
+    dividend_cut_probability: str
+    factors: Dict[str, DividendSafetyFactor] = {}
+    red_flags: List[str] = []
+
+
+class DividendGrowth(BaseModel):
+    """Dividend growth history and classification."""
+    consecutive_years_increased: int = 0
+    classification: str = "Non-Dividend Payer"
+    cagr_3_year: Optional[float] = None
+    cagr_5_year: Optional[float] = None
+    cagr_10_year: Optional[float] = None
+    last_increase_pct: Optional[float] = None
+    last_increase_year: Optional[str] = None
+
+
+class YieldComparison(BaseModel):
+    """Yield comparison vs benchmarks."""
+    stock_yield: Optional[float] = None
+    sector: Optional[str] = None
+    sector_average: Optional[float] = None
+    sp500_average: Optional[float] = None
+    treasury_10y: Optional[float] = None
+    yield_assessment: Optional[str] = None
+
+
+class DividendAnalysisResponse(BaseModel):
+    """Response containing comprehensive dividend analysis."""
+    symbol: str
+    name: str = ""
+    pays_dividends: bool = False
+    message: Optional[str] = None
+    current_dividend: Optional[CurrentDividend] = None
+    dividend_safety: Optional[DividendSafety] = None
+    dividend_growth: Optional[DividendGrowth] = None
+    yield_comparison: Optional[YieldComparison] = None
+    qualitative_assessment: Optional[str] = None
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    execution_time_seconds: Optional[float] = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DividendComparisonItem(BaseModel):
+    """Single company's dividend profile in comparison."""
+    symbol: str
+    name: Optional[str] = None
+    dividend_yield: Optional[float] = None
+    payout_ratio: Optional[float] = None
+    safety_score: Optional[int] = None
+    safety_rating: Optional[str] = None
+    consecutive_years: Optional[int] = None
+    classification: Optional[str] = None
+    cagr_5_year: Optional[float] = None
+    pays_dividends: Optional[bool] = None
+    error: Optional[str] = None
+
+
+class DividendCompareResponse(BaseModel):
+    """Response containing dividend comparison results."""
+    companies_compared: int
+    comparison: List[DividendComparisonItem]
+    best_for_income: Optional[str] = None
+    comparative_narrative: Optional[str] = None
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 

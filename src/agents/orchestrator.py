@@ -19,6 +19,7 @@ from src.agents.thematic import ThematicAnalystAgent
 from src.agents.disruption import DisruptionAnalystAgent
 from src.agents.earnings import EarningsAnalystAgent
 from src.agents.options import OptionsAnalystAgent
+from src.agents.dividend import DividendAnalystAgent
 from src.tools.event_analyzer import analyze_events as run_event_analysis
 from src.tools.backtesting_engine import run_backtest as execute_backtest
 from src.tools.insight_engine import generate_observations as run_observations
@@ -42,6 +43,7 @@ class OrchestratorAgent(BaseAgent):
         self.thematic_analyst = ThematicAnalystAgent()
         self.disruption_analyst = DisruptionAnalystAgent()
         self.earnings_analyst = EarningsAnalystAgent()
+        self.dividend_analyst = DividendAnalystAgent()
 
         super().__init__(
             name="Orchestrator",
@@ -87,10 +89,15 @@ class OrchestratorAgent(BaseAgent):
             """Delegate quarterly earnings analysis to the Earnings Analyst Agent."""
             return f"Delegating earnings analysis for {symbol} to EarningsAnalystAgent"
 
+        @tool("delegate_to_dividend_analyst")
+        def delegate_dividend_tool(symbol: str) -> str:
+            """Delegate dividend analysis to the Dividend Analyst Agent."""
+            return f"Delegating dividend analysis for {symbol} to DividendAnalystAgent"
+
         return [delegate_data_collector_tool, delegate_technical_tool,
                 delegate_fundamental_tool, coordinate_analysis_tool,
                 delegate_thematic_tool, delegate_disruption_tool,
-                delegate_earnings_tool]
+                delegate_earnings_tool, delegate_dividend_tool]
     
     def _get_system_prompt(self) -> str:
         return """You are the Orchestrator Agent, the central coordinator for financial analysis.
@@ -326,6 +333,45 @@ Coordinate efficiently and ensure comprehensive analysis."""
         logger.info(f"Analyzing options flow for {symbol}")
         agent = OptionsAnalystAgent()
         return await agent.analyze(symbol)
+
+    async def analyze_dividends(
+        self, symbol: str, include_narrative: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Run dividend analysis on a company.
+
+        Evaluates dividend yield, safety score, growth history,
+        and sustainability for income investors.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., 'JNJ', 'PG').
+            include_narrative: Whether to generate an LLM qualitative assessment.
+
+        Returns:
+            Dividend analysis results dict.
+        """
+        logger.info(f"Starting dividend analysis for '{symbol}'")
+        if include_narrative:
+            return await self.dividend_analyst.analyze_with_narrative(symbol)
+        return await self.dividend_analyst.analyze_company_direct(symbol)
+
+    async def compare_dividends(
+        self, symbols: List[str], include_narrative: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Compare dividend profiles across multiple companies.
+
+        Args:
+            symbols: List of stock ticker symbols.
+            include_narrative: Whether to generate comparative dividend narrative.
+
+        Returns:
+            Comparison dict with dividend rankings.
+        """
+        logger.info(f"Starting dividend comparison for {symbols}")
+        if include_narrative:
+            return await self.dividend_analyst.analyze_with_comparative_narrative(symbols)
+        return await self.dividend_analyst.compare_companies_direct(symbols)
 
 
 class FinancialResearchAgent:
