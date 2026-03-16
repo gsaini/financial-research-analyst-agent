@@ -509,3 +509,168 @@ Keep answers concise and actionable. Use markdown formatting for readability.
         return response.content
     except Exception as e:
         return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"
+
+
+# ─── Tool-Calling AI Advisor ───────────────────────────────
+
+
+def _fetch_ticker_snapshot(symbol: str) -> str:
+    """Fetch a quick data snapshot for a single ticker (stock or ETF). ~1-2s."""
+    import json
+    import yfinance as yf
+
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+        hist = ticker.history(period="1y")
+
+        price = info.get("currentPrice") or info.get("regularMarketPrice", 0)
+
+        # Basic returns
+        returns = {}
+        if not hist.empty:
+            closes = hist["Close"]
+            for label, days in [("1m", 21), ("3m", 63), ("1y", 252)]:
+                if len(closes) >= days:
+                    start = float(closes.iloc[-days])
+                    if start > 0:
+                        returns[label] = round(((price - start) / start) * 100, 2)
+            # YTD
+            from datetime import datetime
+            year_data = closes[closes.index.year == datetime.now().year]
+            if not year_data.empty:
+                ytd_start = float(year_data.iloc[0])
+                if ytd_start > 0:
+                    returns["ytd"] = round(((price - ytd_start) / ytd_start) * 100, 2)
+
+        snapshot = {
+            "symbol": symbol,
+            "name": info.get("longName") or info.get("shortName", symbol),
+            "price": round(float(price), 2) if price else None,
+            "sector": info.get("sector"),
+            "industry": info.get("industry"),
+            "pe_ratio": info.get("trailingPE"),
+            "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
+            "market_cap": info.get("marketCap"),
+            "52w_high": info.get("fiftyTwoWeekHigh"),
+            "52w_low": info.get("fiftyTwoWeekLow"),
+            "returns": returns,
+            "expense_ratio": info.get("annualReportExpenseRatio"),
+            "total_assets": info.get("totalAssets"),
+            "category": info.get("category"),
+        }
+        # Remove None values for cleaner output
+        snapshot = {k: v for k, v in snapshot.items() if v is not None}
+        return json.dumps(snapshot, indent=2)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
+def ask_advisor(
+    question: str,
+    chat_history: list[dict] | None = None,
+) -> str:
+    """
+    AI Advisor with on-demand tool calling — fetches only what's needed.
+
+    The LLM has access to a lookup tool that fetches real-time data for
+    individual tickers. No bulk pre-fetch required.
+
+    Args:
+        question: The user's question.
+        chat_history: Previous messages for context.
+
+    Returns:
+        The LLM response text.
+    """
+    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+    from langchain_core.tools import tool as lc_tool
+
+    llm = _get_llm()
+
+    # Define the lookup tool
+    @lc_tool
+    def lookup_ticker(symbol: str) -> str:
+        """Look up real-time price, returns, and key metrics for a stock or ETF symbol.
+        Use this when you need current data to answer a question about a specific ticker.
+        Examples: lookup_ticker("QQQ"), lookup_ticker("AAPL")"""
+        return _fetch_ticker_snapshot(symbol.upper().strip())
+
+    system_prompt = """You are an expert AI financial advisor with access to real-time market data.
+
+You can look up any stock or ETF using the lookup_ticker tool to get current prices, returns,
+and key metrics. Use this tool when the user asks about specific tickers.
+
+IMPORTANT — Conversational Approach:
+When a user's question needs more context to give a truly helpful answer, ASK 2-3 short
+clarifying questions BEFORE answering. For example:
+- "How long should I hold X?" → Ask: When did you buy it? What's your target return?
+- "Should I sell X?" → Ask: What's your purchase price? Are you investing for income or growth?
+- "Is X good for me?" → Ask: What's your risk tolerance? What's your investment horizon?
+- "Build me a portfolio" → Ask: What's your total budget? Conservative or aggressive?
+
+When you have enough context, answer directly with specific numbers.
+
+For broad questions like "Which ETF should I invest in?", look up a few popular ETFs
+(e.g. QQQ, VOO, VTI, ARKK, XLK) to compare them, then give a recommendation.
+
+Guidelines:
+- Use the lookup_ticker tool to get real data — don't guess prices or returns
+- Be specific with numbers and explain your reasoning
+- For buy/sell/hold, reference price trends, returns, and valuation
+- Always end with a brief disclaimer that this is informational, not financial advice
+
+Keep answers concise and use markdown formatting."""
+
+    messages = [SystemMessage(content=system_prompt)]
+
+    if chat_history:
+        for msg in chat_history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            else:
+                messages.append(AIMessage(content=msg["content"]))
+
+    messages.append(HumanMessage(content=question))
+
+    try:
+        # Try tool-calling agent first
+        llm_with_tools = llm.bind_tools([lookup_ticker])
+        response = llm_with_tools.invoke(messages)
+
+        # If the LLM made tool calls, execute them and get final answer
+        if response.tool_calls:
+            messages.append(response)
+            from langchain_core.messages import ToolMessage
+
+            for tc in response.tool_calls:
+                tool_result = lookup_ticker.invoke(tc["args"])
+                messages.append(
+                    ToolMessage(content=tool_result, tool_call_id=tc["id"])
+                )
+
+            final = llm_with_tools.invoke(messages)
+
+            # Handle case where LLM makes additional tool calls (multi-hop)
+            max_rounds = 3
+            rounds = 0
+            while final.tool_calls and rounds < max_rounds:
+                messages.append(final)
+                for tc in final.tool_calls:
+                    tool_result = lookup_ticker.invoke(tc["args"])
+                    messages.append(
+                        ToolMessage(content=tool_result, tool_call_id=tc["id"])
+                    )
+                final = llm_with_tools.invoke(messages)
+                rounds += 1
+
+            return final.content
+        else:
+            return response.content
+
+    except (NotImplementedError, TypeError, AttributeError):
+        # Fallback for providers that don't support tool calling —
+        # just answer without live data
+        return ask_financial_question(question=question, context="", chat_history=chat_history)
+    except Exception as e:
+        return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"

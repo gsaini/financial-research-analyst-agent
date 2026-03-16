@@ -17,36 +17,39 @@ from pydantic_settings import BaseSettings
 class LLMSettings(BaseSettings):
     """LLM-related configuration settings."""
 
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     # Provider selection (ollama, openai, anthropic, lmstudio, vllm, groq)
-    provider: str = Field(default="ollama", env="LLM_PROVIDER")
+    provider: str = Field(default="ollama", validation_alias="LLM_PROVIDER")
 
     # Open source / local LLM settings (default)
-    ollama_base_url: str = Field(default="http://localhost:11434", env="OLLAMA_BASE_URL")
-    ollama_model: str = Field(default="llama4:latest", env="OLLAMA_MODEL")
+    ollama_base_url: str = Field(default="http://localhost:11434", validation_alias="OLLAMA_BASE_URL")
+    ollama_model: str = Field(default="llama4:latest", validation_alias="OLLAMA_MODEL")
 
     # LM Studio settings
-    lmstudio_base_url: str = Field(default="http://localhost:1234/v1", env="LMSTUDIO_BASE_URL")
-    lmstudio_model: str = Field(default="local-model", env="LMSTUDIO_MODEL")
+    lmstudio_base_url: str = Field(default="http://localhost:1234/v1", validation_alias="LMSTUDIO_BASE_URL")
+    lmstudio_model: str = Field(default="local-model", validation_alias="LMSTUDIO_MODEL")
 
     # vLLM settings
-    vllm_base_url: str = Field(default="http://localhost:8000/v1", env="VLLM_BASE_URL")
-    vllm_model: str = Field(default="meta-llama/Llama-3.2-8B-Instruct", env="VLLM_MODEL")
+    vllm_base_url: str = Field(default="http://localhost:8000/v1", validation_alias="VLLM_BASE_URL")
+    vllm_model: str = Field(default="meta-llama/Llama-3.2-8B-Instruct", validation_alias="VLLM_MODEL")
 
     # Groq settings (free tier available)
-    groq_api_key: str = Field(default="", env="GROQ_API_KEY")
-    groq_model: str = Field(default="llama-3.2-70b-versatile", env="GROQ_MODEL")
+    groq_api_key: str = Field(default="", validation_alias="GROQ_API_KEY")
+    groq_model: str = Field(default="llama-3.2-70b-versatile", validation_alias="GROQ_MODEL")
 
     # Commercial API keys (optional)
-    openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
-    anthropic_api_key: str = Field(default="", env="ANTHROPIC_API_KEY")
+    openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
+    anthropic_api_key: str = Field(default="", validation_alias="ANTHROPIC_API_KEY")
 
     # General LLM settings
-    model: str = Field(default="llama4:latest", env="LLM_MODEL")
-    temperature: float = Field(default=0.1, env="LLM_TEMPERATURE")
-    max_tokens: int = Field(default=4096, env="LLM_MAX_TOKENS")
-
-    class Config:
-        env_prefix = ""
+    model: str = Field(default="llama4:latest", validation_alias="LLM_MODEL")
+    temperature: float = Field(default=0.1, validation_alias="LLM_TEMPERATURE")
+    max_tokens: int = Field(default=4096, validation_alias="LLM_MAX_TOKENS")
 
 
 class DataAPISettings(BaseSettings):
