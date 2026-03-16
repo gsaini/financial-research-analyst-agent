@@ -315,3 +315,36 @@ def compare_peers(symbol: str, peers: tuple = None) -> dict:
         return {"error": str(e)}
     finally:
         loop.close()
+
+
+# ─── Dividend Analysis ───────────────────────────────────────
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def analyze_dividends(symbol: str) -> dict:
+    """Analyze dividend profile for a stock."""
+    from src.tools.dividend_analyzer import analyze_dividends as _fn
+    return _fn(symbol.upper())
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def compare_dividends(symbols: tuple) -> dict:
+    """Compare dividend profiles. Pass symbols as tuple for caching."""
+    from src.tools.dividend_analyzer import compare_dividends as _fn
+    return _fn(list(symbols))
+
+
+# ─── ETF Screener ────────────────────────────────────────────
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def screen_etfs(theme_ids: tuple = None, max_risk: str = None, top_n: int = 10) -> dict:
+    """Screen and rank ETFs across investment themes."""
+    from src.tools.etf_screener import screen_etfs as _fn
+    ids = list(theme_ids) if theme_ids else None
+    return _fn(theme_ids=ids, max_risk=max_risk, top_n=top_n)
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_etf_data(symbol: str) -> dict:
+    """Fetch data for a single ETF."""
+    from src.tools.etf_screener import fetch_etf_data as _fn
+    return _fn(symbol.upper())
