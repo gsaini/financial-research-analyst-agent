@@ -348,3 +348,127 @@ def fetch_etf_data(symbol: str) -> dict:
     """Fetch data for a single ETF."""
     from src.tools.etf_screener import fetch_etf_data as _fn
     return _fn(symbol.upper())
+
+
+# ─── LLM Chat ──────────────────────────────────────────────
+
+
+@st.cache_resource(show_spinner=False)
+def _get_llm():
+    """
+    Create a shared LLM instance using the configured provider.
+
+    Uses @st.cache_resource so the LLM object is created once per session
+    and reused across calls (it is not serializable with cache_data).
+    """
+    from src.config import settings
+
+    provider = settings.llm.provider.lower()
+    temperature = 0.7  # Conversational temperature
+
+    if provider == "ollama":
+        from langchain_ollama import ChatOllama
+        return ChatOllama(
+            model=settings.llm.ollama_model,
+            base_url=settings.llm.ollama_base_url,
+            temperature=temperature,
+        )
+    elif provider == "lmstudio":
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=settings.llm.lmstudio_model,
+            base_url=settings.llm.lmstudio_base_url,
+            temperature=temperature,
+            api_key="lm-studio",
+        )
+    elif provider == "vllm":
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=settings.llm.vllm_model,
+            base_url=settings.llm.vllm_base_url,
+            temperature=temperature,
+            api_key="vllm",
+        )
+    elif provider == "groq":
+        from langchain_groq import ChatGroq
+        return ChatGroq(
+            model=settings.llm.groq_model,
+            api_key=settings.llm.groq_api_key,
+            temperature=temperature,
+        )
+    elif provider == "anthropic":
+        from langchain_anthropic import ChatAnthropic
+        return ChatAnthropic(
+            model=settings.llm.model,
+            api_key=settings.llm.anthropic_api_key,
+            temperature=temperature,
+            max_tokens=settings.llm.max_tokens,
+        )
+    elif provider == "openai":
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=settings.llm.model,
+            temperature=temperature,
+            api_key=settings.llm.openai_api_key,
+            max_tokens=settings.llm.max_tokens,
+        )
+    else:
+        from langchain_ollama import ChatOllama
+        return ChatOllama(
+            model=settings.llm.ollama_model,
+            base_url=settings.llm.ollama_base_url,
+            temperature=temperature,
+        )
+
+
+def ask_etf_question(
+    question: str,
+    etf_context: str,
+    chat_history: list[dict] | None = None,
+) -> str:
+    """
+    Answer a user question about ETFs/stocks using the configured LLM.
+
+    Args:
+        question: The user's question.
+        etf_context: Pre-formatted string with ETF screening data.
+        chat_history: List of {"role": "user"|"assistant", "content": "..."} dicts.
+
+    Returns:
+        The LLM response text.
+    """
+    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+
+    llm = _get_llm()
+
+    system_prompt = f"""You are an expert financial advisor specializing in ETFs and thematic investing.
+You have access to the latest ETF screening results below. Use this data to answer questions
+about specific ETFs, investment themes, buy/sell timing, holding periods, risk, and portfolio strategy.
+
+Be specific with numbers from the data. When recommending buy/sell/hold, explain your reasoning
+based on the composite score, returns, volatility, and theme health. Always include a disclaimer
+that this is informational analysis, not personalized financial advice.
+
+Keep answers concise (3-5 paragraphs max) and actionable.
+
+=== ETF SCREENING DATA ===
+{etf_context}
+=== END DATA ==="""
+
+    messages = [SystemMessage(content=system_prompt)]
+
+    # Add chat history
+    if chat_history:
+        for msg in chat_history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            else:
+                messages.append(AIMessage(content=msg["content"]))
+
+    messages.append(HumanMessage(content=question))
+
+    try:
+        response = llm.invoke(messages)
+        return response.content
+    except Exception as e:
+        return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"

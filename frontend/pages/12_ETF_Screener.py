@@ -7,7 +7,7 @@ import pandas as pd
 from utils.theme import inject_css, COLORS, get_plotly_layout
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_large_number, format_percent
-from utils.data_service import screen_etfs
+from utils.data_service import screen_etfs, ask_etf_question
 from components.sidebar import render_sidebar
 from components.plotly_charts import create_horizontal_bar, create_grouped_bar
 
@@ -291,3 +291,73 @@ with st.expander("Scoring Methodology", expanded=False):
 Data sourced from Yahoo Finance. Analysis covers 17 investment themes and ~50 reference ETFs.
 This is for informational purposes only and does not constitute financial advice.
     """)
+
+
+# ─── AI Q&A Chat ────────────────────────────────────────────
+
+_section("Ask AI About ETFs")
+
+st.markdown(
+    "<p style='font-size: 0.825rem; color: #71717a; margin-bottom: 1rem;'>"
+    "Ask anything about these ETFs — buy/sell signals, holding periods, "
+    "risk comparisons, or portfolio strategy."
+    "</p>",
+    unsafe_allow_html=True,
+)
+
+# Build context string from screening results (done once, shared across chat)
+if "etf_context" not in st.session_state:
+    ctx_lines = []
+    for i, etf in enumerate(top_recs):
+        returns = etf.get("returns", {})
+        ctx_lines.append(
+            f"#{i+1} {etf['symbol']} ({etf.get('name', '')}) | "
+            f"Theme: {etf.get('theme', '')} | Score: {etf['composite_score']}/100 | "
+            f"Rec: {etf.get('recommendation', '')} | "
+            f"Price: ${etf.get('current_price', 'N/A')} | "
+            f"YTD: {returns.get('ytd', 'N/A')}% | 3M: {returns.get('3m', 'N/A')}% | "
+            f"1Y: {returns.get('1y', 'N/A')}% | "
+            f"Vol: {etf.get('volatility', 'N/A')}% | "
+            f"Risk: {etf.get('risk_level', 'N/A')} | "
+            f"Expense: {etf.get('expense_ratio') or 'N/A'} | "
+            f"AUM: {format_large_number(etf.get('total_assets')) if etf.get('total_assets') else 'N/A'}"
+        )
+
+    if theme_rankings:
+        ctx_lines.append("\n--- THEME RANKINGS ---")
+        for t in theme_rankings:
+            ctx_lines.append(
+                f"{t['theme_name']} | Health: {t['health_score']} | "
+                f"Momentum: {t['momentum_score']} | Risk: {t['risk_level']} | "
+                f"1Y: {t.get('performance_1y', 'N/A')} | YTD: {t.get('performance_ytd', 'N/A')}"
+            )
+
+    st.session_state.etf_context = "\n".join(ctx_lines)
+
+# Initialize chat history
+if "etf_chat_history" not in st.session_state:
+    st.session_state.etf_chat_history = []
+
+# Render previous messages
+for msg in st.session_state.etf_chat_history:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# Chat input
+if prompt := st.chat_input("e.g. Should I buy QQQ now? How long should I hold ARKK?"):
+    # Display user message
+    st.session_state.etf_chat_history.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Generate AI response
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response = ask_etf_question(
+                question=prompt,
+                etf_context=st.session_state.etf_context,
+                chat_history=st.session_state.etf_chat_history[:-1],  # Exclude current question
+            )
+        st.markdown(response)
+
+    st.session_state.etf_chat_history.append({"role": "assistant", "content": response})
