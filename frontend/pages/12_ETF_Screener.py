@@ -7,7 +7,7 @@ import pandas as pd
 from utils.theme import inject_css, COLORS, get_plotly_layout
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_large_number, format_percent
-from utils.data_service import screen_etfs, ask_etf_question
+from utils.data_service import screen_etfs
 from components.sidebar import render_sidebar
 from components.plotly_charts import create_horizontal_bar, create_grouped_bar
 
@@ -293,98 +293,23 @@ This is for informational purposes only and does not constitute financial advice
     """)
 
 
-# ─── AI Q&A Chat ────────────────────────────────────────────
+# ─── AI Advisor CTA ─────────────────────────────────────────
 
-_section("Ask AI About ETFs")
+st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
+_section("Have Questions?")
 
 st.markdown(
-    "<p style='font-size: 0.825rem; color: #71717a; margin-bottom: 0.75rem;'>"
-    "Ask anything about these ETFs — buy/sell signals, holding periods, "
-    "risk comparisons, or portfolio strategy."
-    "</p>",
+    """
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <div style="font-size: 0.95rem; font-weight: 600; color: #fafafa; margin-bottom: 0.375rem;">
+            Ask our AI Advisor about any ETF, stock, or investment strategy
+        </div>
+        <div style="font-size: 0.8rem; color: #71717a;">
+            Get personalized buy/sell guidance, holding period advice, risk analysis, and portfolio recommendations
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
-
-# FAQ template buttons — only show when chat is empty
-if not st.session_state.get("etf_chat_history"):
-    _top_sym = top_recs[0]["symbol"] if top_recs else "QQQ"
-    _second_sym = top_recs[1]["symbol"] if len(top_recs) > 1 else "ARKK"
-
-    _faqs = [
-        f"Which ETF should I invest in right now and why?",
-        f"Is {_top_sym} a good buy at its current price?",
-        f"What's the safest low-volatility ETF from this list?",
-        f"Compare {_top_sym} vs {_second_sym} — which is better for long-term holding?",
-        f"How long should I hold {_top_sym} based on current momentum?",
-        f"Which themes are showing the strongest momentum right now?",
-        f"Build me a diversified 3-ETF portfolio from these recommendations",
-        f"Which ETFs should I avoid and why?",
-    ]
-
-    faq_cols = st.columns(2)
-    for i, faq in enumerate(_faqs):
-        with faq_cols[i % 2]:
-            if st.button(faq, key=f"faq_{i}", use_container_width=True):
-                st.session_state.etf_faq_selected = faq
-                st.rerun()
-
-# Build context string from screening results (done once, shared across chat)
-if "etf_context" not in st.session_state:
-    ctx_lines = []
-    for i, etf in enumerate(top_recs):
-        returns = etf.get("returns", {})
-        ctx_lines.append(
-            f"#{i+1} {etf['symbol']} ({etf.get('name', '')}) | "
-            f"Theme: {etf.get('theme', '')} | Score: {etf['composite_score']}/100 | "
-            f"Rec: {etf.get('recommendation', '')} | "
-            f"Price: ${etf.get('current_price', 'N/A')} | "
-            f"YTD: {returns.get('ytd', 'N/A')}% | 3M: {returns.get('3m', 'N/A')}% | "
-            f"1Y: {returns.get('1y', 'N/A')}% | "
-            f"Vol: {etf.get('volatility', 'N/A')}% | "
-            f"Risk: {etf.get('risk_level', 'N/A')} | "
-            f"Expense: {etf.get('expense_ratio') or 'N/A'} | "
-            f"AUM: {format_large_number(etf.get('total_assets')) if etf.get('total_assets') else 'N/A'}"
-        )
-
-    if theme_rankings:
-        ctx_lines.append("\n--- THEME RANKINGS ---")
-        for t in theme_rankings:
-            ctx_lines.append(
-                f"{t['theme_name']} | Health: {t['health_score']} | "
-                f"Momentum: {t['momentum_score']} | Risk: {t['risk_level']} | "
-                f"1Y: {t.get('performance_1y', 'N/A')} | YTD: {t.get('performance_ytd', 'N/A')}"
-            )
-
-    st.session_state.etf_context = "\n".join(ctx_lines)
-
-# Initialize chat history
-if "etf_chat_history" not in st.session_state:
-    st.session_state.etf_chat_history = []
-
-# Render previous messages
-for msg in st.session_state.etf_chat_history:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-# Resolve input — either from FAQ button click or from chat_input
-_faq_prompt = st.session_state.pop("etf_faq_selected", None)
-_typed_prompt = st.chat_input("e.g. Should I buy QQQ now? How long should I hold ARKK?")
-prompt = _faq_prompt or _typed_prompt
-
-if prompt:
-    # Display user message
-    st.session_state.etf_chat_history.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # Generate AI response
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = ask_etf_question(
-                question=prompt,
-                etf_context=st.session_state.etf_context,
-                chat_history=st.session_state.etf_chat_history[:-1],
-            )
-        st.markdown(response)
-
-    st.session_state.etf_chat_history.append({"role": "assistant", "content": response})
+if st.button("Open AI Advisor", use_container_width=True):
+    st.switch_page("pages/13_AI_Advisor.py")

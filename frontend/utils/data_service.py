@@ -426,12 +426,25 @@ def ask_etf_question(
     etf_context: str,
     chat_history: list[dict] | None = None,
 ) -> str:
+    """Answer a user question about ETFs. Delegates to ask_financial_question."""
+    return ask_financial_question(
+        question=question,
+        context=etf_context,
+        chat_history=chat_history,
+    )
+
+
+def ask_financial_question(
+    question: str,
+    context: str = "",
+    chat_history: list[dict] | None = None,
+) -> str:
     """
-    Answer a user question about ETFs/stocks using the configured LLM.
+    Answer a user question about stocks, ETFs, or investing using the configured LLM.
 
     Args:
         question: The user's question.
-        etf_context: Pre-formatted string with ETF screening data.
+        context: Pre-formatted string with financial data (ETFs, stock info, etc.).
         chat_history: List of {"role": "user"|"assistant", "content": "..."} dicts.
 
     Returns:
@@ -441,9 +454,13 @@ def ask_etf_question(
 
     llm = _get_llm()
 
-    system_prompt = f"""You are an expert financial advisor specializing in ETFs and thematic investing.
-You have access to the latest ETF screening results below. Use this data to answer questions
-about specific ETFs, investment themes, buy/sell timing, holding periods, risk, and portfolio strategy.
+    system_prompt = f"""You are an expert AI financial advisor. You can help with:
+- ETFs and thematic investing (buy/sell/hold recommendations, comparisons)
+- Individual stocks (valuation, technical signals, fundamentals)
+- Portfolio strategy (diversification, allocation, rebalancing)
+- Dividend investing (yield, safety, income planning)
+- Market themes and sector analysis
+- Risk management and investment timing
 
 IMPORTANT — Conversational Approach:
 When a user's question needs more context to give a truly helpful answer, ASK 2-3 short
@@ -454,21 +471,25 @@ Examples of when to ask follow-up questions:
 - "Should I sell X?" → Ask: What's your purchase price? Are you investing for income or growth?
 - "Is X good for me?" → Ask: What's your risk tolerance? What's your investment horizon?
 - "Build me a portfolio" → Ask: What's your total budget? Are you conservative or aggressive?
+- "When should I buy X?" → Ask: Are you looking for a short-term trade or long-term investment?
 
 When you DO have enough context (e.g. general data questions, theme comparisons, or the user
-already provided their details), answer directly without unnecessary questions.
+already provided their details in previous messages), answer directly without unnecessary questions.
 
-Once the user answers your clarifying questions, synthesize all the context and give a
-specific, actionable recommendation with numbers from the data.
+Once the user answers your clarifying questions, synthesize ALL the context and give a
+specific, actionable recommendation backed by numbers from the data.
 
-Be specific with numbers from the data. When recommending buy/sell/hold, explain your reasoning
-based on the composite score, returns, volatility, and theme health. Always include a disclaimer
-that this is informational analysis, not personalized financial advice.
+Guidelines:
+- Be specific with numbers from the data when available
+- When recommending buy/sell/hold, explain your reasoning clearly
+- Reference composite scores, returns, volatility, and theme health where relevant
+- For stocks not in the data, use your financial knowledge but note limited data
+- Always end with a brief disclaimer that this is informational analysis, not personalized financial advice
 
-Keep answers concise and actionable.
+Keep answers concise and actionable. Use markdown formatting for readability.
 
-=== ETF SCREENING DATA ===
-{etf_context}
+=== FINANCIAL DATA ===
+{context}
 === END DATA ==="""
 
     messages = [SystemMessage(content=system_prompt)]
