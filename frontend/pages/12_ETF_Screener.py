@@ -298,12 +298,35 @@ This is for informational purposes only and does not constitute financial advice
 _section("Ask AI About ETFs")
 
 st.markdown(
-    "<p style='font-size: 0.825rem; color: #71717a; margin-bottom: 1rem;'>"
+    "<p style='font-size: 0.825rem; color: #71717a; margin-bottom: 0.75rem;'>"
     "Ask anything about these ETFs — buy/sell signals, holding periods, "
     "risk comparisons, or portfolio strategy."
     "</p>",
     unsafe_allow_html=True,
 )
+
+# FAQ template buttons — only show when chat is empty
+if not st.session_state.get("etf_chat_history"):
+    _top_sym = top_recs[0]["symbol"] if top_recs else "QQQ"
+    _second_sym = top_recs[1]["symbol"] if len(top_recs) > 1 else "ARKK"
+
+    _faqs = [
+        f"Which ETF should I invest in right now and why?",
+        f"Is {_top_sym} a good buy at its current price?",
+        f"What's the safest low-volatility ETF from this list?",
+        f"Compare {_top_sym} vs {_second_sym} — which is better for long-term holding?",
+        f"How long should I hold {_top_sym} based on current momentum?",
+        f"Which themes are showing the strongest momentum right now?",
+        f"Build me a diversified 3-ETF portfolio from these recommendations",
+        f"Which ETFs should I avoid and why?",
+    ]
+
+    faq_cols = st.columns(2)
+    for i, faq in enumerate(_faqs):
+        with faq_cols[i % 2]:
+            if st.button(faq, key=f"faq_{i}", use_container_width=True):
+                st.session_state.etf_faq_selected = faq
+                st.rerun()
 
 # Build context string from screening results (done once, shared across chat)
 if "etf_context" not in st.session_state:
@@ -343,8 +366,12 @@ for msg in st.session_state.etf_chat_history:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Chat input
-if prompt := st.chat_input("e.g. Should I buy QQQ now? How long should I hold ARKK?"):
+# Resolve input — either from FAQ button click or from chat_input
+_faq_prompt = st.session_state.pop("etf_faq_selected", None)
+_typed_prompt = st.chat_input("e.g. Should I buy QQQ now? How long should I hold ARKK?")
+prompt = _faq_prompt or _typed_prompt
+
+if prompt:
     # Display user message
     st.session_state.etf_chat_history.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -356,7 +383,7 @@ if prompt := st.chat_input("e.g. Should I buy QQQ now? How long should I hold AR
             response = ask_etf_question(
                 question=prompt,
                 etf_context=st.session_state.etf_context,
-                chat_history=st.session_state.etf_chat_history[:-1],  # Exclude current question
+                chat_history=st.session_state.etf_chat_history[:-1],
             )
         st.markdown(response)
 
