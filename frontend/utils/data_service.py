@@ -566,37 +566,7 @@ def _fetch_ticker_snapshot(symbol: str) -> str:
         return json.dumps({"symbol": symbol, "error": str(e)})
 
 
-def ask_advisor(
-    question: str,
-    chat_history: list[dict] | None = None,
-) -> str:
-    """
-    AI Advisor with on-demand tool calling — fetches only what's needed.
-
-    The LLM has access to a lookup tool that fetches real-time data for
-    individual tickers. No bulk pre-fetch required.
-
-    Args:
-        question: The user's question.
-        chat_history: Previous messages for context.
-
-    Returns:
-        The LLM response text.
-    """
-    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-    from langchain_core.tools import tool as lc_tool
-
-    llm = _get_llm()
-
-    # Define the lookup tool
-    @lc_tool
-    def lookup_ticker(symbol: str) -> str:
-        """Look up real-time price, returns, and key metrics for a stock or ETF symbol.
-        Use this when you need current data to answer a question about a specific ticker.
-        Examples: lookup_ticker("QQQ"), lookup_ticker("AAPL")"""
-        return _fetch_ticker_snapshot(symbol.upper().strip())
-
-    system_prompt = """You are an expert AI financial advisor with access to real-time market data.
+_ADVISOR_SYSTEM_PROMPT = """You are an expert AI financial advisor with access to real-time market data.
 
 ═══ GUARDRAILS — STRICTLY ENFORCE ═══
 
@@ -663,7 +633,63 @@ to compare them when giving your final recommendation.
 
 Keep answers concise and use markdown formatting."""
 
-    messages = [SystemMessage(content=system_prompt)]
+
+# Friendly labels for progress display
+_STEP_LABELS = {
+    "analyzing": "Analyzing your question...",
+    "lookup": "Fetching {symbol} data from Yahoo Finance...",
+    "fundamentals": "Running fundamental analysis on {symbol}...",
+    "comparison": "Comparing performance metrics...",
+    "synthesizing": "Synthesizing insights & preparing recommendation...",
+}
+
+
+def ask_advisor(
+    question: str,
+    chat_history: list[dict] | None = None,
+    on_progress: "callable | None" = None,
+) -> str:
+    """
+    AI Advisor with on-demand tool calling — fetches only what's needed.
+
+    Args:
+        question: The user's question.
+        chat_history: Previous messages for context.
+        on_progress: Optional callback ``fn(step_key, label)`` called as
+            the advisor progresses through analysis steps. Used by the
+            frontend to update a live status widget.
+
+    Returns:
+        The LLM response text.
+    """
+    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+    from langchain_core.tools import tool as lc_tool
+
+    def _emit(key: str, **fmt):
+        if on_progress:
+            label = _STEP_LABELS.get(key, key).format(**fmt)
+            on_progress(key, label)
+
+    llm = _get_llm()
+
+    # Track symbols looked up for richer progress messages
+    _symbols_fetched: list[str] = []
+
+    @lc_tool
+    def lookup_ticker(symbol: str) -> str:
+        """Look up real-time price, returns, and key metrics for a stock or ETF symbol.
+        Use this when you need current data to answer a question about a specific ticker.
+        Examples: lookup_ticker("QQQ"), lookup_ticker("AAPL")"""
+        sym = symbol.upper().strip()
+        _symbols_fetched.append(sym)
+        _emit("lookup", symbol=sym)
+        result = _fetch_ticker_snapshot(sym)
+        _emit("fundamentals", symbol=sym)
+        return result
+
+    _emit("analyzing")
+
+    messages = [SystemMessage(content=_ADVISOR_SYSTEM_PROMPT)]
 
     if chat_history:
         for msg in chat_history:
@@ -675,11 +701,9 @@ Keep answers concise and use markdown formatting."""
     messages.append(HumanMessage(content=question))
 
     try:
-        # Try tool-calling agent first
         llm_with_tools = llm.bind_tools([lookup_ticker])
         response = llm_with_tools.invoke(messages)
 
-        # If the LLM made tool calls, execute them and get final answer
         if response.tool_calls:
             messages.append(response)
             from langchain_core.messages import ToolMessage
@@ -690,9 +714,12 @@ Keep answers concise and use markdown formatting."""
                     ToolMessage(content=tool_result, tool_call_id=tc["id"])
                 )
 
+            if len(_symbols_fetched) > 1:
+                _emit("comparison")
+
+            _emit("synthesizing")
             final = llm_with_tools.invoke(messages)
 
-            # Handle case where LLM makes additional tool calls (multi-hop)
             max_rounds = 3
             rounds = 0
             while final.tool_calls and rounds < max_rounds:
@@ -702,6 +729,7 @@ Keep answers concise and use markdown formatting."""
                     messages.append(
                         ToolMessage(content=tool_result, tool_call_id=tc["id"])
                     )
+                _emit("synthesizing")
                 final = llm_with_tools.invoke(messages)
                 rounds += 1
 
@@ -710,8 +738,6 @@ Keep answers concise and use markdown formatting."""
             return response.content
 
     except (NotImplementedError, TypeError, AttributeError):
-        # Fallback for providers that don't support tool calling —
-        # just answer without live data
         return ask_financial_question(question=question, context="", chat_history=chat_history)
     except Exception as e:
         return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"

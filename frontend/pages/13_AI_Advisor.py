@@ -111,11 +111,20 @@ if prompt:
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = ask_advisor(
-                question=prompt,
-                chat_history=st.session_state.advisor_chat_history[:-1],
-            )
+        # Live progress display
+        status = st.status("Analyzing your question...", expanded=True)
+
+        def _on_progress(key: str, label: str):
+            status.update(label=label)
+            status.write(f"  {label}")
+
+        response = ask_advisor(
+            question=prompt,
+            chat_history=st.session_state.advisor_chat_history[:-1],
+            on_progress=_on_progress,
+        )
+
+        status.update(label="Analysis complete", state="complete", expanded=False)
         st.markdown(response)
 
     st.session_state.advisor_chat_history.append({"role": "assistant", "content": response})
