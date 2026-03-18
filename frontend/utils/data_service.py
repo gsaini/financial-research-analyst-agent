@@ -566,6 +566,87 @@ def _fetch_ticker_snapshot(symbol: str) -> str:
         return json.dumps({"symbol": symbol, "error": str(e)})
 
 
+def _run_technical_analysis(symbol: str) -> str:
+    """Run technical analysis (RSI, MACD, moving averages, Bollinger Bands)."""
+    import json
+    try:
+        result = get_technical_analysis(symbol)
+        if "error" in result:
+            return json.dumps({"symbol": symbol, "error": result["error"]})
+        # Flatten for LLM readability
+        summary = {"symbol": symbol}
+        if "rsi" in result:
+            summary["rsi"] = result["rsi"]
+        if "macd" in result:
+            summary["macd"] = result["macd"]
+        if "moving_averages" in result:
+            summary["moving_averages"] = result["moving_averages"]
+        if "patterns" in result:
+            summary["patterns"] = result["patterns"]
+        return json.dumps(summary, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
+def _run_fundamental_analysis(symbol: str) -> str:
+    """Run fundamental analysis (valuation ratios, profitability, financial health)."""
+    import json
+    try:
+        health = get_financial_health(symbol)
+        valuation = get_valuation_ratios(symbol)
+        profitability = get_profitability_ratios(symbol)
+        return json.dumps({
+            "symbol": symbol,
+            "financial_health": health if "error" not in health else None,
+            "valuation": valuation if "error" not in valuation else None,
+            "profitability": profitability if "error" not in profitability else None,
+        }, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
+def _run_dividend_analysis(symbol: str) -> str:
+    """Run dividend analysis (yield, safety, growth history)."""
+    import json
+    try:
+        from src.tools.dividend_analyzer import analyze_dividends as _fn
+        result = _fn(symbol)
+        return json.dumps(result, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
+def _run_earnings_analysis(symbol: str) -> str:
+    """Run earnings analysis (EPS surprises, beat/miss patterns, quality)."""
+    import json
+    try:
+        from src.tools.earnings_data import analyze_earnings as _fn
+        result = _fn(symbol)
+        return json.dumps(result, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
+def _run_sentiment_analysis(symbol: str) -> str:
+    """Run news sentiment analysis."""
+    import json
+    try:
+        result = analyze_news_sentiment(symbol)
+        return json.dumps(result, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
+def _run_peer_comparison(symbol: str) -> str:
+    """Run peer comparison analysis."""
+    import json
+    try:
+        result = compare_peers(symbol)
+        return json.dumps(result, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
 _ADVISOR_SYSTEM_PROMPT = """You are an expert AI financial advisor with access to real-time market data.
 
 ═══ GUARDRAILS — STRICTLY ENFORCE ═══
@@ -623,6 +704,27 @@ specific, data-backed recommendation.
 For broad questions, look up a few popular ETFs (e.g. QQQ, VOO, VTI, ARKK, XLK)
 to compare them when giving your final recommendation.
 
+═══ ANALYSIS TOOLS AVAILABLE ═══
+
+You have access to these specialized analysis tools. Use the RIGHT tools for the question:
+
+- **lookup_ticker**: Quick price, returns, key stats. Use for simple price checks.
+- **run_technical**: RSI, MACD, Moving Averages, Bollinger Bands, chart patterns.
+  Use when asked about buy/sell timing, entry/exit points, or technical signals.
+- **run_fundamentals**: P/E, P/B, ROE, margins, valuation, financial health.
+  Use when asked about whether a stock is overvalued, fundamentals, or financials.
+- **run_dividends**: Dividend yield, safety score, payout ratio, growth history.
+  Use when asked about dividends, passive income, or income investing.
+- **run_earnings**: EPS actuals vs estimates, beat/miss patterns, earnings quality.
+  Use when asked about earnings, quarterly results, or EPS.
+- **run_sentiment**: News sentiment aggregation and scoring.
+  Use when asked about market sentiment, news, or public perception.
+- **run_peers**: Peer comparison on valuation, performance, and profitability.
+  Use when asked to compare companies or for competitive positioning.
+
+When giving a comprehensive recommendation, use MULTIPLE tools (e.g. lookup + technical +
+fundamentals) to provide a thorough, data-backed answer.
+
 ═══ RESPONSE GUIDELINES ═══
 
 - Be specific with numbers and explain your reasoning
@@ -634,30 +736,29 @@ to compare them when giving your final recommendation.
 Keep answers concise and use markdown formatting."""
 
 
-# Friendly labels for progress display
-_STEP_LABELS = {
-    "analyzing": "Analyzing your question...",
-    "lookup": "Fetching {symbol} data from Yahoo Finance...",
-    "fundamentals": "Running fundamental analysis on {symbol}...",
-    "comparison": "Comparing performance metrics...",
-    "synthesizing": "Synthesizing insights & preparing recommendation...",
-}
-
-
 def ask_advisor(
     question: str,
     chat_history: list[dict] | None = None,
     on_progress: "callable | None" = None,
 ) -> str:
     """
-    AI Advisor with on-demand tool calling — fetches only what's needed.
+    AI Advisor with on-demand tool calling — the LLM decides which
+    analyses to run based on the question.
+
+    Available tools (orchestrator pipeline):
+    - lookup_ticker: Quick price/returns snapshot
+    - run_technical: RSI, MACD, moving averages, patterns
+    - run_fundamentals: Valuation, profitability, financial health
+    - run_dividends: Yield, safety score, growth history
+    - run_earnings: EPS surprises, beat/miss patterns, quality
+    - run_sentiment: News sentiment analysis
+    - run_peers: Peer comparison
 
     Args:
         question: The user's question.
         chat_history: Previous messages for context.
         on_progress: Optional callback ``fn(step_key, label)`` called as
-            the advisor progresses through analysis steps. Used by the
-            frontend to update a live status widget.
+            the advisor progresses through analysis steps.
 
     Returns:
         The LLM response text.
@@ -665,29 +766,89 @@ def ask_advisor(
     from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
     from langchain_core.tools import tool as lc_tool
 
-    def _emit(key: str, **fmt):
+    def _emit(key: str, label: str):
         if on_progress:
-            label = _STEP_LABELS.get(key, key).format(**fmt)
             on_progress(key, label)
 
     llm = _get_llm()
 
-    # Track symbols looked up for richer progress messages
-    _symbols_fetched: list[str] = []
+    # ── Tool definitions — each maps to an orchestrator analysis ──
 
     @lc_tool
     def lookup_ticker(symbol: str) -> str:
-        """Look up real-time price, returns, and key metrics for a stock or ETF symbol.
-        Use this when you need current data to answer a question about a specific ticker.
+        """Look up real-time price, returns, and key metrics for a stock or ETF.
+        Use for quick price checks or when you need an overview.
         Examples: lookup_ticker("QQQ"), lookup_ticker("AAPL")"""
         sym = symbol.upper().strip()
-        _symbols_fetched.append(sym)
-        _emit("lookup", symbol=sym)
-        result = _fetch_ticker_snapshot(sym)
-        _emit("fundamentals", symbol=sym)
-        return result
+        _emit("lookup", f"Fetching {sym} market data from Yahoo Finance...")
+        return _fetch_ticker_snapshot(sym)
 
-    _emit("analyzing")
+    @lc_tool
+    def run_technical(symbol: str) -> str:
+        """Run technical analysis on a stock — RSI, MACD, moving averages,
+        Bollinger Bands, and chart patterns. Use when the user asks about
+        buy/sell timing, technical signals, or chart analysis.
+        Examples: run_technical("AAPL"), run_technical("QQQ")"""
+        sym = symbol.upper().strip()
+        _emit("technical", f"Running technical analysis on {sym} (RSI, MACD, Moving Averages)...")
+        return _run_technical_analysis(sym)
+
+    @lc_tool
+    def run_fundamentals(symbol: str) -> str:
+        """Run fundamental analysis — valuation ratios (P/E, P/B, EV/EBITDA),
+        profitability (ROE, ROA, margins), and financial health.
+        Use when the user asks about valuation, whether a stock is overvalued, or financials.
+        Examples: run_fundamentals("MSFT"), run_fundamentals("GOOGL")"""
+        sym = symbol.upper().strip()
+        _emit("fundamentals", f"Running fundamental analysis on {sym} (Valuation, Profitability, Health)...")
+        return _run_fundamental_analysis(sym)
+
+    @lc_tool
+    def run_dividends(symbol: str) -> str:
+        """Run dividend analysis — yield, safety score, payout ratio,
+        growth history, and Dividend King/Aristocrat classification.
+        Use when the user asks about dividends, income investing, or yield.
+        Examples: run_dividends("JNJ"), run_dividends("KO")"""
+        sym = symbol.upper().strip()
+        _emit("dividends", f"Analyzing {sym} dividend profile (Yield, Safety, Growth History)...")
+        return _run_dividend_analysis(sym)
+
+    @lc_tool
+    def run_earnings(symbol: str) -> str:
+        """Run quarterly earnings analysis — EPS actual vs estimates,
+        beat/miss patterns, quarterly trends, and earnings quality score.
+        Use when the user asks about earnings, EPS, or quarterly results.
+        Examples: run_earnings("AAPL"), run_earnings("NVDA")"""
+        sym = symbol.upper().strip()
+        _emit("earnings", f"Analyzing {sym} quarterly earnings (EPS Surprises, Trends, Quality)...")
+        return _run_earnings_analysis(sym)
+
+    @lc_tool
+    def run_sentiment(symbol: str) -> str:
+        """Run news sentiment analysis — aggregates recent news and
+        calculates overall sentiment score. Use when the user asks
+        about market sentiment, news impact, or public perception.
+        Examples: run_sentiment("TSLA"), run_sentiment("META")"""
+        sym = symbol.upper().strip()
+        _emit("sentiment", f"Analyzing {sym} news sentiment...")
+        return _run_sentiment_analysis(sym)
+
+    @lc_tool
+    def run_peers(symbol: str) -> str:
+        """Run peer comparison — compares a stock against its sector peers
+        on valuation, performance, and profitability.
+        Use when the user asks to compare a stock, or for competitive positioning.
+        Examples: run_peers("AAPL"), run_peers("JPM")"""
+        sym = symbol.upper().strip()
+        _emit("peers", f"Comparing {sym} against sector peers...")
+        return _run_peer_comparison(sym)
+
+    all_tools = [
+        lookup_ticker, run_technical, run_fundamentals,
+        run_dividends, run_earnings, run_sentiment, run_peers,
+    ]
+
+    _emit("analyzing", "Analyzing your question...")
 
     messages = [SystemMessage(content=_ADVISOR_SYSTEM_PROMPT)]
 
@@ -701,41 +862,33 @@ def ask_advisor(
     messages.append(HumanMessage(content=question))
 
     try:
-        llm_with_tools = llm.bind_tools([lookup_ticker])
+        llm_with_tools = llm.bind_tools(all_tools)
+        tool_map = {t.name: t for t in all_tools}
+
         response = llm_with_tools.invoke(messages)
 
-        if response.tool_calls:
+        # Process tool calls in rounds (LLM may chain multiple)
+        max_rounds = 4
+        rounds = 0
+        while response.tool_calls and rounds < max_rounds:
             messages.append(response)
             from langchain_core.messages import ToolMessage
 
             for tc in response.tool_calls:
-                tool_result = lookup_ticker.invoke(tc["args"])
+                tool_fn = tool_map.get(tc["name"])
+                if tool_fn:
+                    tool_result = tool_fn.invoke(tc["args"])
+                else:
+                    tool_result = f"Unknown tool: {tc['name']}"
                 messages.append(
                     ToolMessage(content=tool_result, tool_call_id=tc["id"])
                 )
 
-            if len(_symbols_fetched) > 1:
-                _emit("comparison")
+            _emit("synthesizing", "Synthesizing insights & preparing recommendation...")
+            response = llm_with_tools.invoke(messages)
+            rounds += 1
 
-            _emit("synthesizing")
-            final = llm_with_tools.invoke(messages)
-
-            max_rounds = 3
-            rounds = 0
-            while final.tool_calls and rounds < max_rounds:
-                messages.append(final)
-                for tc in final.tool_calls:
-                    tool_result = lookup_ticker.invoke(tc["args"])
-                    messages.append(
-                        ToolMessage(content=tool_result, tool_call_id=tc["id"])
-                    )
-                _emit("synthesizing")
-                final = llm_with_tools.invoke(messages)
-                rounds += 1
-
-            return final.content
-        else:
-            return response.content
+        return response.content
 
     except (NotImplementedError, TypeError, AttributeError):
         return ask_financial_question(question=question, context="", chat_history=chat_history)
