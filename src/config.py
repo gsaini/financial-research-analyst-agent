@@ -40,7 +40,7 @@ class LLMSettings(BaseSettings):
 
     # Groq settings (free tier available)
     groq_api_key: str = Field(default="", validation_alias="GROQ_API_KEY")
-    groq_model: str = Field(default="llama-3.2-70b-versatile", validation_alias="GROQ_MODEL")
+    groq_model: str = Field(default="llama-3.1-70b-versatile", validation_alias="GROQ_MODEL")
 
     # Commercial API keys (optional)
     openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")

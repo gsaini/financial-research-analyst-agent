@@ -891,6 +891,13 @@ def ask_advisor(
         return response.content
 
     except (NotImplementedError, TypeError, AttributeError):
+        # Provider doesn't support tool calling — fall back to plain chat
+        _emit("fallback", "Using conversational mode...")
         return ask_financial_question(question=question, context="", chat_history=chat_history)
     except Exception as e:
+        error_msg = str(e)
+        # Detect tool-calling failures (Groq/some models format tool calls incorrectly)
+        if "tool_use_failed" in error_msg or "failed_generation" in error_msg or "Failed to call a function" in error_msg:
+            _emit("fallback", "Retrying without tool calling...")
+            return ask_financial_question(question=question, context="", chat_history=chat_history)
         return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"
