@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime
 import numpy as np
 
-import yfinance as yf
+from src.data import get_provider
 from src.tools.theme_mapper import list_available_themes, analyze_theme
 from src.utils.logger import get_logger
 

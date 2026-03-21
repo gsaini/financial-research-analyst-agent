@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 import math
 
-import yfinance as yf
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,8 +34,8 @@ RISK_FREE_RATE = 0.05  # ~5% annualized (approximate current T-bill rate)
 def _fetch_history(symbol: str, period: str = "5y") -> Optional[Any]:
     """Fetch adjusted close history as a pandas Series."""
     try:
-        ticker = yf.Ticker(symbol)
-        hist = ticker.history(period=period, auto_adjust=True)
+        provider = get_provider()
+        hist = provider.get_history(symbol, period=period)
         if hist.empty:
             return None
         return hist["Close"]
@@ -228,7 +228,8 @@ def track_performance(symbol: str) -> Dict[str, Any]:
 
     # Determine sector ETF
     try:
-        info = yf.Ticker(symbol).info
+        provider = get_provider()
+        info = provider.get_info(symbol)
         sector = info.get("sector", "")
         sector_etf = SECTOR_ETFS.get(sector)
     except Exception:

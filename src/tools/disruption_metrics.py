@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
 import numpy as np
 
-import yfinance as yf
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -41,10 +41,10 @@ def fetch_company_financials(symbol: str) -> Dict[str, Any]:
         Dict with financial data organized by category.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
-        income_stmt = ticker.income_stmt
-        balance_sheet = ticker.balance_sheet
+        provider = get_provider()
+        info = provider.get_info(symbol)
+        income_stmt = provider.get_financials(symbol, "income_statement")
+        balance_sheet = provider.get_financials(symbol, "balance_sheet")
 
         result = {
             "symbol": symbol,

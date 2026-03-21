@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-import yfinance as yf
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,9 +39,9 @@ def fetch_quarterly_financials(symbol: str) -> Dict[str, Any]:
         Dict with quarterly financial data.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        quarterly_income = ticker.quarterly_income_stmt
-        info = ticker.info
+        provider = get_provider()
+        quarterly_income = provider.get_quarterly_income_statement(symbol)
+        info = provider.get_info(symbol)
 
         if quarterly_income.empty:
             return {"symbol": symbol, "error": "No quarterly financial data available"}
@@ -110,11 +110,11 @@ def fetch_earnings_history(symbol: str) -> Dict[str, Any]:
         Dict with earnings history including surprises.
     """
     try:
-        ticker = yf.Ticker(symbol)
+        provider = get_provider()
 
         # Try to get earnings data
-        earnings = ticker.earnings_history
-        info = ticker.info
+        earnings = provider.get_earnings_history(symbol)
+        info = provider.get_info(symbol)
 
         result = {
             "symbol": symbol,
@@ -165,9 +165,9 @@ def fetch_upcoming_earnings(symbol: str) -> Dict[str, Any]:
         Dict with next earnings date and estimates.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
-        calendar = ticker.calendar
+        provider = get_provider()
+        info = provider.get_info(symbol)
+        calendar = provider.get_calendar(symbol)
 
         result = {
             "symbol": symbol,

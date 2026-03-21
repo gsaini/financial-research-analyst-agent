@@ -76,10 +76,10 @@ def fetch_company_news(symbol: str) -> List[Dict[str, Any]]:
         List of company-specific news
     """
     try:
-        import yfinance as yf
+        from src.data import get_provider
 
-        ticker = yf.Ticker(symbol)
-        news = ticker.news
+        provider = get_provider()
+        news = provider.get_news(symbol)
 
         if not news:
             return _get_sample_news(symbol)

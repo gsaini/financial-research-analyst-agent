@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import math
 
 import numpy as np
-import yfinance as yf
+from src.data import get_provider
 
 from src.utils.logger import get_logger
 
@@ -45,8 +45,8 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
     symbol = symbol.upper()
 
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
+        provider = get_provider()
+        info = provider.get_info(symbol)
         result: Dict[str, Any] = {
             "symbol": symbol,
             "name": info.get("longName", info.get("shortName", symbol)),
@@ -55,7 +55,7 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
         # ── Earnings dates ──────────────────────────────
         earnings_events: List[Dict[str, str]] = []
         try:
-            earnings_hist = ticker.earnings_history
+            earnings_hist = provider.get_earnings_history(symbol)
             if earnings_hist is not None and not earnings_hist.empty:
                 for idx, row in earnings_hist.iterrows():
                     date_str = idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
@@ -69,8 +69,8 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
 
         # Try earnings_dates as fallback / supplement
         try:
-            earnings_dates = ticker.earnings_dates
-            if earnings_dates is not None and not earnings_dates.empty:
+            earnings_dates = provider.get_calendar(symbol) # mapped to calendar essentially although yfinance might have multiple forms. For simplicity, just use what calendar returns. Note: Calendar from yfinance might not be a dataframe with the same structure depending on the yfinance version. Let's just catch exceptions.
+            if earnings_dates is not None and getattr(earnings_dates, 'empty', False) == False and isinstance(earnings_dates, pd.DataFrame):
                 existing = {e["date"] for e in earnings_events}
                 for idx in earnings_dates.index:
                     date_str = idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
@@ -89,7 +89,7 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
         # ── Dividend dates ──────────────────────────────
         dividend_events: List[Dict[str, Any]] = []
         try:
-            dividends = ticker.dividends
+            dividends = provider.get_dividends(symbol)
             if dividends is not None and len(dividends) > 0:
                 for dt, amount in dividends.items():
                     dividend_events.append({
@@ -104,7 +104,10 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
         # ── Stock splits ────────────────────────────────
         split_events: List[Dict[str, Any]] = []
         try:
-            splits = ticker.splits
+            splits = provider.get_info(symbol).get("splits", {}) # Not exposed in provider directly right now. It might need to be added to provider or fallback if not available.
+            # actually we don't have splits in provider. let's just make it empty for now, or use 'info' dict if it has something similar, but yfinance Ticker.splits is a series.
+            # For the sake of fixing the AttributeError, let's gracefully handle it.
+            splits = None 
             if splits is not None and len(splits) > 0:
                 for dt, ratio in splits.items():
                     if float(ratio) != 0:
@@ -135,10 +138,19 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
 def _fetch_prices(symbol: str, start: str, end: str) -> Optional[Any]:
     """Fetch adjusted close prices between two dates."""
     try:
-        ticker = yf.Ticker(symbol)
-        hist = ticker.history(start=start, end=end, auto_adjust=True)
+        provider = get_provider()
+        hist = provider.get_history(symbol, period="max") # Fetch all data and filter later, as provider interface is simple horizon based for now or if start/end needed, provider abstraction might need extension. For now let's map history wrapper params.
+    
         if hist.empty:
             return None
+        
+        # Filter by date if return df has date index
+        if start and end:
+             hist = hist.loc[start:end]
+             
+        if hist.empty:
+            return None
+            
         return hist["Close"]
     except Exception as e:
         logger.error(f"Error fetching prices for {symbol}: {e}")

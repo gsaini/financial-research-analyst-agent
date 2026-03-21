@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime
 import asyncio
 import concurrent.futures
-import yfinance as yf
+from src.data import get_provider
 import numpy as np
 
 from src.utils.logger import get_logger
@@ -52,7 +52,7 @@ _PEER_CACHE: Dict[str, List[str]] = {}
 def _fetch_info_cached(symbol: str) -> Dict[str, Any]:
     """Helper to fetch info with error handling."""
     try:
-        return yf.Ticker(symbol).info
+        return get_provider().get_info(symbol)
     except Exception:
         return {}
 

@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 import json
 
-import yfinance as yf
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,8 +23,8 @@ def get_stock_price(symbol: str) -> Dict[str, Any]:
         Dictionary with current price data
     """
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
+        provider = get_provider()
+        info = provider.get_info(symbol)
         
         return {
             "symbol": symbol,
@@ -63,8 +63,8 @@ def get_historical_data(symbol: str, period: str = "1y") -> Dict[str, Any]:
         Dictionary with historical OHLCV data
     """
     try:
-        ticker = yf.Ticker(symbol)
-        hist = ticker.history(period=period)
+        provider = get_provider()
+        hist = provider.get_history(symbol, period=period)
         
         if hist.empty:
             return {"symbol": symbol, "error": "No historical data available"}
@@ -99,8 +99,8 @@ def get_company_info(symbol: str) -> Dict[str, Any]:
         Dictionary with company profile
     """
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
+        provider = get_provider()
+        info = provider.get_info(symbol)
         
         return {
             "symbol": symbol,
@@ -133,12 +133,12 @@ def get_financial_statements(symbol: str) -> Dict[str, Any]:
         Dictionary with financial statement data
     """
     try:
-        ticker = yf.Ticker(symbol)
+        provider = get_provider()
         
         # Get financial statements
-        income_stmt = ticker.income_stmt
-        balance_sheet = ticker.balance_sheet
-        cash_flow = ticker.cashflow
+        income_stmt = provider.get_income_statement(symbol)
+        balance_sheet = provider.get_balance_sheet(symbol)
+        cash_flow = provider.get_cash_flow(symbol)
         
         result = {"symbol": symbol}
         
@@ -178,3 +178,4 @@ def get_financial_statements(symbol: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error fetching financial statements for {symbol}: {e}")
         return {"symbol": symbol, "error": str(e)}
+

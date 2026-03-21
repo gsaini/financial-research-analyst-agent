@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-import yfinance as yf
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -37,8 +37,8 @@ def fetch_dividend_info(symbol: str) -> Dict[str, Any]:
         Dict with dividend details.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
+        provider = get_provider()
+        info = provider.get_info(symbol)
 
         # Get dividend data
         annual_dividend = info.get("dividendRate", 0) or 0
@@ -58,7 +58,7 @@ def fetch_dividend_info(symbol: str) -> Dict[str, Any]:
                 ex_date_str = None
 
         # Determine frequency based on dividend history
-        dividends = ticker.dividends
+        dividends = provider.get_dividends(symbol)
         frequency = "Unknown"
         if not dividends.empty and len(dividends) >= 4:
             # Calculate average days between dividends
@@ -105,9 +105,9 @@ def fetch_dividend_history(symbol: str, years: int = 10) -> Dict[str, Any]:
         Dict with dividend history and statistics.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        dividends = ticker.dividends
-        info = ticker.info
+        provider = get_provider()
+        dividends = provider.get_dividends(symbol)
+        info = provider.get_info(symbol)
 
         if dividends.empty:
             return {
@@ -171,9 +171,9 @@ def calculate_dividend_growth(symbol: str) -> Dict[str, Any]:
         Dict with growth metrics and classification.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        dividends = ticker.dividends
-        info = ticker.info
+        provider = get_provider()
+        dividends = provider.get_dividends(symbol)
+        info = provider.get_info(symbol)
 
         if dividends.empty:
             return {
@@ -311,11 +311,11 @@ def calculate_dividend_safety(symbol: str) -> Dict[str, Any]:
         Dict with safety score (1-100) and factor breakdown.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
-        cash_flow = ticker.cashflow
-        balance_sheet = ticker.balance_sheet
-        income_stmt = ticker.income_stmt
+        provider = get_provider()
+        info = provider.get_info(symbol)
+        cash_flow = provider.get_cash_flow(symbol)
+        balance_sheet = provider.get_balance_sheet(symbol)
+        income_stmt = provider.get_income_statement(symbol)
 
         if info.get("dividendRate", 0) == 0:
             return {
@@ -534,8 +534,8 @@ def compare_yields(symbol: str) -> Dict[str, Any]:
         Dict with yield comparisons.
     """
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
+        provider = get_provider()
+        info = provider.get_info(symbol)
 
         stock_yield = info.get("dividendYield", 0) or 0
         if stock_yield > 0 and stock_yield < 1:

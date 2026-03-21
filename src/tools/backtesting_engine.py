@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import yfinance as yf
+from src.data import get_provider
 
 from src.tools.strategy_definitions import STRATEGIES, get_strategy
 from src.utils.logger import get_logger

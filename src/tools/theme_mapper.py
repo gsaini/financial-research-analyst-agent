@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-import yfinance as yf
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -160,14 +160,14 @@ def fetch_theme_stock_data(
 
     for symbol in symbols:
         try:
-            ticker = yf.Ticker(symbol)
-            hist = ticker.history(period=period)
+            provider = get_provider()
+            hist = provider.get_history(symbol, period=period)
 
             if hist.empty:
                 results[symbol] = {"error": f"No data available for {symbol}"}
                 continue
 
-            info = ticker.info
+            info = provider.get_info(symbol)
             closes = hist["Close"].tolist()
             returns = hist["Close"].pct_change().dropna().tolist()
             dates = [d.strftime("%Y-%m-%d") for d in hist.index]

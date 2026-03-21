@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
+from src.data import get_provider
 
 from src.utils.logger import get_logger
 
@@ -49,12 +49,12 @@ def get_insider_activity(
         Dict with parsed transactions, net activity, and cluster analysis.
     """
     try:
-        ticker = yf.Ticker(symbol)
+        provider = get_provider()
 
         # ── Insider transactions (Form 4 filings) ──
-        txn_df = _safe_dataframe(getattr(ticker, "insider_transactions", None))
-        purchases_df = _safe_dataframe(getattr(ticker, "insider_purchases", None))
-        major = _safe_dataframe(getattr(ticker, "major_holders", None))
+        txn_df = _safe_dataframe(provider.get_insider_transactions(symbol))
+        purchases_df = _safe_dataframe(provider.get_insider_purchases(symbol))
+        major = _safe_dataframe(provider.get_major_holders(symbol))
 
         # Parse insider ownership % from major_holders
         insider_ownership_pct = _extract_insider_ownership(major)
@@ -295,11 +295,11 @@ def get_institutional_holdings(symbol: str) -> Dict[str, Any]:
         Dict with top holders, ownership %, and summary.
     """
     try:
-        ticker = yf.Ticker(symbol)
+        provider = get_provider()
 
-        inst_df = _safe_dataframe(getattr(ticker, "institutional_holders", None))
-        mf_df = _safe_dataframe(getattr(ticker, "mutualfund_holders", None))
-        major = _safe_dataframe(getattr(ticker, "major_holders", None))
+        inst_df = _safe_dataframe(provider.get_institutional_holders(symbol))
+        mf_df = _safe_dataframe(provider.get_mutualfund_holders(symbol))
+        major = _safe_dataframe(provider.get_major_holders(symbol))
 
         inst_pct = _extract_institutional_ownership(major)
         top_holders = _parse_holders(inst_df, label="institutional")

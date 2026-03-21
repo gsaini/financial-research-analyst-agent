@@ -24,7 +24,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
+from src.data import get_provider, MarketDataProvider
 
 from src.utils.logger import get_logger
 
@@ -46,13 +46,13 @@ def analyze_options(symbol: str) -> Dict[str, Any]:
     sym = symbol.upper()
 
     try:
-        ticker = yf.Ticker(sym)
-        current_price = _get_current_price(ticker)
+        provider = get_provider()
+        current_price = _get_current_price(provider, sym)
 
         if not current_price:
             raise ValueError(f"Could not fetch current price for {sym}")
 
-        expirations = getattr(ticker, "options", [])
+        expirations = provider.get_options_expirations(sym)
         if not expirations:
             raise ValueError(f"No options data available for {sym}")
 
@@ -64,9 +64,9 @@ def analyze_options(symbol: str) -> Dict[str, Any]:
 
         for exp in target_expirations:
             try:
-                chain = ticker.option_chain(exp)
-                calls = chain.calls.copy()
-                puts = chain.puts.copy()
+                chain = provider.get_options_chain(sym, exp)
+                calls = chain["calls"].copy()
+                puts = chain["puts"].copy()
 
                 # Add expiration date to rows
                 calls["expiration"] = exp
@@ -114,16 +114,16 @@ def analyze_options(symbol: str) -> Dict[str, Any]:
         return _empty_options_response(sym, str(exc))
 
 
-def _get_current_price(ticker: yf.Ticker) -> Optional[float]:
-    """Safely fetch current price."""
+def _get_current_price(provider: MarketDataProvider, symbol: str) -> Optional[float]:
+    """Safely fetch current price via the data provider."""
     try:
-        info = ticker.info
+        info = provider.get_info(symbol)
         price = info.get("currentPrice", info.get("regularMarketPrice", info.get("previousClose")))
         if price:
             return float(price)
         
         # Fallback to history
-        hist = ticker.history(period="1d")
+        hist = provider.get_history(symbol, period="1d")
         if not hist.empty:
             return float(hist["Close"].iloc[-1])
     except Exception:
