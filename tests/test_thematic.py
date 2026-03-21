@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Tests for Feature 1: Thematic Investing Analysis.
 
@@ -284,7 +285,7 @@ class TestThemeSchemas:
             theme="AI & Machine Learning",
             theme_id="ai_machine_learning",
             constituents=["NVDA", "MSFT"],
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         assert resp.theme == "AI & Machine Learning"
         assert resp.momentum_score == 0  # default
@@ -301,7 +302,7 @@ class TestThemeSchemas:
         resp = ThemeListResponse(
             themes=[summary],
             total_themes=1,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
         )
         assert resp.total_themes == 1
 

@@ -319,16 +319,16 @@ class TestParseTransactions:
 
 class TestAnalyzeSmartMoney:
 
-    @patch("src.tools.insider_activity.yf.Ticker")
-    def test_full_pipeline(self, mock_ticker_cls):
-        mock_ticker = MagicMock()
-        mock_ticker_cls.return_value = mock_ticker
+    @patch("src.tools.insider_activity.get_provider")
+    def test_full_pipeline(self, mock_provider_func):
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
 
-        mock_ticker.insider_transactions = _sample_insider_buys()
-        mock_ticker.insider_purchases = None
-        mock_ticker.major_holders = _sample_major_holders()
-        mock_ticker.institutional_holders = _sample_institutional_holders()
-        mock_ticker.mutualfund_holders = _sample_mf_holders()
+        mock_provider.get_insider_transactions.return_value = _sample_insider_buys()
+        mock_provider.get_insider_purchases.return_value = pd.DataFrame()
+        mock_provider.get_major_holders.return_value = _sample_major_holders()
+        mock_provider.get_institutional_holders.return_value = _sample_institutional_holders()
+        mock_provider.get_mutualfund_holders.return_value = _sample_mf_holders()
 
         result = analyze_smart_money("AAPL")
 
@@ -339,16 +339,16 @@ class TestAnalyzeSmartMoney:
         assert "score" in result["smart_money_signal"]
         assert "execution_time_seconds" in result
 
-    @patch("src.tools.insider_activity.yf.Ticker")
-    def test_handles_empty_data(self, mock_ticker_cls):
-        mock_ticker = MagicMock()
-        mock_ticker_cls.return_value = mock_ticker
+    @patch("src.tools.insider_activity.get_provider")
+    def test_handles_empty_data(self, mock_provider_func):
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
 
-        mock_ticker.insider_transactions = pd.DataFrame()
-        mock_ticker.insider_purchases = None
-        mock_ticker.major_holders = None
-        mock_ticker.institutional_holders = None
-        mock_ticker.mutualfund_holders = None
+        mock_provider.get_insider_transactions.return_value = pd.DataFrame()
+        mock_provider.get_insider_purchases.return_value = pd.DataFrame()
+        mock_provider.get_major_holders.return_value = pd.DataFrame()
+        mock_provider.get_institutional_holders.return_value = pd.DataFrame()
+        mock_provider.get_mutualfund_holders.return_value = pd.DataFrame()
 
         result = analyze_smart_money("UNKNOWN")
 
@@ -356,16 +356,16 @@ class TestAnalyzeSmartMoney:
         assert result["insider_activity"]["transaction_count"] == 0
         assert result["institutional_activity"]["total_institutional_holders"] == 0
 
-    @patch("src.tools.insider_activity.yf.Ticker")
-    def test_custom_days(self, mock_ticker_cls):
-        mock_ticker = MagicMock()
-        mock_ticker_cls.return_value = mock_ticker
+    @patch("src.tools.insider_activity.get_provider")
+    def test_custom_days(self, mock_provider_func):
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
 
-        mock_ticker.insider_transactions = _sample_insider_buys()
-        mock_ticker.insider_purchases = None
-        mock_ticker.major_holders = _sample_major_holders()
-        mock_ticker.institutional_holders = _sample_institutional_holders()
-        mock_ticker.mutualfund_holders = None
+        mock_provider.get_insider_transactions.return_value = _sample_insider_buys()
+        mock_provider.get_insider_purchases.return_value = pd.DataFrame()
+        mock_provider.get_major_holders.return_value = _sample_major_holders()
+        mock_provider.get_institutional_holders.return_value = _sample_institutional_holders()
+        mock_provider.get_mutualfund_holders.return_value = pd.DataFrame()
 
         result = analyze_smart_money("AAPL", days=30)
         assert result["period_days"] == 30

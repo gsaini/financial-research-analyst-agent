@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Theme Mapper Tools for the Thematic Investing Analysis feature.
 
@@ -242,8 +243,8 @@ def calculate_theme_performance(
 
         if days is None:
             # YTD: calculate days from Jan 1
-            today = datetime.utcnow()
-            start_of_year = datetime(today.year, 1, 1)
+            today = datetime.now(timezone.utc)
+            start_of_year = datetime(today.year, 1, 1, tzinfo=timezone.utc)
             days = (today - start_of_year).days
 
         returns_for_period = []
@@ -613,5 +614,5 @@ def analyze_theme(theme_id: str) -> Dict[str, Any]:
         "failed_constituents": [
             sym for sym, data in stock_data.items() if "error" in data
         ],
-        "analyzed_at": datetime.utcnow().isoformat(),
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }

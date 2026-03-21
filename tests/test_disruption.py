@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Tests for Feature 3: Market Disruption Analysis.
 
@@ -450,7 +451,7 @@ class TestDisruptionSchemas:
             industry="Auto Manufacturers",
             disruption_score=85,
             classification="Active Disruptor",
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         assert resp.disruption_score == 85
         assert resp.classification == "Active Disruptor"
@@ -469,7 +470,7 @@ class TestDisruptionSchemas:
             companies_compared=1,
             comparison=[item],
             most_disruptive="TSLA",
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         assert resp.companies_compared == 1
         assert resp.most_disruptive == "TSLA"

@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Earnings Analyst Agent for the Financial Research Analyst.
 
@@ -244,12 +245,12 @@ Present findings with clear patterns, supporting data, and investment implicatio
             Complete earnings analysis dict.
         """
         logger.info(f"Running direct earnings analysis for '{symbol}'")
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
 
         try:
             result = analyze_earnings(symbol)
             result["execution_time_seconds"] = (
-                datetime.utcnow() - start
+                datetime.now(timezone.utc) - start
             ).total_seconds()
             return result
         except Exception as e:
@@ -258,7 +259,7 @@ Present findings with clear patterns, supporting data, and investment implicatio
                 "error": str(e),
                 "symbol": symbol,
                 "execution_time_seconds": (
-                    datetime.utcnow() - start
+                    datetime.now(timezone.utc) - start
                 ).total_seconds(),
             }
 
@@ -329,12 +330,12 @@ Provide a balanced assessment of earnings reliability and investment implication
             Comparison dict with earnings rankings.
         """
         logger.info(f"Comparing earnings profiles for {symbols}")
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
 
         try:
             result = compare_earnings(symbols)
             result["execution_time_seconds"] = (
-                datetime.utcnow() - start
+                datetime.now(timezone.utc) - start
             ).total_seconds()
             return result
         except Exception as e:
@@ -343,7 +344,7 @@ Provide a balanced assessment of earnings reliability and investment implication
                 "error": str(e),
                 "symbols": symbols,
                 "execution_time_seconds": (
-                    datetime.utcnow() - start
+                    datetime.now(timezone.utc) - start
                 ).total_seconds(),
             }
 

@@ -59,8 +59,7 @@ class DataAPISettings(BaseSettings):
     finnhub_api_key: str = Field(default="", env="FINNHUB_API_KEY")
     news_api_key: str = Field(default="", env="NEWS_API_KEY")
     
-    class Config:
-        env_prefix = ""
+    model_config = ConfigDict(env_prefix="")
 
 
 class DatabaseSettings(BaseSettings):
@@ -74,8 +73,7 @@ class DatabaseSettings(BaseSettings):
     redis_password: Optional[str] = Field(default=None, env="REDIS_PASSWORD")
     cache_ttl_seconds: int = Field(default=3600, env="CACHE_TTL_SECONDS")
     
-    class Config:
-        env_prefix = ""
+    model_config = ConfigDict(env_prefix="")
 
 
 class VectorStoreSettings(BaseSettings):
@@ -108,8 +106,7 @@ class VectorStoreSettings(BaseSettings):
         env="EMBEDDING_MODEL"
     )
 
-    class Config:
-        env_prefix = ""
+    model_config = ConfigDict(env_prefix="")
 
 
 class AgentSettings(BaseSettings):
@@ -119,8 +116,7 @@ class AgentSettings(BaseSettings):
     timeout_seconds: int = Field(default=300, env="AGENT_TIMEOUT_SECONDS")
     enable_memory: bool = Field(default=True, env="ENABLE_MEMORY")
     
-    class Config:
-        env_prefix = ""
+    model_config = ConfigDict(env_prefix="")
 
 
 class APISettings(BaseSettings):
@@ -134,8 +130,7 @@ class APISettings(BaseSettings):
         env="CORS_ORIGINS"
     )
     
-    class Config:
-        env_prefix = ""
+    model_config = ConfigDict(env_prefix="")
 
 
 class Settings(BaseSettings):

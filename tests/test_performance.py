@@ -171,31 +171,30 @@ class TestDrawdownAnalysis:
 class TestTrackPerformance:
     """Test the main track_performance function with mocked yfinance."""
 
-    @patch("src.tools.performance_tracker.yf")
-    def test_track_performance_structure(self, mock_yf):
+    @patch("src.tools.performance_tracker.get_provider")
+    def test_track_performance_structure(self, mock_provider_func):
         """Should return all expected top-level keys."""
         from src.tools.performance_tracker import track_performance
 
-        # Mock Ticker.history and Ticker.info
         stock_prices = _make_price_series(100, 150, 300)
         spy_prices = _make_price_series(100, 130, 300)
 
-        def mock_ticker(symbol):
-            m = MagicMock()
+        def mock_provider_get_history(symbol, period="max"):
             if symbol in ("SPY", "QQQ", "XLK"):
-                m.history.return_value = pd.DataFrame(
+                return pd.DataFrame(
                     {"Close": spy_prices.values},
                     index=spy_prices.index,
                 )
             else:
-                m.history.return_value = pd.DataFrame(
+                return pd.DataFrame(
                     {"Close": stock_prices.values},
                     index=stock_prices.index,
                 )
-                m.info = {"sector": "Technology"}
-            return m
 
-        mock_yf.Ticker.side_effect = mock_ticker
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_history.side_effect = mock_provider_get_history
+        mock_provider.get_info.return_value = {"sector": "Technology"}
 
         result = track_performance("AAPL")
 
@@ -209,35 +208,35 @@ class TestTrackPerformance:
         assert "current_price" in result
         assert result["data_points"] > 0
 
-    @patch("src.tools.performance_tracker.yf")
-    def test_track_performance_no_data(self, mock_yf):
+    @patch("src.tools.performance_tracker.get_provider")
+    def test_track_performance_no_data(self, mock_provider_func):
         """Should return error when no data is available."""
         from src.tools.performance_tracker import track_performance
 
-        m = MagicMock()
-        m.history.return_value = pd.DataFrame()
-        mock_yf.Ticker.return_value = m
+        mock_provider = MagicMock()
+        mock_provider.get_history.return_value = pd.DataFrame()
+        mock_provider_func.return_value = mock_provider
 
         result = track_performance("INVALID")
 
         assert "error" in result
 
-    @patch("src.tools.performance_tracker.yf")
-    def test_absolute_returns_horizons(self, mock_yf):
+    @patch("src.tools.performance_tracker.get_provider")
+    def test_absolute_returns_horizons(self, mock_provider_func):
         """Should compute returns for multiple horizons."""
         from src.tools.performance_tracker import track_performance
 
         prices = _make_price_series(100, 150, 500)
 
-        def mock_ticker(symbol):
-            m = MagicMock()
-            m.history.return_value = pd.DataFrame(
+        def mock_provider_get_history(symbol, period="max"):
+            return pd.DataFrame(
                 {"Close": prices.values}, index=prices.index
             )
-            m.info = {"sector": "Technology"}
-            return m
 
-        mock_yf.Ticker.side_effect = mock_ticker
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_history.side_effect = mock_provider_get_history
+        mock_provider.get_info.return_value = {"sector": "Technology"}
 
         result = track_performance("MSFT")
         returns = result["absolute_returns"]

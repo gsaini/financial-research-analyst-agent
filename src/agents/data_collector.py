@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Data Collector Agent for the Financial Research Analyst.
 
@@ -196,14 +197,14 @@ Organize all data in a structured format."""
             return {
                 "symbol": symbol,
                 "data": result.data,
-                "collected_at": datetime.utcnow().isoformat(),
+                "collected_at": datetime.now(timezone.utc).isoformat(),
                 "status": "success"
             }
         else:
             return {
                 "symbol": symbol,
                 "error": result.error,
-                "collected_at": datetime.utcnow().isoformat(),
+                "collected_at": datetime.now(timezone.utc).isoformat(),
                 "status": "failed"
             }
     
@@ -231,5 +232,5 @@ Organize all data in a structured format."""
             "results": results,
             "total_collected": len([r for r in results if r.get("status") == "success"]),
             "total_failed": len([r for r in results if r.get("status") == "failed"]),
-            "collected_at": datetime.utcnow().isoformat()
+            "collected_at": datetime.now(timezone.utc).isoformat()
         }

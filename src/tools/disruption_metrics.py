@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Disruption Metrics Tools for Market Disruption Analysis (Feature 3).
 
@@ -671,7 +672,7 @@ def analyze_disruption(symbol: str) -> Dict[str, Any]:
         Complete disruption analysis dict.
     """
     logger.info(f"Running disruption analysis for {symbol}")
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
 
     # Fetch financial data
     financials = fetch_company_financials(symbol)
@@ -698,7 +699,7 @@ def analyze_disruption(symbol: str) -> Dict[str, Any]:
     risk_factors = identify_risk_factors(financials, rd_metrics, growth_metrics, margin_metrics)
     strengths = identify_strengths(rd_metrics, growth_metrics, margin_metrics)
 
-    execution_time = (datetime.utcnow() - start_time).total_seconds()
+    execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
     return {
         "symbol": financials.get("symbol"),
@@ -723,7 +724,7 @@ def analyze_disruption(symbol: str) -> Dict[str, Any]:
             "years_analyzed": len(financials.get("years", [])),
             "data_years": financials.get("years", []),
         },
-        "analyzed_at": datetime.utcnow().isoformat(),
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
         "execution_time_seconds": round(execution_time, 2),
     }
 
@@ -762,5 +763,5 @@ def compare_disruption(symbols: List[str]) -> Dict[str, Any]:
         "companies_compared": len(symbols),
         "comparison": comparison,
         "most_disruptive": comparison[0]["symbol"] if comparison and "error" not in comparison[0] else None,
-        "analyzed_at": datetime.utcnow().isoformat(),
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }

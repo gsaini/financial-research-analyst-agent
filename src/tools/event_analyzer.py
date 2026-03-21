@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Event-Driven Performance Analysis Tool (Feature 7).
 
@@ -444,7 +445,7 @@ def analyze_events(
     """
     symbol = symbol.upper()
     logger.info(f"Running event analysis for {symbol} (type={event_type})")
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
 
     # Step 1: Get event calendar
     calendar = get_event_calendar(symbol)
@@ -470,7 +471,7 @@ def analyze_events(
         }
 
     # Only analyse past events (skip future dates)
-    today = datetime.utcnow().strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     past_events = [e for e in raw_events if e["date"] <= today]
 
     # Limit to most recent 12 events for performance
@@ -514,7 +515,7 @@ def analyze_events(
         clean = {k: v for k, v in w.items() if k != "_returns_raw"}
         clean_events.append(clean)
 
-    execution_time = (datetime.utcnow() - start_time).total_seconds()
+    execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
     return {
         "symbol": symbol,
@@ -524,6 +525,6 @@ def analyze_events(
         "events": clean_events,
         "historical_patterns": patterns,
         "correlation_with_surprise": correlation if correlation else None,
-        "analyzed_at": datetime.utcnow().isoformat(),
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
         "execution_time_seconds": round(execution_time, 2),
     }

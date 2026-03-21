@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Tests for Feature 2: Peer Group Comparison.
 """
@@ -151,6 +152,6 @@ def test_peer_schemas():
         relative_valuation={},
         strengths=[],
         weaknesses=[],
-        generated_at=datetime.utcnow()
+        generated_at=datetime.now(timezone.utc)
     )
     assert resp.target == "AAPL"

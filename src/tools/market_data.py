@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Market data tools for fetching financial data from various sources.
 """
@@ -44,7 +45,7 @@ def get_stock_price(symbol: str) -> Dict[str, Any]:
                 ((info.get("currentPrice", 0) - info.get("previousClose", 1)) / 
                  info.get("previousClose", 1)) * 100, 2
             ) if info.get("previousClose", 0) > 0 else 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         logger.error(f"Error fetching stock price for {symbol}: {e}")

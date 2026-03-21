@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Base Agent class for the Financial Research Analyst Agent.
 
@@ -14,7 +15,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_core.tools import BaseTool
 from langchain.agents import create_agent
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from src.config import settings
 from src.utils.logger import get_logger
@@ -34,8 +35,7 @@ class AgentState(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class AgentResult(BaseModel):
@@ -46,7 +46,7 @@ class AgentResult(BaseModel):
     error: Optional[str] = None
     execution_time_seconds: float = 0.0
     agent_name: str = ""
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert result to dictionary."""
@@ -216,7 +216,7 @@ class BaseAgent(ABC):
         Returns:
             AgentResult with execution results
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         self.state.status = "running"
         self.state.current_task = task
         self.state.started_at = start_time
@@ -247,10 +247,10 @@ class BaseAgent(ABC):
                     break
 
             # Process result
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
             self.state.status = "completed"
-            self.state.completed_at = datetime.utcnow()
+            self.state.completed_at = datetime.now(timezone.utc)
             self.state.results[task[:50]] = output
 
             return AgentResult(
@@ -261,7 +261,7 @@ class BaseAgent(ABC):
             )
 
         except Exception as e:
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             error_msg = str(e)
 
             self.state.status = "error"

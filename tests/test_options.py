@@ -250,20 +250,22 @@ class TestOptionsSignal:
 
 class TestAnalyzeOptionsPipeline:
 
-    @patch("src.tools.options_analyzer.yf.Ticker")
-    def test_full_pipeline(self, mock_ticker_cls):
-        mock_ticker = MagicMock()
-        mock_ticker_cls.return_value = mock_ticker
+    @patch("src.tools.options_analyzer.get_provider")
+    def test_full_pipeline(self, mock_provider_func):
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
 
         # Setup mock ticker properties
-        mock_ticker.info = {"currentPrice": 185.0}
-        mock_ticker.options = ["2026-02-21", "2026-03-21"]
+        mock_provider.get_info.return_value = {"currentPrice": 185.0} # Actually provider uses get_quote or get_info. Options uses get_current_price mapped to provider.get_quote() usually.
+        # Options analyzer does: _get_current_price(symbol, provider)
+        mock_provider.get_quote.return_value = 185.0
+        mock_provider.get_options_expirations.return_value = ["2026-02-21", "2026-03-21"]
         
         # Setup mock option chain
-        mock_chain = MagicMock()
-        mock_chain.calls = _sample_calls()
-        mock_chain.puts = _sample_puts()
-        mock_ticker.option_chain.return_value = mock_chain
+        mock_provider.get_options_chain.return_value = {
+            "calls": _sample_calls(),
+            "puts": _sample_puts()
+        }
 
         result = analyze_options("AAPL")
 
@@ -278,13 +280,13 @@ class TestAnalyzeOptionsPipeline:
         
         assert len(result["expirations_analyzed"]) > 0
 
-    @patch("src.tools.options_analyzer.yf.Ticker")
-    def test_handles_missing_options_data(self, mock_ticker_cls):
-        mock_ticker = MagicMock()
-        mock_ticker_cls.return_value = mock_ticker
+    @patch("src.tools.options_analyzer.get_provider")
+    def test_handles_missing_options_data(self, mock_provider_func):
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
 
-        mock_ticker.info = {"currentPrice": 185.0}
-        mock_ticker.options = []  # No expirations
+        mock_provider.get_quote.return_value = 185.0
+        mock_provider.get_options_expirations.return_value = []  # No expirations
 
         result = analyze_options("NOOPT")
 
@@ -293,16 +295,17 @@ class TestAnalyzeOptionsPipeline:
         assert "No options data" in result["error"]
         assert result["current_price"] == 0.0
 
-    @patch("src.tools.options_analyzer.yf.Ticker")
-    def test_handles_missing_price(self, mock_ticker_cls):
-        mock_ticker = MagicMock()
-        mock_ticker_cls.return_value = mock_ticker
+    @patch("src.tools.options_analyzer.get_provider")
+    def test_handles_missing_price(self, mock_provider_func):
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
 
-        mock_ticker.info = {}
+        mock_provider.get_quote.return_value = None
+        mock_provider.get_info.return_value = {}
         # Make history return empty dataframe
         mock_hist = MagicMock()
         mock_hist.empty = True
-        mock_ticker.history.return_value = mock_hist
+        mock_provider.get_history.return_value = mock_hist
 
         result = analyze_options("NOPRICE")
 

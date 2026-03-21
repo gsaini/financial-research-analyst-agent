@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Technical Analyst Agent for the Financial Research Analyst.
 
@@ -245,7 +246,7 @@ Provide a structured technical analysis report."""
             "analysis_type": "technical",
             "result": result.data if result.success else None,
             "error": result.error if not result.success else None,
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
     
     def generate_signals(

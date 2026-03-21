@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Fundamental Analyst Agent for the Financial Research Analyst.
 
@@ -247,7 +248,7 @@ Provide a structured fundamental analysis report."""
             "analysis_type": "fundamental",
             "result": result.data if result.success else None,
             "error": result.error if not result.success else None,
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
     
     def calculate_intrinsic_value(

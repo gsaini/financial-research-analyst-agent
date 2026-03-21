@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Orchestrator Agent for the Financial Research Analyst.
 
@@ -124,7 +125,7 @@ Coordinate efficiently and ensure comprehensive analysis."""
     async def analyze(self, symbol: str, include_all: bool = True) -> Dict[str, Any]:
         """Run comprehensive analysis on a symbol."""
         logger.info(f"Starting comprehensive analysis for {symbol}")
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         results = {"symbol": symbol, "started_at": start_time.isoformat()}
         
         try:
@@ -151,7 +152,7 @@ Coordinate efficiently and ensure comprehensive analysis."""
             report = await self.report_generator.generate_report(symbol, results)
             results["report"] = report
             
-            results["completed_at"] = datetime.utcnow().isoformat()
+            results["completed_at"] = datetime.now(timezone.utc).isoformat()
             results["success"] = True
             
         except Exception as e:

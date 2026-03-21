@@ -102,5 +102,7 @@ class AnalysisResult(BaseModel):
     confidence: float = 0.5
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    from pydantic import ConfigDict
+    model_config = ConfigDict(
+        json_encoders={datetime: lambda v: v.isoformat()}
+    )

@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Peer Comparison Tool for Financial Research Analyst.
 
@@ -350,7 +351,7 @@ async def compare_peers(symbol: str, peer_symbols: List[str] = None) -> Dict[str
             "relative_valuation": rel_valuation,
             "strengths": strengths,
             "weaknesses": weaknesses,
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:

@@ -5,7 +5,7 @@ API request/response schemas.
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AnalysisType(str, Enum):
@@ -30,14 +30,7 @@ class AnalysisRequest(BaseModel):
     )
     include_news: bool = Field(default=True, description="Include news analysis")
     
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "symbol": "AAPL",
-                "analysis_type": "comprehensive",
-                "include_news": True
-            }
-        }
+    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'AAPL', 'analysis_type': 'comprehensive', 'include_news': True}}, extra="ignore")
 
 
 class PortfolioRequest(BaseModel):
@@ -79,8 +72,7 @@ class AnalysisResponse(BaseModel):
     analyzed_at: datetime
     execution_time_seconds: float
     
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class PortfolioResponse(BaseModel):
@@ -129,8 +121,7 @@ class HealthResponse(BaseModel):
         description="Health check response time in milliseconds"
     )
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class ThemeAnalysisRequest(BaseModel):
@@ -145,13 +136,7 @@ class ThemeAnalysisRequest(BaseModel):
         description="Include LLM-generated narrative outlook",
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "theme_id": "ai_machine_learning",
-                "include_narrative": False,
-            }
-        }
+    model_config = ConfigDict(json_schema_extra={'example': {'theme_id': 'ai_machine_learning', 'include_narrative': False}}, extra="ignore")
 
 
 class ThemeCompareRequest(BaseModel):
@@ -203,8 +188,7 @@ class ThemeAnalysisResponse(BaseModel):
     analyzed_at: datetime
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class ThemeSummary(BaseModel):
@@ -252,8 +236,7 @@ class PeerComparisonResponse(BaseModel):
     weaknesses: List[str]
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -273,13 +256,7 @@ class DisruptionAnalysisRequest(BaseModel):
         description="Include LLM-generated qualitative assessment",
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "symbol": "TSLA",
-                "include_narrative": False,
-            }
-        }
+    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'TSLA', 'include_narrative': False}}, extra="ignore")
 
 
 class DisruptionCompareRequest(BaseModel):
@@ -322,8 +299,7 @@ class DisruptionAnalysisResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class DisruptionComparisonItem(BaseModel):
@@ -348,8 +324,7 @@ class DisruptionCompareResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -369,13 +344,7 @@ class EarningsAnalysisRequest(BaseModel):
         description="Include LLM-generated qualitative assessment",
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "symbol": "AAPL",
-                "include_narrative": False,
-            }
-        }
+    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'AAPL', 'include_narrative': False}}, extra="ignore")
 
 
 class EarningsCompareRequest(BaseModel):
@@ -463,8 +432,7 @@ class EarningsAnalysisResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class EarningsComparisonItem(BaseModel):
@@ -490,8 +458,7 @@ class EarningsCompareResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -517,8 +484,7 @@ class PerformanceResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -538,8 +504,7 @@ class EventAnalysisResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -559,15 +524,7 @@ class BacktestRequest(BaseModel):
     period: str = Field(default="5y", description="yfinance period if dates omitted")
     initial_capital: float = Field(default=10000.0, description="Starting capital ($)")
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "symbol": "AAPL",
-                "strategy": "rsi_reversal",
-                "period": "5y",
-                "initial_capital": 10000.0,
-            }
-        }
+    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'AAPL', 'strategy': 'rsi_reversal', 'period': '5y', 'initial_capital': 10000.0}}, extra="ignore")
 
 
 class BacktestResponse(BaseModel):
@@ -585,8 +542,7 @@ class BacktestResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -607,8 +563,7 @@ class ObservationsResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -626,8 +581,7 @@ class SmartMoneyResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -648,8 +602,7 @@ class OptionsAnalysisResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -665,13 +618,7 @@ class DividendAnalysisRequest(BaseModel):
         description="Include LLM-generated qualitative assessment",
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "symbol": "JNJ",
-                "include_narrative": False,
-            }
-        }
+    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'JNJ', 'include_narrative': False}}, extra="ignore")
 
 
 class DividendCompareRequest(BaseModel):
@@ -686,13 +633,7 @@ class DividendCompareRequest(BaseModel):
         description="Include LLM-generated comparative narrative",
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "symbols": ["JNJ", "PG", "KO"],
-                "include_narrative": False,
-            }
-        }
+    model_config = ConfigDict(json_schema_extra={'example': {'symbols': ['JNJ', 'PG', 'KO'], 'include_narrative': False}}, extra="ignore")
 
 
 class CurrentDividend(BaseModel):
@@ -755,8 +696,7 @@ class DividendAnalysisResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class DividendComparisonItem(BaseModel):
@@ -783,6 +723,4 @@ class DividendCompareResponse(BaseModel):
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     execution_time_seconds: Optional[float] = None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
-
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})

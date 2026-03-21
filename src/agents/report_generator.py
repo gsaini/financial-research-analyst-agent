@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Report Generator Agent for the Financial Research Analyst.
 
@@ -47,7 +48,7 @@ EXECUTIVE SUMMARY - {symbol}
 {'=' * 40}
 Recommendation: {recommendation}
 Confidence Level: {confidence * 100:.0f}%
-Analysis Date: {datetime.utcnow().strftime('%Y-%m-%d')}
+Analysis Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}
 
 Key Findings:
 • Technical Analysis: {data.get('technical_summary', 'N/A')}
@@ -100,7 +101,7 @@ Use clear, professional language suitable for institutional investors."""
         """Create structured report dictionary."""
         return {
             "symbol": symbol,
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "technical": analyses.get("technical", {}),
             "fundamental": analyses.get("fundamental", {}),
             "sentiment": analyses.get("sentiment", {}),

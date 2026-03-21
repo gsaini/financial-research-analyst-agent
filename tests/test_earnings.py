@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Tests for Feature 4: Quarterly Earnings Analysis.
 
@@ -395,7 +396,7 @@ class TestEarningsSchemas:
             symbol="AAPL",
             name="Apple Inc.",
             currency="USD",
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         assert resp.symbol == "AAPL"
         assert resp.currency == "USD"
@@ -414,7 +415,7 @@ class TestEarningsSchemas:
             companies_compared=1,
             comparison=[item],
             best_earnings_quality="AAPL",
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         assert resp.companies_compared == 1
         assert resp.best_earnings_quality == "AAPL"

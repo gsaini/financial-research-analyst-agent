@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Dividend Analyst Agent for the Financial Research Analyst.
 
@@ -228,12 +229,12 @@ Present findings with clear safety ratings, growth trends, and income investing 
             Complete dividend analysis dict.
         """
         logger.info(f"Running direct dividend analysis for '{symbol}'")
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
 
         try:
             result = analyze_dividends(symbol)
             result["execution_time_seconds"] = (
-                datetime.utcnow() - start
+                datetime.now(timezone.utc) - start
             ).total_seconds()
             return result
         except Exception as e:
@@ -242,7 +243,7 @@ Present findings with clear safety ratings, growth trends, and income investing 
                 "error": str(e),
                 "symbol": symbol,
                 "execution_time_seconds": (
-                    datetime.utcnow() - start
+                    datetime.now(timezone.utc) - start
                 ).total_seconds(),
             }
 
@@ -324,12 +325,12 @@ Provide a balanced assessment of dividend reliability and income investing suita
             Comparison dict with dividend rankings.
         """
         logger.info(f"Comparing dividend profiles for {symbols}")
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
 
         try:
             result = compare_dividends(symbols)
             result["execution_time_seconds"] = (
-                datetime.utcnow() - start
+                datetime.now(timezone.utc) - start
             ).total_seconds()
             return result
         except Exception as e:
@@ -338,7 +339,7 @@ Provide a balanced assessment of dividend reliability and income investing suita
                 "error": str(e),
                 "symbols": symbols,
                 "execution_time_seconds": (
-                    datetime.utcnow() - start
+                    datetime.now(timezone.utc) - start
                 ).total_seconds(),
             }
 

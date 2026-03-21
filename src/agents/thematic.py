@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Thematic Analyst Agent for the Financial Research Analyst.
 
@@ -185,12 +186,12 @@ decision-making. Include a short narrative outlook at the end."""
             Complete theme analysis dict.
         """
         logger.info(f"Running direct thematic analysis for '{theme_id}'")
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
 
         try:
             result = analyze_theme(theme_id)
             result["execution_time_seconds"] = (
-                datetime.utcnow() - start
+                datetime.now(timezone.utc) - start
             ).total_seconds()
             return result
         except Exception as e:
@@ -199,7 +200,7 @@ decision-making. Include a short narrative outlook at the end."""
                 "error": str(e),
                 "theme_id": theme_id,
                 "execution_time_seconds": (
-                    datetime.utcnow() - start
+                    datetime.now(timezone.utc) - start
                 ).total_seconds(),
             }
 
@@ -282,5 +283,5 @@ Provide a balanced outlook covering momentum, risk, and portfolio implications."
         return {
             "themes_compared": len(theme_ids),
             "comparison": comparison,
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }

@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Main entry point for the Financial Research Analyst Agent.
 """
@@ -72,7 +73,7 @@ def main():
     logger.info("=" * 60)
     logger.info("Financial Research Analyst Agent")
     logger.info(f"Version: 1.0.0")
-    logger.info(f"Started at: {datetime.utcnow().isoformat()}")
+    logger.info(f"Started at: {datetime.now(timezone.utc).isoformat()}")
     logger.info("=" * 60)
     
     if len(sys.argv) > 1:

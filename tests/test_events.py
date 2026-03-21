@@ -100,17 +100,21 @@ def _mock_ticker_factory(
 class TestEventCalendar:
     """Test the event calendar extraction."""
 
-    @patch("src.tools.event_analyzer.yf")
-    def test_calendar_earnings(self, mock_yf):
+    @patch("src.tools.event_analyzer.get_provider")
+    def test_calendar_earnings(self, mock_provider_func):
         """Should extract earnings dates from earnings_history."""
         from src.tools.event_analyzer import get_event_calendar
 
-        mock_yf.Ticker.side_effect = _mock_ticker_factory(
-            earnings_records=[
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
+        df = pd.DataFrame([
                 {"date": "2025-10-30", "epsActual": 1.50, "epsEstimate": 1.40},
                 {"date": "2025-07-31", "epsActual": 1.30, "epsEstimate": 1.25},
-            ]
-        )
+        ])
+        df.index = pd.to_datetime(df.pop("date"))
+        mock_provider.get_earnings_history.return_value = df
+        mock_provider.get_calendar.return_value = pd.DataFrame()
 
         result = get_event_calendar("AAPL")
 
@@ -119,16 +123,24 @@ class TestEventCalendar:
         assert result["earnings"][0]["eps_actual"] == 1.30  # sorted — earlier date first
         assert result["total_events"] >= 2
 
-    @patch("src.tools.event_analyzer.yf")
-    def test_calendar_dividends(self, mock_yf):
+    @patch("src.tools.event_analyzer.get_provider")
+    def test_calendar_dividends(self, mock_provider_func):
         """Should extract dividend ex-dates."""
         from src.tools.event_analyzer import get_event_calendar
 
-        mock_yf.Ticker.side_effect = _mock_ticker_factory(
-            dividend_data=[
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
+        mock_provider.get_earnings_history.return_value = pd.DataFrame()
+        mock_provider.get_calendar.return_value = pd.DataFrame()
+
+        dividend_data = [
                 {"date": "2025-08-07", "amount": 0.25},
                 {"date": "2025-11-06", "amount": 0.26},
-            ]
+        ]
+        idx = pd.to_datetime([d["date"] for d in dividend_data])
+        mock_provider.get_dividends.return_value = pd.Series(
+                [d["amount"] for d in dividend_data], index=idx
         )
 
         result = get_event_calendar("AAPL")
@@ -136,12 +148,17 @@ class TestEventCalendar:
         assert len(result["dividends"]) == 2
         assert result["dividends"][0]["amount"] == 0.25
 
-    @patch("src.tools.event_analyzer.yf")
-    def test_calendar_empty(self, mock_yf):
+    @patch("src.tools.event_analyzer.get_provider")
+    def test_calendar_empty(self, mock_provider_func):
         """Should handle no events gracefully."""
         from src.tools.event_analyzer import get_event_calendar
 
-        mock_yf.Ticker.side_effect = _mock_ticker_factory()
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_info.return_value = {"longName": "Mock XYZ", "sector": "Technology"}
+        mock_provider.get_earnings_history.return_value = pd.DataFrame()
+        mock_provider.get_calendar.return_value = pd.DataFrame()
+        mock_provider.get_dividends.return_value = pd.Series()
 
         result = get_event_calendar("XYZ")
 
@@ -313,21 +330,28 @@ class TestAnalyzeEvents:
     """Test the main analyze_events entry point."""
 
     @patch("src.tools.event_analyzer._fetch_prices")
-    @patch("src.tools.event_analyzer.yf")
-    def test_full_analysis_structure(self, mock_yf, mock_fetch):
+    @patch("src.tools.event_analyzer.get_provider")
+    def test_full_analysis_structure(self, mock_provider_func, mock_fetch):
         """Should return all expected top-level keys."""
         from src.tools.event_analyzer import analyze_events
 
         prices = _make_price_series(100, 120, 60)
         mock_fetch.return_value = prices
 
-        mock_yf.Ticker.side_effect = _mock_ticker_factory(
-            earnings_records=[
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
+        df = pd.DataFrame([
                 {"date": "2025-10-30", "epsActual": 1.50, "epsEstimate": 1.40},
                 {"date": "2025-07-31", "epsActual": 1.30, "epsEstimate": 1.25},
                 {"date": "2025-04-30", "epsActual": 1.20, "epsEstimate": 1.15},
-            ],
-            prices=prices,
+        ])
+        df.index = pd.to_datetime(df.pop("date"))
+        mock_provider.get_earnings_history.return_value = df
+        mock_provider.get_calendar.return_value = pd.DataFrame()
+        mock_provider.get_dividends.return_value = pd.Series()
+        mock_provider.get_history.return_value = pd.DataFrame(
+                {"Close": prices.values}, index=prices.index
         )
 
         result = analyze_events("AAPL")
@@ -340,24 +364,29 @@ class TestAnalyzeEvents:
         assert "analyzed_at" in result
         assert "execution_time_seconds" in result
 
-    @patch("src.tools.event_analyzer.yf")
-    def test_no_events(self, mock_yf):
+    @patch("src.tools.event_analyzer.get_provider")
+    def test_no_events(self, mock_provider_func):
         """Should handle zero events gracefully."""
         from src.tools.event_analyzer import analyze_events
 
-        mock_yf.Ticker.side_effect = _mock_ticker_factory()
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_info.return_value = {"longName": "Mock XYZ", "sector": "Technology"}
+        mock_provider.get_earnings_history.return_value = pd.DataFrame()
 
         result = analyze_events("XYZ", event_type="earnings")
 
         assert result["events_analyzed"] == 0
         assert "error" in result
 
-    @patch("src.tools.event_analyzer.yf")
-    def test_unknown_event_type(self, mock_yf):
+    @patch("src.tools.event_analyzer.get_provider")
+    def test_unknown_event_type(self, mock_provider_func):
         """Should return error for unknown event type."""
         from src.tools.event_analyzer import analyze_events
 
-        mock_yf.Ticker.side_effect = _mock_ticker_factory()
+        mock_provider = MagicMock()
+        mock_provider_func.return_value = mock_provider
+        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
 
         result = analyze_events("AAPL", event_type="unknown")
 

@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 FastAPI routes for the Financial Research Analyst API.
 """
@@ -196,7 +197,7 @@ async def health_check():
     health_response = HealthResponse(
         status=overall_status,
         version="1.0.0",
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         uptime_seconds=uptime_seconds,
         checks=checks,
         response_time_ms=round(response_time_ms, 2),
@@ -276,7 +277,7 @@ async def analyze_stock(request: AnalysisRequest):
             fundamental={"company": company, "price_data": price_data},
             sentiment={"status": "analyzed", "score": 0.5},
             risk={"volatility": "medium"},
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
             execution_time_seconds=round(execution_time, 2),
         )
         
@@ -303,7 +304,7 @@ async def get_technical_analysis(symbol: str):
             "rsi": calculate_rsi(closes),
             "macd": calculate_macd(closes),
             "moving_averages": calculate_moving_averages(closes),
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -320,7 +321,7 @@ async def get_fundamental_analysis(symbol: str):
             "symbol": symbol,
             "company": company,
             "price_data": price_data,
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -335,7 +336,7 @@ async def get_sentiment_analysis(symbol: str):
         "score": 0.65,
         "news_sentiment": 0.7,
         "social_sentiment": 0.6,
-        "analyzed_at": datetime.utcnow().isoformat(),
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -358,7 +359,7 @@ async def analyze_portfolio(request: PortfolioRequest):
             diversification_score=0.7,
             risk_assessment="moderate",
             recommendations=["Consider diversifying across sectors"],
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -374,7 +375,7 @@ async def generate_report(request: ReportRequest):
         
         content = f"# Investment Research Report\n\n"
         content += f"Symbols: {', '.join(request.symbols)}\n"
-        content += f"Generated: {datetime.utcnow().isoformat()}\n\n"
+        content += f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n"
         content += "## Summary\n\nDetailed analysis available upon request."
         
         return ReportResponse(
@@ -382,7 +383,7 @@ async def generate_report(request: ReportRequest):
             symbols=request.symbols,
             format=request.format,
             content=content,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -398,7 +399,7 @@ async def get_market_summary():
             "QQQ": {"price": 395.20, "change": 0.8},
             "DIA": {"price": 375.30, "change": 0.3},
         },
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -421,7 +422,7 @@ async def get_themes():
         return ThemeListResponse(
             themes=themes,
             total_themes=len(themes),
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
         )
     except Exception as e:
         logger.error(f"Error listing themes: {e}")
@@ -470,7 +471,7 @@ async def analyze_investment_theme(theme_id: str, request: ThemeAnalysisRequest 
                 result["outlook"] = "Unable to generate narrative outlook"
 
         result["execution_time_seconds"] = round(time.time() - start_time, 2)
-        result["analyzed_at"] = datetime.utcnow().isoformat()
+        result["analyzed_at"] = datetime.now(timezone.utc).isoformat()
 
         return ThemeAnalysisResponse(**result)
 
@@ -530,7 +531,7 @@ async def compare_investment_themes(request: ThemeCompareRequest):
             "themes_compared": len(request.theme_ids),
             "comparison": comparison,
             "execution_time_seconds": round(time.time() - start_time, 2),
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
 
     except HTTPException:
@@ -867,7 +868,7 @@ async def get_performance(symbol: str):
         result = track_performance(symbol.upper())
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
-        result["analyzed_at"] = datetime.utcnow().isoformat()
+        result["analyzed_at"] = datetime.now(timezone.utc).isoformat()
         return result
     except HTTPException:
         raise

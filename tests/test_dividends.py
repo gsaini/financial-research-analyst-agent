@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Tests for Feature 15: Dividend Analysis.
 
@@ -29,13 +30,13 @@ class TestDividendSafetyCalculation:
         """Should calculate high safety score for strong fundamentals."""
         from src.tools.dividend_analyzer import calculate_dividend_safety
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker, \
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider, \
              patch("src.tools.dividend_analyzer.calculate_dividend_growth") as mock_growth:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
 
             # Mock strong dividend payer
-            mock_instance.info = {
+            mock_provider.get_info.return_value = {
                 "longName": "Johnson & Johnson",
                 "dividendRate": 4.76,
                 "dividendYield": 0.03,
@@ -49,7 +50,7 @@ class TestDividendSafetyCalculation:
             mock_cashflow = MagicMock()
             mock_cashflow.empty = False
             mock_cashflow.iloc.__getitem__ = MagicMock(return_value=fcf_row)
-            mock_instance.cashflow = mock_cashflow
+            mock_provider.get_cash_flow.return_value = mock_cashflow
 
             # Mock balance sheet with low debt
             bs_row = MagicMock()
@@ -60,7 +61,7 @@ class TestDividendSafetyCalculation:
             mock_balance = MagicMock()
             mock_balance.empty = False
             mock_balance.iloc.__getitem__ = MagicMock(return_value=bs_row)
-            mock_instance.balance_sheet = mock_balance
+            mock_provider.get_balance_sheet.return_value = mock_balance
 
             # Mock income statement with stable earnings
             income_col = MagicMock()
@@ -69,7 +70,7 @@ class TestDividendSafetyCalculation:
             mock_income.empty = False
             mock_income.columns = ["2024", "2023", "2022", "2021"]
             mock_income.__getitem__ = MagicMock(return_value=income_col)
-            mock_instance.income_stmt = mock_income
+            mock_provider.get_income_statement.return_value = mock_income
 
             # Mock dividend growth result
             mock_growth.return_value = {
@@ -89,19 +90,19 @@ class TestDividendSafetyCalculation:
         """Should return N/A for non-dividend payers."""
         from src.tools.dividend_analyzer import calculate_dividend_safety
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider:
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
 
-            mock_instance.info = {
+            mock_provider.get_info.return_value = {
                 "longName": "Amazon.com Inc",
                 "dividendRate": 0,
                 "dividendYield": 0,
             }
-            mock_instance.cashflow = MagicMock(empty=True)
-            mock_instance.balance_sheet = MagicMock(empty=True)
-            mock_instance.income_stmt = MagicMock(empty=True)
-            mock_instance.dividends = MagicMock(empty=True)
+            mock_provider.get_cash_flow.return_value = MagicMock(empty=True)
+            mock_provider.get_balance_sheet.return_value = MagicMock(empty=True)
+            mock_provider.get_income_statement.return_value = MagicMock(empty=True)
+            mock_provider.get_dividends.return_value = MagicMock(empty=True)
 
             result = calculate_dividend_safety("AMZN")
 
@@ -112,13 +113,13 @@ class TestDividendSafetyCalculation:
         """Should identify red flags for risky dividends."""
         from src.tools.dividend_analyzer import calculate_dividend_safety
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker, \
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider, \
              patch("src.tools.dividend_analyzer.calculate_dividend_growth") as mock_growth:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
 
             # Mock risky dividend payer (high payout, low FCF coverage)
-            mock_instance.info = {
+            mock_provider.get_info.return_value = {
                 "longName": "Risky Corp",
                 "dividendRate": 5.0,
                 "dividendYield": 0.08,
@@ -132,7 +133,7 @@ class TestDividendSafetyCalculation:
             mock_cashflow = MagicMock()
             mock_cashflow.empty = False
             mock_cashflow.iloc.__getitem__ = MagicMock(return_value=fcf_row)
-            mock_instance.cashflow = mock_cashflow
+            mock_provider.get_cash_flow.return_value = mock_cashflow
 
             # Mock balance sheet with high debt
             bs_row = MagicMock()
@@ -143,9 +144,9 @@ class TestDividendSafetyCalculation:
             mock_balance = MagicMock()
             mock_balance.empty = False
             mock_balance.iloc.__getitem__ = MagicMock(return_value=bs_row)
-            mock_instance.balance_sheet = mock_balance
+            mock_provider.get_balance_sheet.return_value = mock_balance
 
-            mock_instance.income_stmt = MagicMock(empty=True)
+            mock_provider.get_income_statement.return_value = MagicMock(empty=True)
 
             mock_growth.return_value = {
                 "consecutive_years_increased": 0,
@@ -170,17 +171,17 @@ class TestDividendGrowthCalculation:
         """Should classify as Dividend King for 50+ years."""
         from src.tools.dividend_analyzer import calculate_dividend_growth
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
-            mock_instance.info = {"longName": "Procter & Gamble"}
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider:
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
+            mock_provider.get_info.return_value = {"longName": "Procter & Gamble"}
 
             # Create 60+ years of increasing dividends
             import pandas as pd
             dates = pd.date_range(start="1960-01-01", end="2025-01-01", freq="QE")
             amounts = [0.10 * (1.03 ** (i // 4)) for i in range(len(dates))]
             mock_dividends = pd.Series(amounts, index=dates)
-            mock_instance.dividends = mock_dividends
+            mock_provider.get_dividends.return_value = mock_dividends
 
             result = calculate_dividend_growth("PG")
 
@@ -192,13 +193,13 @@ class TestDividendGrowthCalculation:
         """Should handle non-dividend payers."""
         from src.tools.dividend_analyzer import calculate_dividend_growth
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
-            mock_instance.info = {"longName": "Amazon.com Inc"}
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider:
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
+            mock_provider.get_info.return_value = {"longName": "Amazon.com Inc"}
 
             import pandas as pd
-            mock_instance.dividends = pd.Series([], dtype=float)
+            mock_provider.get_dividends.return_value = pd.Series([], dtype=float)
 
             result = calculate_dividend_growth("AMZN")
 
@@ -210,17 +211,17 @@ class TestDividendGrowthCalculation:
         """Should calculate CAGR correctly."""
         from src.tools.dividend_analyzer import calculate_dividend_growth
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
-            mock_instance.info = {"longName": "Test Corp"}
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider:
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
+            mock_provider.get_info.return_value = {"longName": "Test Corp"}
 
             # Create 10 years of steady 6% annual dividend growth
             import pandas as pd
             dates = pd.date_range(start="2015-01-01", end="2025-01-01", freq="QE")
             base = 1.0
             amounts = [base * (1.06 ** (i // 4)) for i in range(len(dates))]
-            mock_instance.dividends = pd.Series(amounts, index=dates)
+            mock_provider.get_dividends.return_value = pd.Series(amounts, index=dates)
 
             result = calculate_dividend_growth("TEST")
 
@@ -242,11 +243,11 @@ class TestYieldComparison:
         """Should identify yield above sector average."""
         from src.tools.dividend_analyzer import compare_yields
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider:
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
 
-            mock_instance.info = {
+            mock_provider.get_info.return_value = {
                 "longName": "Verizon Communications",
                 "dividendYield": 0.065,  # 6.5% yield
                 "sector": "Communication Services",
@@ -265,11 +266,11 @@ class TestYieldComparison:
         """Should use correct sector average for utilities."""
         from src.tools.dividend_analyzer import compare_yields
 
-        with patch("src.tools.dividend_analyzer.yf.Ticker") as mock_ticker:
-            mock_instance = MagicMock()
-            mock_ticker.return_value = mock_instance
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider:
+            mock_provider = MagicMock()
+            mock_get_provider.return_value = mock_provider
 
-            mock_instance.info = {
+            mock_provider.get_info.return_value = {
                 "longName": "Duke Energy",
                 "dividendYield": 0.04,  # 4% yield
                 "sector": "Utilities",
@@ -484,7 +485,7 @@ class TestDividendSchemas:
             symbol="JNJ",
             name="Johnson & Johnson",
             pays_dividends=True,
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         assert resp.symbol == "JNJ"
         assert resp.pays_dividends is True
@@ -504,7 +505,7 @@ class TestDividendSchemas:
             companies_compared=1,
             comparison=[item],
             best_for_income="JNJ",
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         assert resp.companies_compared == 1
         assert resp.best_for_income == "JNJ"
