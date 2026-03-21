@@ -511,6 +511,224 @@ Keep answers concise and actionable. Use markdown formatting for readability.
         return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"
 
 
+# ─── Ticker Extraction ─────────────────────────────────────
+
+import re as _re
+
+# Common tickers that are also English words — avoid false positives
+_COMMON_WORD_TICKERS = {
+    "A", "I", "IT", "ALL", "ARE", "AT", "BE", "BIG", "CAN", "CEO",
+    "DO", "FOR", "GO", "HAS", "HE", "HER", "HIM", "HIS", "IF",
+    "IN", "IS", "ITS", "LOW", "ME", "MY", "NEW", "NOW", "OLD",
+    "ON", "ONE", "OR", "OUT", "OWN", "PAY", "SO", "THE", "TO",
+    "TOO", "TWO", "UP", "US", "WAS", "WAR", "WAY", "WE",
+    "WHO", "WHY", "WIN", "YOU", "AN", "AM", "AS", "BY", "OF",
+    "HOLD", "BUY", "SELL", "LONG", "PUT", "CALL", "RUN",
+    "VERY", "WELL", "GOOD", "BEST", "TOP", "HIGH", "ANY",
+    "HOW", "WHAT", "WHEN", "JUST", "THAN", "THEN",
+    "MOST", "NOT", "YET", "BUT", "AND", "THAT", "THIS",
+    "FROM", "WILL", "BEEN", "HAVE", "WITH", "THEM",
+    "ETF", "AI", "SEC", "IPO", "CEO", "CFO", "COO",
+}
+
+def _extract_tickers(text: str) -> list[str]:
+    """
+    Extract likely stock/ETF ticker symbols from user text.
+
+    Handles:
+    - Explicit $AAPL notation
+    - Standalone uppercase 1-5 letter words that look like tickers
+    - Filters out common English words and financial abbreviations
+    """
+    tickers = set()
+
+    # 1) Explicit $TICKER notation (highest confidence)
+    for m in _re.finditer(r"\$([A-Z]{1,5})\b", text.upper()):
+        tickers.add(m.group(1))
+
+    # 2) Standalone uppercase words that look like tickers
+    for m in _re.finditer(r"\b([A-Z]{1,5})\b", text):
+        candidate = m.group(1)
+        if candidate not in _COMMON_WORD_TICKERS and len(candidate) >= 2:
+            tickers.add(candidate)
+
+    # 3) Mixed-case common tickers (e.g. "aapl", "Aapl")
+    for m in _re.finditer(r"\b([A-Za-z]{2,5})\b", text):
+        upper = m.group(1).upper()
+        if upper not in _COMMON_WORD_TICKERS:
+            # Only add if the original was already uppercase or $ prefixed
+            pass  # handled above
+
+    return sorted(tickers)
+
+
+# ─── User Profile Tracker ──────────────────────────────────
+
+_PROFILE_EXTRACTION_PROMPT = """Analyze the following conversation and extract any user preferences or profile information that was mentioned.
+Return a JSON object with ONLY the fields that were explicitly mentioned (omit fields with no info).
+
+Possible fields:
+- "risk_tolerance": "conservative" | "moderate" | "aggressive"
+- "investment_horizon": e.g. "short-term (< 1 year)" | "medium-term (1-5 years)" | "long-term (5+ years)"
+- "budget": e.g. "$10,000" | "$50,000"
+- "goal": e.g. "growth" | "income" | "preservation" | "retirement"
+- "holdings": list of tickers they mentioned owning, e.g. ["QQQ", "AAPL"]
+- "purchase_prices": dict of ticker to purchase price, e.g. {"QQQM": 180}
+- "preferred_sectors": list of sectors they mentioned interest in
+- "age_range": e.g. "20s" | "30s" | "40s" | "retired"
+
+Conversation:
+{conversation}
+
+Return ONLY valid JSON, no explanation."""
+
+
+def _extract_user_profile(chat_history: list[dict]) -> dict:
+    """
+    Extract user profile/preferences from chat history using simple
+    keyword matching. Fast, no LLM call needed.
+    """
+    profile = {}
+    holdings = set()
+    purchase_prices = {}
+
+    for msg in chat_history:
+        if msg["role"] != "user":
+            continue
+        text = msg["content"].lower()
+
+        # Risk tolerance
+        if not profile.get("risk_tolerance"):
+            if any(w in text for w in ["conservative", "safe", "low risk", "risk-averse"]):
+                profile["risk_tolerance"] = "conservative"
+            elif any(w in text for w in ["aggressive", "high risk", "high-risk", "risky"]):
+                profile["risk_tolerance"] = "aggressive"
+            elif any(w in text for w in ["moderate", "balanced", "medium risk"]):
+                profile["risk_tolerance"] = "moderate"
+
+        # Investment horizon
+        if not profile.get("investment_horizon"):
+            if any(w in text for w in ["long term", "long-term", "10 year", "5 year", "retire"]):
+                profile["investment_horizon"] = "long-term (5+ years)"
+            elif any(w in text for w in ["short term", "short-term", "quick", "day trade", "swing"]):
+                profile["investment_horizon"] = "short-term (< 1 year)"
+            elif any(w in text for w in ["medium term", "medium-term", "1-3 year", "few years"]):
+                profile["investment_horizon"] = "medium-term (1-5 years)"
+
+        # Goal
+        if not profile.get("goal"):
+            if any(w in text for w in ["passive income", "dividend", "income", "yield"]):
+                profile["goal"] = "income"
+            elif any(w in text for w in ["growth", "capital appreciation", "grow"]):
+                profile["goal"] = "growth"
+            elif any(w in text for w in ["preserve", "preservation", "protect"]):
+                profile["goal"] = "preservation"
+
+        # Budget — look for dollar amounts
+        budget_match = _re.search(r"\$([\d,]+(?:\.\d+)?)", msg["content"])
+        if budget_match and not profile.get("budget"):
+            profile["budget"] = f"${budget_match.group(1)}"
+
+        # Holdings — "I bought X" / "I own X" / "I have X"
+        for m in _re.finditer(
+            r"(?:bought|own|have|holding|invested in)\s+([A-Z]{1,5})",
+            msg["content"],
+        ):
+            ticker = m.group(1)
+            if ticker not in _COMMON_WORD_TICKERS:
+                holdings.add(ticker)
+
+        # Purchase prices — "bought X at $Y" / "X at $Y"
+        for m in _re.finditer(
+            r"([A-Z]{1,5})\s+(?:at|@)\s+\$?([\d.]+)",
+            msg["content"],
+        ):
+            ticker = m.group(1)
+            if ticker not in _COMMON_WORD_TICKERS:
+                purchase_prices[ticker] = float(m.group(2))
+                holdings.add(ticker)
+
+    if holdings:
+        profile["holdings"] = sorted(holdings)
+    if purchase_prices:
+        profile["purchase_prices"] = purchase_prices
+
+    return profile
+
+
+def _format_user_profile(profile: dict) -> str:
+    """Format extracted profile for injection into the system prompt."""
+    if not profile:
+        return ""
+
+    lines = ["\n═══ KNOWN USER PREFERENCES ═══"]
+    mapping = {
+        "risk_tolerance": "Risk Tolerance",
+        "investment_horizon": "Investment Horizon",
+        "budget": "Budget",
+        "goal": "Investment Goal",
+        "holdings": "Current Holdings",
+        "purchase_prices": "Purchase Prices",
+        "preferred_sectors": "Preferred Sectors",
+        "age_range": "Age Range",
+    }
+    for key, label in mapping.items():
+        val = profile.get(key)
+        if val:
+            if isinstance(val, list):
+                lines.append(f"- {label}: {', '.join(val)}")
+            elif isinstance(val, dict):
+                pairs = [f"{k}: ${v}" for k, v in val.items()]
+                lines.append(f"- {label}: {', '.join(pairs)}")
+            else:
+                lines.append(f"- {label}: {val}")
+
+    lines.append(
+        "\nUse this context to personalize your advice. Do NOT re-ask questions "
+        "the user has already answered above."
+    )
+    lines.append("═══ END USER PREFERENCES ═══")
+    return "\n".join(lines)
+
+
+# ─── Chat Summarization ───────────────────────────────────
+
+def _summarize_chat_history(
+    chat_history: list[dict],
+    keep_recent: int = 6,
+) -> list[dict]:
+    """
+    For long conversations, keep the most recent messages verbatim
+    and compress older messages into a summary to save context window.
+    """
+    if len(chat_history) <= keep_recent:
+        return chat_history
+
+    older = chat_history[:-keep_recent]
+    recent = chat_history[-keep_recent:]
+
+    # Build a condensed summary of older messages
+    summary_parts = []
+    for msg in older:
+        role = msg["role"]
+        content = msg["content"]
+        # Truncate long messages
+        if len(content) > 200:
+            content = content[:200] + "..."
+        summary_parts.append(f"{role}: {content}")
+
+    summary_msg = {
+        "role": "user",
+        "content": (
+            "[CONVERSATION SUMMARY — earlier messages condensed]\n"
+            + "\n".join(summary_parts)
+            + "\n[END SUMMARY — recent messages follow]"
+        ),
+    }
+
+    return [summary_msg] + recent
+
+
 # ─── Tool-Calling AI Advisor ───────────────────────────────
 
 
@@ -550,14 +768,19 @@ def _fetch_ticker_snapshot(symbol: str) -> str:
             "sector": info.get("sector"),
             "industry": info.get("industry"),
             "pe_ratio": info.get("trailingPE"),
+            "forward_pe": info.get("forwardPE"),
+            "peg_ratio": info.get("pegRatio"),
             "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
             "market_cap": info.get("marketCap"),
             "52w_high": info.get("fiftyTwoWeekHigh"),
             "52w_low": info.get("fiftyTwoWeekLow"),
+            "beta": info.get("beta"),
             "returns": returns,
             "expense_ratio": info.get("annualReportExpenseRatio"),
             "total_assets": info.get("totalAssets"),
             "category": info.get("category"),
+            "analyst_target": info.get("targetMeanPrice"),
+            "recommendation": info.get("recommendationKey"),
         }
         # Remove None values for cleaner output
         snapshot = {k: v for k, v in snapshot.items() if v is not None}
@@ -647,6 +870,28 @@ def _run_peer_comparison(symbol: str) -> str:
         return json.dumps({"symbol": symbol, "error": str(e)})
 
 
+def _run_options_analysis(symbol: str) -> str:
+    """Run options flow analysis (put/call ratio, IV, max pain, unusual activity)."""
+    import json
+    try:
+        from src.tools.options_analyzer import analyze_options as _fn
+        result = _fn(symbol)
+        return json.dumps(result, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
+def _run_insider_analysis(symbol: str) -> str:
+    """Run insider & institutional activity analysis (smart money signal)."""
+    import json
+    try:
+        from src.tools.insider_activity import analyze_smart_money as _fn
+        result = _fn(symbol)
+        return json.dumps(result, indent=2, default=str)
+    except Exception as e:
+        return json.dumps({"symbol": symbol, "error": str(e)})
+
+
 _ADVISOR_SYSTEM_PROMPT = """You are an expert AI financial advisor with access to real-time market data.
 
 ═══ GUARDRAILS — STRICTLY ENFORCE ═══
@@ -657,6 +902,7 @@ SCOPE — Only answer questions about:
 - Dividends, earnings, valuations, and financial metrics
 - Market themes, sectors, and economic trends
 - Investment timing, risk management, and holding periods
+- Options flow, insider activity, and institutional positioning
 
 REFUSE politely if the user asks about:
 - Cryptocurrency, NFTs, meme coins, or DeFi (say: "I specialize in stocks and ETFs. For crypto, please consult a crypto-focused platform.")
@@ -694,9 +940,14 @@ BEFORE giving your analysis. This applies to every type of question. Examples:
 - "Which ETF should I invest in?" → Ask: What's your investment goal? How much are you looking to invest?
 - "What's the best dividend ETF?" → Ask: What yield are you targeting? Do you prefer safety or high yield?
 
+HOWEVER — if a USER PREFERENCES section is present below, the user may have already
+answered these questions. Do NOT re-ask questions the user has already answered.
+Use their known preferences directly and ask only about MISSING information.
+
 ONLY answer directly WITHOUT questions when:
 - The user is answering your previous clarifying questions (follow-up in conversation)
 - The user asks a pure factual question like "What's the price of AAPL?"
+- All relevant preferences are already known from the USER PREFERENCES section
 
 Once the user answers your clarifying questions, synthesize everything and give a
 specific, data-backed recommendation.
@@ -715,15 +966,31 @@ You have access to these specialized analysis tools. Use the RIGHT tools for the
   Use when asked about whether a stock is overvalued, fundamentals, or financials.
 - **run_dividends**: Dividend yield, safety score, payout ratio, growth history.
   Use when asked about dividends, passive income, or income investing.
-- **run_earnings**: EPS actuals vs estimates, beat/miss patterns, earnings quality.
+- **run_earnings**: EPS actuals vs estimates, beat/miss patterns, quarterly trends, and earnings quality score.
   Use when asked about earnings, quarterly results, or EPS.
 - **run_sentiment**: News sentiment aggregation and scoring.
   Use when asked about market sentiment, news, or public perception.
 - **run_peers**: Peer comparison on valuation, performance, and profitability.
   Use when asked to compare companies or for competitive positioning.
+- **run_options**: Options flow analysis — put/call ratio, implied volatility,
+  max pain, and unusual activity detection.
+  Use when asked about options flow, market positioning, or expected moves.
+- **run_insider**: Insider & institutional activity — Form 4 filings, cluster buying,
+  institutional ownership, and a combined smart money score.
+  Use when asked about insider buying/selling, institutional interest, or smart money.
 
-When giving a comprehensive recommendation, use MULTIPLE tools (e.g. lookup + technical +
-fundamentals) to provide a thorough, data-backed answer.
+═══ TOOL USAGE STRATEGY ═══
+
+For comprehensive buy/sell/hold recommendations, use MULTIPLE tools:
+- **Quick check**: lookup_ticker only
+- **Should I buy/sell?**: lookup_ticker + run_technical + run_fundamentals
+- **Timing questions**: run_technical + run_options
+- **Income investing**: lookup_ticker + run_dividends + run_fundamentals
+- **Due diligence**: lookup_ticker + run_fundamentals + run_earnings + run_insider
+- **Full analysis**: lookup_ticker + run_technical + run_fundamentals + run_sentiment + run_options
+
+ALWAYS use lookup_ticker as a starting point for any recommendation. Combine with
+deeper analysis tools based on the question type.
 
 ═══ RESPONSE GUIDELINES ═══
 
@@ -732,6 +999,9 @@ fundamentals) to provide a thorough, data-backed answer.
 - When comparing investments, present a balanced view with pros AND cons
 - Flag concentration risk if a user is overweight in one sector or stock
 - Suggest position sizing (e.g. "consider allocating 5-10% of your portfolio")
+- When options data is available, mention put/call ratio and max pain for context
+- When insider data is available, mention the smart money signal
+- Structure responses with clear sections using markdown headers
 
 Keep answers concise and use markdown formatting."""
 
@@ -745,6 +1015,14 @@ def ask_advisor(
     AI Advisor with on-demand tool calling — the LLM decides which
     analyses to run based on the question.
 
+    Enhanced features:
+    - Pre-fetches ticker snapshots for detected symbols (context injection)
+    - Parallel tool execution via ThreadPoolExecutor
+    - User profile tracking (persists preferences across messages)
+    - Chat summarization for long conversations
+    - 9 analysis tools including options flow & insider activity
+    - Response validation (disclaimer, data references, risk mentions)
+
     Available tools (orchestrator pipeline):
     - lookup_ticker: Quick price/returns snapshot
     - run_technical: RSI, MACD, moving averages, patterns
@@ -753,6 +1031,8 @@ def ask_advisor(
     - run_earnings: EPS surprises, beat/miss patterns, quality
     - run_sentiment: News sentiment analysis
     - run_peers: Peer comparison
+    - run_options: Options flow (put/call ratio, IV, max pain)
+    - run_insider: Insider & institutional activity (smart money)
 
     Args:
         question: The user's question.
@@ -765,12 +1045,57 @@ def ask_advisor(
     """
     from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
     from langchain_core.tools import tool as lc_tool
+    import concurrent.futures
 
     def _emit(key: str, label: str):
         if on_progress:
             on_progress(key, label)
 
     llm = _get_llm()
+    history = chat_history or []
+
+    # ── Step 1: Extract user profile from conversation history ──
+    _emit("profiling", "Understanding your preferences...")
+    user_profile = _extract_user_profile(history + [{"role": "user", "content": question}])
+    profile_context = _format_user_profile(user_profile)
+
+    # ── Step 2: Pre-fetch snapshots for detected tickers ──
+    detected_tickers = _extract_tickers(question)
+    prefetch_context = ""
+
+    if detected_tickers:
+        _emit("prefetch", f"Fetching live data for {', '.join(detected_tickers)}...")
+        # Parallel pre-fetch
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
+            futures = {
+                ex.submit(_fetch_ticker_snapshot, t): t
+                for t in detected_tickers[:5]  # Cap at 5 tickers
+            }
+            snapshots = []
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    snapshots.append(future.result())
+                except Exception:
+                    pass
+        if snapshots:
+            prefetch_context = (
+                "\n═══ PRE-FETCHED MARKET DATA (for tickers mentioned in the question) ═══\n"
+                + "\n---\n".join(snapshots)
+                + "\n═══ END PRE-FETCHED DATA ═══\n"
+                "\nYou already have this data. Use it directly; only call lookup_ticker for "
+                "tickers NOT shown above. Use deeper analysis tools (technical, fundamentals, "
+                "etc.) when the user needs more than a quick snapshot."
+            )
+
+    # ── Step 3: Summarize long conversations ──
+    condensed_history = _summarize_chat_history(history)
+
+    # ── Step 4: Build system prompt with injected context ──
+    system_prompt = _ADVISOR_SYSTEM_PROMPT
+    if profile_context:
+        system_prompt += "\n" + profile_context
+    if prefetch_context:
+        system_prompt += "\n" + prefetch_context
 
     # ── Tool definitions — each maps to an orchestrator analysis ──
 
@@ -780,7 +1105,7 @@ def ask_advisor(
         Use for quick price checks or when you need an overview.
         Examples: lookup_ticker("QQQ"), lookup_ticker("AAPL")"""
         sym = symbol.upper().strip()
-        _emit("lookup", f"Fetching {sym} market data from Yahoo Finance...")
+        _emit("lookup", f"Fetching {sym} market data...")
         return _fetch_ticker_snapshot(sym)
 
     @lc_tool
@@ -843,21 +1168,45 @@ def ask_advisor(
         _emit("peers", f"Comparing {sym} against sector peers...")
         return _run_peer_comparison(sym)
 
+    @lc_tool
+    def run_options(symbol: str) -> str:
+        """Run options flow analysis — put/call ratio, implied volatility,
+        max pain calculation, and unusual activity detection.
+        Use when the user asks about options flow, expected price moves,
+        or market positioning. Helps gauge short-term sentiment.
+        Examples: run_options("TSLA"), run_options("AAPL")"""
+        sym = symbol.upper().strip()
+        _emit("options", f"Analyzing {sym} options flow (Put/Call, IV, Max Pain)...")
+        return _run_options_analysis(sym)
+
+    @lc_tool
+    def run_insider(symbol: str) -> str:
+        """Run insider & institutional activity analysis — recent insider
+        buys/sells (Form 4), cluster buying detection, institutional
+        ownership, and a combined smart money score (0-100).
+        Use when the user asks about insider trading, institutional
+        interest, or smart money signals.
+        Examples: run_insider("AAPL"), run_insider("NVDA")"""
+        sym = symbol.upper().strip()
+        _emit("insider", f"Tracking {sym} insider & institutional activity (Smart Money)...")
+        return _run_insider_analysis(sym)
+
     all_tools = [
         lookup_ticker, run_technical, run_fundamentals,
         run_dividends, run_earnings, run_sentiment, run_peers,
+        run_options, run_insider,
     ]
 
     _emit("analyzing", "Analyzing your question...")
 
-    messages = [SystemMessage(content=_ADVISOR_SYSTEM_PROMPT)]
+    messages = [SystemMessage(content=system_prompt)]
 
-    if chat_history:
-        for msg in chat_history:
-            if msg["role"] == "user":
-                messages.append(HumanMessage(content=msg["content"]))
-            else:
-                messages.append(AIMessage(content=msg["content"]))
+    # Add (possibly summarized) chat history
+    for msg in condensed_history:
+        if msg["role"] == "user":
+            messages.append(HumanMessage(content=msg["content"]))
+        else:
+            messages.append(AIMessage(content=msg["content"]))
 
     messages.append(HumanMessage(content=question))
 
@@ -867,37 +1216,103 @@ def ask_advisor(
 
         response = llm_with_tools.invoke(messages)
 
-        # Process tool calls in rounds (LLM may chain multiple)
+        # ── Process tool calls in rounds with PARALLEL execution ──
         max_rounds = 4
         rounds = 0
         while response.tool_calls and rounds < max_rounds:
             messages.append(response)
             from langchain_core.messages import ToolMessage
 
-            for tc in response.tool_calls:
+            # Execute all tool calls in this round IN PARALLEL
+            tool_calls = response.tool_calls
+            if len(tool_calls) > 1:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
+                    future_to_tc = {
+                        ex.submit(
+                            tool_map[tc["name"]].invoke if tc["name"] in tool_map else lambda _: f"Unknown tool: {tc['name']}",
+                            tc["args"],
+                        ): tc
+                        for tc in tool_calls
+                    }
+                    for future in concurrent.futures.as_completed(future_to_tc):
+                        tc = future_to_tc[future]
+                        try:
+                            tool_result = future.result()
+                        except Exception as exc:
+                            tool_result = f"Tool error: {exc}"
+                        messages.append(
+                            ToolMessage(content=str(tool_result), tool_call_id=tc["id"])
+                        )
+            else:
+                # Single tool call — run directly
+                tc = tool_calls[0]
                 tool_fn = tool_map.get(tc["name"])
                 if tool_fn:
                     tool_result = tool_fn.invoke(tc["args"])
                 else:
                     tool_result = f"Unknown tool: {tc['name']}"
                 messages.append(
-                    ToolMessage(content=tool_result, tool_call_id=tc["id"])
+                    ToolMessage(content=str(tool_result), tool_call_id=tc["id"])
                 )
 
             _emit("synthesizing", "Synthesizing insights & preparing recommendation...")
             response = llm_with_tools.invoke(messages)
             rounds += 1
 
-        return response.content
+        result = response.content
+
+        # ── Step 5: Validate response ──
+        result = _validate_advisor_response(result, question)
+
+        return result
 
     except (NotImplementedError, TypeError, AttributeError):
         # Provider doesn't support tool calling — fall back to plain chat
         _emit("fallback", "Using conversational mode...")
-        return ask_financial_question(question=question, context="", chat_history=chat_history)
+        context = prefetch_context + profile_context
+        return ask_financial_question(question=question, context=context, chat_history=chat_history)
     except Exception as e:
         error_msg = str(e)
         # Detect tool-calling failures (Groq/some models format tool calls incorrectly)
         if "tool_use_failed" in error_msg or "failed_generation" in error_msg or "Failed to call a function" in error_msg:
             _emit("fallback", "Retrying without tool calling...")
-            return ask_financial_question(question=question, context="", chat_history=chat_history)
+            context = prefetch_context + profile_context
+            return ask_financial_question(question=question, context=context, chat_history=chat_history)
         return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"
+
+
+# ─── Response Validation ──────────────────────────────────
+
+_DISCLAIMER = (
+    "\n\n*This is informational analysis based on publicly available data, "
+    "not personalized financial advice. Please consult a licensed financial "
+    "advisor before making investment decisions.*"
+)
+
+
+def _validate_advisor_response(response: str, question: str) -> str:
+    """
+    Post-process the advisor response to ensure quality:
+    - Appends disclaimer if missing and response contains a recommendation
+    - Checks for risk mention on buy recommendations
+    """
+    if not response:
+        return response
+
+    # Keywords that indicate a recommendation was made
+    recommendation_keywords = [
+        "recommend", "suggest", "consider", "buy", "sell", "hold",
+        "allocate", "invest", "position", "portfolio",
+    ]
+    has_recommendation = any(
+        kw in response.lower() for kw in recommendation_keywords
+    )
+
+    # Ensure disclaimer is present for recommendations
+    if has_recommendation:
+        disclaimer_fragments = ["not personalized", "financial advice", "licensed financial advisor"]
+        has_disclaimer = any(frag in response.lower() for frag in disclaimer_fragments)
+        if not has_disclaimer:
+            response += _DISCLAIMER
+
+    return response

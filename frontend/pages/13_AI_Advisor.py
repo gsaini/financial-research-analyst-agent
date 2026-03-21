@@ -111,12 +111,30 @@ if prompt:
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        # Live progress display
+        # Live progress display with step icons
         status = st.status("Analyzing your question...", expanded=True)
 
+        _step_icons = {
+            "profiling": "👤",
+            "prefetch": "📡",
+            "analyzing": "🧠",
+            "lookup": "📊",
+            "technical": "📈",
+            "fundamentals": "📋",
+            "dividends": "💰",
+            "earnings": "📑",
+            "sentiment": "📰",
+            "peers": "🔄",
+            "options": "⚡",
+            "insider": "🔍",
+            "synthesizing": "✨",
+            "fallback": "🔁",
+        }
+
         def _on_progress(key: str, label: str):
-            status.update(label=label)
-            status.write(f"  {label}")
+            icon = _step_icons.get(key, "⏳")
+            status.update(label=f"{icon} {label}")
+            status.write(f"{icon} {label}")
 
         response = ask_advisor(
             question=prompt,
@@ -124,7 +142,8 @@ if prompt:
             on_progress=_on_progress,
         )
 
-        status.update(label="Analysis complete", state="complete", expanded=False)
+        status.update(label="✅ Analysis complete", state="complete", expanded=False)
         st.markdown(response)
 
     st.session_state.advisor_chat_history.append({"role": "assistant", "content": response})
+
