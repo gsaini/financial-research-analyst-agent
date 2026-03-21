@@ -138,6 +138,11 @@ class MarketDataProvider(ABC):
         """Quarterly income statement."""
         ...
 
+    @abstractmethod
+    def get_financials(self, symbol: str, statement_type: str = "income_statement", freq: str = "yearly") -> pd.DataFrame:
+        """Helper to get right statement from provider"""
+        ...
+
     # ── Category 4: Earnings ──────────────────────────────────────────
 
     @abstractmethod
@@ -292,6 +297,20 @@ class YFinanceProvider(MarketDataProvider):
         except Exception as e:
             logger.error(f"YFinanceProvider.get_quarterly_income_statement({symbol}): {e}")
             return self._empty_df()
+            
+    def get_financials(self, symbol: str, statement_type: str = "income_statement", freq: str = "yearly") -> pd.DataFrame:
+        if freq == "yearly":
+            if statement_type == "income_statement":
+                return self.get_income_statement(symbol)
+            elif statement_type == "balance_sheet":
+                return self.get_balance_sheet(symbol)
+            elif statement_type == "cash_flow":
+                return self.get_cash_flow(symbol)
+        elif freq == "quarterly":
+            if statement_type == "income_statement":
+                 return self.get_quarterly_income_statement(symbol)
+                 
+        return self._empty_df()
 
     # Category 4 ──────────────────────────────────────────────────────
 
