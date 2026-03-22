@@ -8,14 +8,14 @@ from utils.theme import inject_css, COLORS, get_plotly_layout
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_large_number, format_percent
 from utils.data_service import screen_etfs
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import create_horizontal_bar, create_grouped_bar
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="ETF Recommendations | FinancialAI", page_icon=":bar_chart:", layout="wide")
+st.set_page_config(page_title="ETF Recommendations | FinancialAI", page_icon=":bar_chart:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## ETF Recommendations")
 st.caption("Top 10 ETF picks ranked by AI analysis across 17 investment themes")
@@ -312,4 +312,4 @@ st.markdown(
     unsafe_allow_html=True,
 )
 if st.button("Open AI Advisor", use_container_width=True):
-    st.switch_page("pages/13_AI_Advisor.py")
+    st.switch_page("app.py")

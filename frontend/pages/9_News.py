@@ -7,14 +7,14 @@ from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_date
 from utils.data_service import get_company_news
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.metrics_cards import render_news_card
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="News | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="News | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Financial News")
 st.caption("Latest headlines from Yahoo Finance")

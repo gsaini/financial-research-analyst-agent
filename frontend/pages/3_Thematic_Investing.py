@@ -7,15 +7,15 @@ from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_percent, format_currency, format_large_number
 from utils.data_service import get_themes_list, analyze_theme, refresh_themes_cache
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import create_gauge_chart, create_donut_chart, create_horizontal_bar, create_radar_chart
 from components.metrics_cards import render_kpi_row
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Thematic Investing | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Thematic Investing | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Thematic Investing")
 st.caption("Explore investment themes and megatrends")

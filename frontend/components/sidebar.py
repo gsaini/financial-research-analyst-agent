@@ -1,27 +1,23 @@
 """
-Shared sidebar component - branding, global symbol search, watchlist.
+Minimal sidebar component - symbol search and watchlist only.
+Branding and navigation moved to header.
 """
 
 import streamlit as st
-from utils.session import init_session_state, add_to_watchlist, remove_from_watchlist
+from utils.session import init_session_state, add_to_watchlist
 
 
 def render_sidebar():
-    """Render the shared sidebar with branding, search, and watchlist."""
+    """Render a minimal sidebar with search and watchlist."""
     init_session_state()
 
     with st.sidebar:
-        # Branding
-        st.markdown("# FinancialAI")
-        st.caption("AI-Powered Research Platform")
-        st.markdown("---")
-
-        # Global symbol search
-        st.markdown("### Search")
+        # Symbol search
+        st.markdown("### Symbol")
         symbol = st.text_input(
             "Stock Symbol",
             value=st.session_state.get("selected_symbol", ""),
-            placeholder="e.g. AAPL, MSFT, GOOGL",
+            placeholder="e.g. AAPL, MSFT",
             key="sidebar_symbol_input",
             label_visibility="collapsed",
         )
@@ -51,7 +47,7 @@ def render_sidebar():
         # Add to watchlist
         new_sym = st.text_input(
             "Add to watchlist",
-            placeholder="Symbol",
+            placeholder="Add symbol",
             key="add_watchlist_input",
             label_visibility="collapsed",
         )
@@ -61,16 +57,10 @@ def render_sidebar():
 
         st.markdown("---")
 
-        # System info
-        st.markdown("### System")
-        st.caption("Data: Yahoo Finance (yfinance)")
-        st.caption("Charts: TradingView Lightweight")
-        st.caption("Analysis: Local Python Tools")
-
-        st.markdown("---")
+        # Minimal footer
         st.markdown(
             "<div style='font-size: 0.65rem; color: #6b7280; line-height: 1.4;'>"
-            "For informational purposes only. Not financial advice."
+            "Data: Yahoo Finance"
             "</div>",
             unsafe_allow_html=True,
         )

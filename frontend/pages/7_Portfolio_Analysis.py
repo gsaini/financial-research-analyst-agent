@@ -9,15 +9,15 @@ from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_percent, format_large_number
 from utils.data_service import get_stock_price, get_historical_data, get_company_info, get_technical_analysis
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import create_donut_chart, create_heatmap, create_gauge_chart
 from components.charts import render_area_chart
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Portfolio | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Portfolio | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Portfolio Analysis")
 st.caption("Analyze multi-stock portfolios with correlation insights")

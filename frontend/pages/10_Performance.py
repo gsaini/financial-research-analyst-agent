@@ -8,7 +8,7 @@ from utils.theme import inject_css, COLORS
 from utils.session import init_session_state
 from utils.formatters import format_percent, format_currency, format_number
 from utils.data_service import track_performance
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import (
     create_gauge_chart,
     create_line_chart,
@@ -22,10 +22,11 @@ st.set_page_config(
     page_title="Performance Tracking | FinancialAI",
     page_icon=":chart_with_upwards_trend:",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Historical Performance Tracking")
 st.caption("Multi-horizon returns, benchmark comparison, risk-adjusted metrics & drawdown analysis")

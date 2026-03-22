@@ -7,7 +7,7 @@ from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_percent, format_large_number, format_date
 from utils.data_service import get_stock_price, get_historical_data, get_company_news, get_technical_analysis
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.charts import render_candlestick_chart, render_area_chart
 from components.metrics_cards import render_kpi_row, render_news_card
 
@@ -15,7 +15,7 @@ from components.metrics_cards import render_kpi_row, render_news_card
 st.set_page_config(page_title="Dashboard | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Dashboard")
 st.caption("Market overview and quick analysis")

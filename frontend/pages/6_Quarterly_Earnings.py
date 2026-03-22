@@ -8,15 +8,15 @@ from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_large_number, format_number, format_date, format_percent
 from utils.data_service import analyze_earnings, compare_earnings
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import create_gauge_chart, create_earnings_surprise_chart, create_horizontal_bar
 from components.metrics_cards import render_score_badge
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Quarterly Earnings | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Quarterly Earnings | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Quarterly Earnings Analysis")
 st.caption("Track EPS beats/misses, trends, and earnings quality")

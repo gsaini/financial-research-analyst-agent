@@ -13,13 +13,13 @@ from utils.data_service import (
     get_stock_price, get_company_info, get_technical_analysis,
     get_financial_health, get_company_news, analyze_disruption, analyze_earnings,
 )
-from components.sidebar import render_sidebar
+from components.header import render_header
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Reports | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Reports | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Research Reports")
 st.caption("Generate and download investment research reports")

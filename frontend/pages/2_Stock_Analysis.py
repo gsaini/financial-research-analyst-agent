@@ -17,17 +17,17 @@ from utils.data_service import (
     get_financial_health, get_valuation_ratios, get_profitability_ratios,
     get_company_news, analyze_news_sentiment,
 )
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.charts import render_candlestick_chart
 from components.plotly_charts import create_gauge_chart, create_radar_chart, create_grouped_bar, create_donut_chart
 from components.metrics_cards import render_company_header, render_news_card, render_score_badge
 from components.data_tables import render_styled_dataframe, render_metrics_table
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Stock Analysis | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Stock Analysis | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Stock Analysis")
 

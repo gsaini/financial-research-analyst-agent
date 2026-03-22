@@ -98,6 +98,102 @@ header[data-testid="stHeader"] {
     border-bottom: 1px solid var(--border-subtle);
 }
 
+/* ─── Reduce Page Padding ─── */
+.main .block-container,
+.stMainBlockContainer,
+[data-testid="stMainBlockContainer"],
+div[data-testid="stMainBlockContainer"] > div {
+    padding: 0.5rem 1rem 1rem 1rem !important;
+    padding-top: 0.5rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    max-width: 100% !important;
+}
+
+.stAppViewBlockContainer,
+[data-testid="stAppViewBlockContainer"] {
+    padding: 0 !important;
+}
+
+/* Remove default element padding */
+.element-container {
+    margin: 0 !important;
+}
+
+/* Override all block container padding */
+.block-container {
+    padding: 0.5rem 1rem !important;
+}
+
+section[data-testid="stMain"] > div {
+    padding: 0 !important;
+}
+
+.stMain > div:first-child {
+    padding-top: 0 !important;
+}
+
+/* Reduce vertical gaps between elements */
+.stVerticalBlock {
+    gap: 0.35rem !important;
+}
+
+.stVerticalBlock > div {
+    gap: 0.35rem !important;
+}
+
+/* Tighter column gaps */
+div[data-testid="stHorizontalBlock"] {
+    gap: 0.5rem !important;
+}
+
+/* Reduce widget label padding */
+.stTextInput label, .stSelectbox label, .stMultiSelect label {
+    margin-bottom: 0.25rem !important;
+}
+
+/* Reduce markdown spacing */
+.stMarkdown {
+    margin-bottom: 0 !important;
+}
+
+.stMarkdown p {
+    margin-bottom: 0.25rem !important;
+}
+
+.stMarkdown h2 {
+    margin-top: 0 !important;
+    margin-bottom: 0.35rem !important;
+    font-size: 1.3rem !important;
+}
+
+.stMarkdown h3 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 1rem !important;
+}
+
+/* Reduce caption spacing */
+.stCaption {
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+/* Reduce chart container padding */
+div[data-testid="stPlotlyChart"] {
+    padding: 0 !important;
+}
+
+/* Reduce expander padding */
+details[data-testid="stExpander"] {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Compact status widget */
+div[data-testid="stStatusWidget"] {
+    padding: 0.5rem !important;
+}
+
 /* ─── Sidebar ─── */
 [data-testid="stSidebar"] {
     background: var(--bg-primary) !important;
@@ -140,16 +236,23 @@ header[data-testid="stHeader"] {
 [data-testid="stMetric"] {
     background: var(--bg-card) !important;
     border: 1px solid var(--border-default) !important;
-    border-radius: var(--radius-xl) !important;
-    padding: 1.25rem 1.5rem !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.6rem 0.75rem !important;
     transition: all 0.2s ease;
 }
 
 [data-testid="stMetric"]:hover {
     background: var(--bg-hover) !important;
     border-color: var(--border-hover) !important;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+}
+
+[data-testid="stMetric"] label {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.15rem !important;
+}
+
+[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    font-size: 1.25rem !important;
 }
 
 [data-testid="stMetric"] label {
@@ -187,8 +290,8 @@ header[data-testid="stHeader"] {
     border-radius: var(--radius-md);
     color: var(--text-secondary) !important;
     font-weight: 500;
-    font-size: 0.875rem;
-    padding: 0.5rem 1.25rem;
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
     transition: all 0.15s ease;
 }
 
@@ -236,18 +339,16 @@ header[data-testid="stHeader"] {
     background: var(--gradient-primary) !important;
     color: white !important;
     border: none !important;
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--radius-sm) !important;
     font-weight: 600 !important;
-    font-size: 0.875rem !important;
-    padding: 0.6rem 1.5rem !important;
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.75rem !important;
     transition: all 0.15s ease !important;
     letter-spacing: -0.01em;
 }
 
 .stButton > button:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: var(--shadow-glow), var(--shadow-md) !important;
-    opacity: 0.95;
+    opacity: 0.9;
 }
 
 .stButton > button:active {
@@ -269,16 +370,17 @@ header[data-testid="stHeader"] {
 .stTextInput > div > div > input {
     background: var(--bg-input) !important;
     border: 1px solid var(--border-default) !important;
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--radius-sm) !important;
     color: var(--text-primary) !important;
     font-family: 'Inter', sans-serif !important;
-    padding: 0.65rem 1rem !important;
+    font-size: 0.85rem !important;
+    padding: 0.45rem 0.75rem !important;
     transition: all 0.15s ease;
 }
 
 .stTextInput > div > div > input:focus {
     border-color: var(--accent-primary) !important;
-    box-shadow: 0 0 0 3px var(--accent-glow) !important;
+    box-shadow: 0 0 0 2px var(--accent-glow) !important;
 }
 
 .stTextInput > div > div > input::placeholder {
@@ -290,7 +392,8 @@ header[data-testid="stHeader"] {
 .stMultiSelect > div > div {
     background: var(--bg-input) !important;
     border: 1px solid var(--border-default) !important;
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--radius-sm) !important;
+    font-size: 0.85rem !important;
 }
 
 .stSelectbox > div > div:focus-within,
@@ -310,16 +413,16 @@ header[data-testid="stHeader"] {
 .card {
     background: var(--bg-card);
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-xl);
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
     transition: all 0.2s ease;
 }
 
 .card:hover {
     background: var(--bg-hover);
     border-color: var(--border-hover);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
 
@@ -371,12 +474,12 @@ header[data-testid="stHeader"] {
 .kpi-header {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    padding: 1.5rem 1.75rem;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
     background: var(--gradient-card);
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-2xl);
-    margin-bottom: 1.75rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1rem;
 }
 
 .kpi-header .symbol {
@@ -460,9 +563,9 @@ header[data-testid="stHeader"] {
 .news-card {
     background: var(--bg-card);
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    padding: 1.125rem 1.25rem;
-    margin-bottom: 0.75rem;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
     transition: all 0.15s ease;
 }
 
@@ -488,8 +591,8 @@ header[data-testid="stHeader"] {
 .theme-card {
     background: var(--bg-card);
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-xl);
-    padding: 1.375rem 1.5rem;
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.125rem;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -497,7 +600,7 @@ header[data-testid="stHeader"] {
 .theme-card:hover {
     background: var(--bg-hover);
     border-color: var(--accent-primary);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-glow), var(--shadow-md);
 }
 
@@ -671,4 +774,170 @@ header[data-testid="stHeader"] {
         margin-left: 0;
         font-size: 1.75rem;
     }
+}
+
+/* ─── Header Navigation Bar ─── */
+
+/* Hide default Streamlit header */
+header[data-testid="stHeader"] {
+    display: none !important;
+}
+
+/* Hide sidebar completely */
+[data-testid="stSidebar"] {
+    display: none !important;
+}
+
+/* Ensure main content uses full width */
+[data-testid="stAppViewContainer"] {
+    margin-left: 0 !important;
+}
+
+[data-testid="stAppViewContainer"] > section[data-testid="stMain"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+/* Remove sidebar toggle button */
+button[data-testid="stSidebarCollapsedControl"] {
+    display: none !important;
+}
+
+
+/* Popover dropdown styling - remove ALL padding */
+div[data-baseweb="popover"] {
+    padding: 0 !important;
+}
+
+div[data-baseweb="popover"] > div {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-baseweb="popover"] [data-baseweb="popover-body"] {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stPopover"] > div[data-baseweb="popover"] > div {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-lg) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Remove ALL padding from every element inside popover */
+div[data-testid="stPopover"] div[data-baseweb="popover"] * {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stPopover"] div[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stPopover"] div[data-testid="stVerticalBlock"] > div {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stPopover"] .stElementContainer {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stPopover"] [data-testid="baseButton-secondary"] {
+    margin: 0 !important;
+}
+
+div[data-testid="stPopover"] [data-testid="stMainBlockContainer"],
+div[data-testid="stPopover"] .stMainBlockContainer,
+div[data-testid="stPopover"] .block-container {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Remove iframe/container padding inside popover */
+div[data-testid="stPopover"] iframe,
+div[data-testid="stPopover"] .stMarkdownContainer {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Popover trigger button */
+div[data-testid="stPopover"] > button {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-default) !important;
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.75rem !important;
+    border-radius: var(--radius-sm) !important;
+    transition: all 0.15s ease !important;
+}
+
+div[data-testid="stPopover"] > button:hover {
+    background: var(--bg-hover) !important;
+    border-color: var(--border-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Menu items inside popover - override wildcard reset */
+div[data-testid="stPopover"] div[data-testid="stVerticalBlock"] .stButton {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stPopover"] div[data-testid="stVerticalBlock"] .stButton > button {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: var(--text-secondary) !important;
+    text-align: left !important;
+    padding: 0.6rem 0.875rem !important;
+    margin: 0 !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    justify-content: flex-start !important;
+    transition: all 0.12s ease !important;
+    width: 100% !important;
+    min-height: unset !important;
+}
+
+div[data-testid="stPopover"] div[data-testid="stVerticalBlock"] .stButton > button:hover {
+    background: var(--accent-glow) !important;
+    color: var(--text-primary) !important;
+}
+
+div[data-testid="stPopover"] div[data-testid="stVerticalBlock"] .stButton > button > div {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stPopover"] div[data-testid="stVerticalBlock"] .stButton > button p {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Nav divider */
+.nav-divider {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.2), transparent);
+    margin: 1rem 0 1.5rem;
+}
+
+/* Sticky Header - ONLY target element containing brand-logo */
+[data-testid="stMainBlockContainer"] > div > div:has(.brand-logo) {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: var(--bg-base) !important;
+    padding: 0.5rem 0 0.25rem !important;
+    margin: 0 -1rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
 }

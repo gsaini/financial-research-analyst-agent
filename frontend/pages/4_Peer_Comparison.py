@@ -8,16 +8,16 @@ from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_percent, format_large_number, format_number
 from utils.data_service import compare_peers
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import create_radar_chart, create_horizontal_bar, create_grouped_bar
 from components.metrics_cards import render_company_header, render_strength_weakness
 from components.data_tables import render_comparison_table
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Peer Comparison | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Peer Comparison | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Peer Comparison")
 st.caption("Compare a stock against its industry peers")

@@ -8,16 +8,16 @@ from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_large_number, format_number
 from utils.data_service import analyze_disruption, compare_disruption
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import create_gauge_chart, create_horizontal_bar, create_grouped_bar
 from components.metrics_cards import render_score_badge, render_strength_weakness
 from components.data_tables import render_styled_dataframe
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Market Disruption | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Market Disruption | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## Market Disruption Analysis")
 st.caption("Evaluate a company's innovation and disruption potential")

@@ -8,7 +8,7 @@ from utils.theme import inject_css, COLORS
 from utils.session import init_session_state
 from utils.formatters import format_percent, format_date
 from utils.data_service import analyze_news_sentiment
-from components.sidebar import render_sidebar
+from components.header import render_header
 from components.plotly_charts import (
     create_gauge_chart,
     create_donut_chart,
@@ -21,10 +21,11 @@ st.set_page_config(
     page_title="Sentiment Analysis | FinancialAI",
     page_icon=":newspaper:",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 inject_css()
 init_session_state()
-render_sidebar()
+render_header()
 
 st.markdown("## News & Sentiment Analysis")
 st.caption("AI-powered sentiment scoring, news volume tracking, trends & source diversity")
