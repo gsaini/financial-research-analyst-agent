@@ -1,5 +1,32 @@
+# Frontend Dependencies
 streamlit>=1.30.0
 plotly>=5.18.0
 pandas>=2.1.0
 numpy>=1.26.0
 nest-asyncio>=1.5.8
+
+# Financial Data (used by src.tools via data_service.py)
+yfinance>=0.2.35
+
+# HTTP & APIs
+requests>=2.31.0
+
+# Configuration (used by src.config)
+pydantic>=2.5.3
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# Logging
+loguru>=0.7.2
+
+# NLP & Sentiment (used by sentiment analysis tools)
+nltk>=3.8.1
+textblob>=0.17.1
+
+# LangChain - LLM Providers (for AI Advisor feature)
+langchain-core>=0.1.0
+langchain-ollama>=0.1.0
+langchain-openai>=0.0.5
+langchain-groq>=0.1.0
+langchain-anthropic>=0.1.0
