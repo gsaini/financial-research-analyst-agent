@@ -46,6 +46,8 @@ class AgentResult(BaseModel):
     error: Optional[str] = None
     execution_time_seconds: float = 0.0
     agent_name: str = ""
+    confidence: float = Field(default=0.0, description="Confidence score 0.0-1.0")
+    reasoning_steps: int = Field(default=0, description="Number of reasoning steps taken")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -56,6 +58,8 @@ class AgentResult(BaseModel):
             "error": self.error,
             "execution_time_seconds": self.execution_time_seconds,
             "agent_name": self.agent_name,
+            "confidence": self.confidence,
+            "reasoning_steps": self.reasoning_steps,
             "timestamp": self.timestamp.isoformat(),
         }
 
@@ -71,6 +75,10 @@ class BaseAgent(ABC):
     - Logging and error handling
     """
 
+    # ReAct reasoning configuration
+    MAX_REASONING_STEPS: int = 5
+    CONFIDENCE_THRESHOLD: float = 0.7
+
     def __init__(
         self,
         name: str,
@@ -79,6 +87,7 @@ class BaseAgent(ABC):
         tools: Optional[List[BaseTool]] = None,
         temperature: float = 0.1,
         verbose: bool = False,
+        max_reasoning_steps: int = 5,
     ):
         """
         Initialize the base agent.
@@ -90,11 +99,13 @@ class BaseAgent(ABC):
             tools: List of tools available to the agent
             temperature: LLM temperature setting
             verbose: Enable verbose logging
+            max_reasoning_steps: Max ReAct reasoning iterations
         """
         self.name = name
         self.description = description
         self.temperature = temperature
         self.verbose = verbose
+        self.max_reasoning_steps = max_reasoning_steps
 
         # Initialize LLM
         self.llm = llm or self._create_default_llm()
@@ -206,7 +217,14 @@ class BaseAgent(ABC):
         chat_history: Optional[List[BaseMessage]] = None,
     ) -> AgentResult:
         """
-        Execute a task with the agent.
+        Execute a task with the agent using ReAct-style multi-step reasoning.
+
+        The agent will:
+        1. Think about the task and plan tool usage
+        2. Execute tools and observe results
+        3. Reflect on findings and assess confidence
+        4. If confidence is below threshold and steps remain, investigate further
+        5. Produce a final answer with confidence score
 
         Args:
             task: The task to execute
@@ -214,7 +232,7 @@ class BaseAgent(ABC):
             chat_history: Previous conversation history
 
         Returns:
-            AgentResult with execution results
+            AgentResult with execution results and confidence score
         """
         start_time = datetime.now(timezone.utc)
         self.state.status = "running"
@@ -224,10 +242,8 @@ class BaseAgent(ABC):
         try:
             logger.info(f"Agent {self.name} executing task: {task[:100]}...")
 
-            # Build input message
-            input_text = task
-            if context:
-                input_text += f"\n\nContext: {json.dumps(context)}"
+            # Build input with ReAct reasoning instructions
+            input_text = self._build_react_prompt(task, context)
 
             # Build messages list
             messages = []
@@ -235,18 +251,25 @@ class BaseAgent(ABC):
                 messages.extend(chat_history)
             messages.append(HumanMessage(content=input_text))
 
-            # Execute via agent graph
+            # Execute via agent graph (LangGraph handles tool calling loop)
             result = await self.agent_graph.ainvoke({"messages": messages})
 
-            # Extract output from the last AI message
+            # Extract output and count reasoning steps
             output_messages = result.get("messages", [])
             output = ""
+            reasoning_steps = 0
             for msg in reversed(output_messages):
                 if isinstance(msg, AIMessage) and msg.content:
                     output = msg.content
                     break
+            # Count tool calls as reasoning steps
+            for msg in output_messages:
+                if isinstance(msg, AIMessage) and hasattr(msg, "tool_calls") and msg.tool_calls:
+                    reasoning_steps += len(msg.tool_calls)
 
-            # Process result
+            # Extract confidence from output if present
+            confidence = self._extract_confidence(output)
+
             execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
             self.state.status = "completed"
@@ -258,6 +281,8 @@ class BaseAgent(ABC):
                 data={"output": output, "raw_result": result},
                 execution_time_seconds=execution_time,
                 agent_name=self.name,
+                confidence=confidence,
+                reasoning_steps=reasoning_steps,
             )
 
         except Exception as e:
@@ -275,6 +300,74 @@ class BaseAgent(ABC):
                 execution_time_seconds=execution_time,
                 agent_name=self.name,
             )
+
+    def _build_react_prompt(
+        self, task: str, context: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Build a ReAct-style prompt that encourages multi-step reasoning.
+
+        The prompt instructs the agent to:
+        1. Think step-by-step before acting
+        2. Use tools to gather evidence
+        3. Reflect on findings and check for contradictions
+        4. Assess confidence level
+        5. Investigate further if confidence is low
+        """
+        react_instructions = """## Reasoning Protocol
+
+Follow this structured reasoning approach:
+
+**Step 1 — Plan**: Before using any tools, think about what data you need and which tools to call. Identify what would increase or decrease your confidence.
+
+**Step 2 — Gather**: Call the necessary tools to collect data and evidence.
+
+**Step 3 — Analyze**: Examine the results. Look for:
+  - Confirming signals across multiple data sources
+  - Contradictions that need investigation
+  - Missing data that limits your confidence
+  - Non-obvious patterns or anomalies
+
+**Step 4 — Reflect**: If your findings are contradictory or incomplete:
+  - Use additional tools to investigate the contradiction
+  - Look at the data from a different angle
+  - Consider what alternative explanations exist
+
+**Step 5 — Conclude**: Provide your final analysis with:
+  - Clear conclusions supported by specific evidence
+  - A confidence level (0.0-1.0) reflecting data quality and signal alignment
+  - Key risks or caveats
+  - What to watch going forward
+
+Include a line: **Confidence: X.XX** (where X.XX is your confidence score 0.0-1.0)
+
+---
+
+"""
+        input_text = react_instructions + task
+        if context:
+            input_text += f"\n\nContext: {json.dumps(context, default=str)}"
+        return input_text
+
+    @staticmethod
+    def _extract_confidence(output: str) -> float:
+        """Extract confidence score from agent output text."""
+        import re
+        # Look for patterns like "Confidence: 0.85" or "**Confidence: 0.72**"
+        patterns = [
+            r'\*?\*?[Cc]onfidence:?\s*\*?\*?\s*(\d+\.?\d*)',
+            r'confidence[:\s]+(\d+\.?\d*)',
+            r'confidence level[:\s]+(\d+\.?\d*)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, output)
+            if match:
+                val = float(match.group(1))
+                # Normalize if given as percentage
+                if val > 1.0:
+                    val = val / 100.0
+                return min(max(val, 0.0), 1.0)
+        return 0.5  # Default confidence when not explicitly stated
 
     def execute_sync(
         self,

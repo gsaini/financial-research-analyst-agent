@@ -15,6 +15,6 @@ Usage::
     chain    = provider.get_options_chain("AAPL", expiration="2025-06-20")
 """
 
-from src.data.provider import get_provider, MarketDataProvider
+from src.data.provider import get_provider, MarketDataProvider, MultiProvider, reset_provider
 
-__all__ = ["get_provider", "MarketDataProvider"]
+__all__ = ["get_provider", "MarketDataProvider", "MultiProvider", "reset_provider"]

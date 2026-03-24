@@ -40,7 +40,7 @@ class LLMSettings(BaseSettings):
 
     # Groq settings (free tier available)
     groq_api_key: str = Field(default="", validation_alias="GROQ_API_KEY")
-    groq_model: str = Field(default="llama-3.1-70b-versatile", validation_alias="GROQ_MODEL")
+    groq_model: str = Field(default="llama-3.3-70b-versatile", validation_alias="GROQ_MODEL")
 
     # Commercial API keys (optional)
     openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
@@ -54,11 +54,13 @@ class LLMSettings(BaseSettings):
 
 class DataAPISettings(BaseSettings):
     """Financial data API configuration settings."""
-    
+
     alpha_vantage_api_key: str = Field(default="", env="ALPHA_VANTAGE_API_KEY")
     finnhub_api_key: str = Field(default="", env="FINNHUB_API_KEY")
     news_api_key: str = Field(default="", env="NEWS_API_KEY")
-    
+    fmp_api_key: str = Field(default="", env="FMP_API_KEY")
+    fred_api_key: str = Field(default="", env="FRED_API_KEY")
+
     model_config = ConfigDict(env_prefix="")
 
 

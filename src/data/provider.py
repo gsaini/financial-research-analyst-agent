@@ -30,13 +30,30 @@ from __future__ import annotations
 
 import threading
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+# ─── Fallback (multi-provider) wrapper ───────────────────────────────────────
+
+
+class FallbackProvider(ABC):
+    """
+    Wraps a primary + secondary ``MarketDataProvider`` so that every call
+    automatically retries on the secondary when the primary fails or
+    returns empty data.
+
+    This is NOT a ``MarketDataProvider`` subclass on purpose — it *contains*
+    providers and delegates to them.  It exposes the same public API via
+    ``__getattr__`` so calling code can treat it as a drop-in replacement.
+    """
+
+    pass  # Defined after MarketDataProvider so it can reference the type
 
 
 # ─── Abstract Interface ──────────────────────────────────────────────────────
@@ -412,33 +429,188 @@ class YFinanceProvider(MarketDataProvider):
             return []
 
 
+# ─── Multi-Provider Fallback Wrapper ─────────────────────────────────────────
+
+
+class MultiProvider(MarketDataProvider):
+    """
+    Wraps a primary and optional fallback ``MarketDataProvider``.
+
+    Every method call goes to the primary first.  If the primary returns
+    empty/None data **or** raises, the fallback is tried automatically.
+    """
+
+    def __init__(
+        self,
+        primary: MarketDataProvider,
+        fallback: Optional[MarketDataProvider] = None,
+    ) -> None:
+        self._primary = primary
+        self._fallback = fallback
+        self._primary_name = type(primary).__name__
+        self._fallback_name = type(fallback).__name__ if fallback else "None"
+        logger.info(
+            f"MultiProvider: primary={self._primary_name}, "
+            f"fallback={self._fallback_name}"
+        )
+
+    def _call(self, method_name: str, *args, **kwargs) -> Any:
+        """Call method on primary, fall back on failure or empty result."""
+        primary_method = getattr(self._primary, method_name)
+        try:
+            result = primary_method(*args, **kwargs)
+            if self._is_empty(result):
+                raise ValueError(f"{self._primary_name}.{method_name} returned empty")
+            return result
+        except Exception as e:
+            if not self._fallback:
+                logger.warning(f"{self._primary_name}.{method_name} failed, no fallback: {e}")
+                return self._empty_for(method_name)
+
+            logger.info(
+                f"{self._primary_name}.{method_name} failed ({e}), "
+                f"trying {self._fallback_name}"
+            )
+            fallback_method = getattr(self._fallback, method_name)
+            try:
+                return fallback_method(*args, **kwargs)
+            except Exception as e2:
+                logger.error(f"Both providers failed for {method_name}: {e2}")
+                return self._empty_for(method_name)
+
+    @staticmethod
+    def _is_empty(result: Any) -> bool:
+        if result is None:
+            return True
+        if isinstance(result, dict) and not result:
+            return True
+        if isinstance(result, (pd.DataFrame, pd.Series)) and result.empty:
+            return True
+        if isinstance(result, list) and len(result) == 0:
+            return True
+        return False
+
+    @staticmethod
+    def _empty_for(method_name: str) -> Any:
+        df_methods = {
+            "get_history", "get_income_statement", "get_balance_sheet",
+            "get_cash_flow", "get_quarterly_income_statement", "get_financials",
+            "get_earnings_history", "get_insider_transactions",
+            "get_insider_purchases", "get_institutional_holders",
+            "get_mutualfund_holders", "get_major_holders",
+        }
+        if method_name in df_methods:
+            return pd.DataFrame()
+        if method_name == "get_dividends":
+            return pd.Series(dtype=float)
+        if method_name in ("get_news", "get_options_expirations"):
+            return []
+        if method_name == "get_options_chain":
+            return {"calls": pd.DataFrame(), "puts": pd.DataFrame()}
+        return {}
+
+    # ── All abstract method implementations via _call ────────────
+
+    def get_info(self, symbol: str) -> Dict[str, Any]:
+        return self._call("get_info", symbol)
+
+    def get_quote(self, symbol: str) -> Dict[str, Any]:
+        return self._call("get_quote", symbol)
+
+    def get_history(self, symbol: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
+        return self._call("get_history", symbol, period=period, interval=interval)
+
+    def get_income_statement(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_income_statement", symbol)
+
+    def get_balance_sheet(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_balance_sheet", symbol)
+
+    def get_cash_flow(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_cash_flow", symbol)
+
+    def get_quarterly_income_statement(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_quarterly_income_statement", symbol)
+
+    def get_financials(self, symbol: str, statement_type: str = "income_statement", freq: str = "yearly") -> pd.DataFrame:
+        return self._call("get_financials", symbol, statement_type=statement_type, freq=freq)
+
+    def get_earnings_history(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_earnings_history", symbol)
+
+    def get_calendar(self, symbol: str) -> Any:
+        return self._call("get_calendar", symbol)
+
+    def get_dividends(self, symbol: str) -> pd.Series:
+        return self._call("get_dividends", symbol)
+
+    def get_options_expirations(self, symbol: str) -> List[str]:
+        return self._call("get_options_expirations", symbol)
+
+    def get_options_chain(self, symbol: str, expiration: str) -> Dict[str, pd.DataFrame]:
+        return self._call("get_options_chain", symbol, expiration)
+
+    def get_insider_transactions(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_insider_transactions", symbol)
+
+    def get_insider_purchases(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_insider_purchases", symbol)
+
+    def get_institutional_holders(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_institutional_holders", symbol)
+
+    def get_mutualfund_holders(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_mutualfund_holders", symbol)
+
+    def get_major_holders(self, symbol: str) -> pd.DataFrame:
+        return self._call("get_major_holders", symbol)
+
+    def get_news(self, symbol: str) -> List[Dict[str, Any]]:
+        return self._call("get_news", symbol)
+
+
 # ─── Provider Singleton & Factory ─────────────────────────────────────────────
 
 _provider_instance: Optional[MarketDataProvider] = None
 _provider_lock = threading.Lock()
 
 
+def _create_provider(name: str) -> MarketDataProvider:
+    """Create a single provider instance by name."""
+    if name == "yfinance":
+        return YFinanceProvider()
+    elif name == "fmp":
+        from src.data.fmp_provider import FMPProvider
+        from src.config import get_settings
+        api_key = get_settings().data_api.fmp_api_key
+        if not api_key:
+            raise ValueError(
+                "FMP_API_KEY not set. Get a free key at "
+                "https://site.financialmodelingprep.com/register"
+            )
+        return FMPProvider(api_key=api_key)
+    elif name == "twelvedata":
+        raise NotImplementedError("Twelve Data provider not yet implemented.")
+    else:
+        raise ValueError(
+            f"Unknown provider: {name!r}. Supported: 'yfinance', 'fmp', 'twelvedata'"
+        )
+
+
 def get_provider(provider_name: str | None = None) -> MarketDataProvider:
     """
     Return the global MarketDataProvider singleton.
 
-    The provider is created lazily on first call.  Pass ``provider_name``
-    to override the default (useful for testing or future multi-provider
-    setups).  Currently supported values:
+    Supported values: ``"yfinance"`` (default), ``"fmp"``.
 
-    - ``"yfinance"``  (default)
-    - ``"fmp"``       (placeholder — not yet implemented)
-    - ``"twelvedata"`` (placeholder — not yet implemented)
-
-    Thread-safe via a simple lock around initialization.
+    **Fallback chain**: Set ``DATA_FALLBACK_PROVIDER`` env var to
+    automatically wrap primary + fallback via ``MultiProvider``.
 
     Example::
 
         from src.data import get_provider
-
         provider = get_provider()
         info = provider.get_info("AAPL")
-        hist = provider.get_history("AAPL", period="6mo")
     """
     global _provider_instance
 
@@ -446,31 +618,28 @@ def get_provider(provider_name: str | None = None) -> MarketDataProvider:
         return _provider_instance
 
     with _provider_lock:
-        # Double-check lock pattern
         if _provider_instance is not None and provider_name is None:
             return _provider_instance
 
-        name = (provider_name or "yfinance").lower()
+        import os
+        name = (provider_name or os.getenv("DATA_PROVIDER", "yfinance")).lower()
+        fallback_name = os.getenv("DATA_FALLBACK_PROVIDER", "").lower().strip()
 
-        if name == "yfinance":
-            _provider_instance = YFinanceProvider()
-        elif name == "fmp":
-            raise NotImplementedError(
-                "FMP provider not yet implemented.  "
-                "Install `fmpsdk` and add FMPProvider to src/data/provider.py"
-            )
-        elif name == "twelvedata":
-            raise NotImplementedError(
-                "Twelve Data provider not yet implemented.  "
-                "Install `twelvedata` and add TwelveDataProvider to src/data/provider.py"
-            )
+        primary = _create_provider(name)
+
+        if fallback_name and fallback_name != name:
+            try:
+                fallback = _create_provider(fallback_name)
+                _provider_instance = MultiProvider(primary, fallback)
+                logger.info(f"Market data: primary={name}, fallback={fallback_name}")
+            except Exception as e:
+                logger.warning(f"Could not create fallback provider '{fallback_name}': {e}")
+                _provider_instance = primary
+                logger.info(f"Market data provider set to: {name} (no fallback)")
         else:
-            raise ValueError(
-                f"Unknown provider: {name!r}.  "
-                f"Supported: 'yfinance', 'fmp', 'twelvedata'"
-            )
+            _provider_instance = primary
+            logger.info(f"Market data provider set to: {name}")
 
-        logger.info(f"Market data provider set to: {name}")
         return _provider_instance
 
 

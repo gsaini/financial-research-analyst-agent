@@ -22,6 +22,7 @@ from src.tools.financial_metrics import (
     compare_to_industry,
 )
 from src.tools.peer_comparison import compare_peers
+from src.tools.document_search import search_filings, get_filing_context
 import json
 from src.utils.logger import get_logger
 
@@ -163,6 +164,8 @@ class FundamentalAnalystAgent(BaseAgent):
             analyze_financial_health_tool,
             compare_to_industry_tool,
             analyze_peer_group_tool,
+            search_filings,
+            get_filing_context,
         ]
     
     def _get_system_prompt(self) -> str:
@@ -178,6 +181,8 @@ Your responsibilities:
 5. Analyze growth trends and future prospects
 6. Compare company metrics to industry peers using real-time data
 7. Determine if a stock is undervalued, fairly valued, or overvalued
+8. Search SEC filings (10-K, 10-Q) for risk factors, management discussion, and strategic insights
+9. Use filing context to support or challenge your quantitative findings
 
 When performing analysis:
 - Consider both absolute values and trends over time

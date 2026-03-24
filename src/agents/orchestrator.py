@@ -24,6 +24,7 @@ from src.agents.dividend import DividendAnalystAgent
 from src.tools.event_analyzer import analyze_events as run_event_analysis
 from src.tools.backtesting_engine import run_backtest as execute_backtest
 from src.tools.insight_engine import generate_observations as run_observations
+from src.tools.llm_insight_engine import generate_smart_observations
 from src.tools.insider_activity import analyze_smart_money as run_smart_money
 from src.utils.logger import get_logger
 
@@ -143,15 +144,38 @@ Coordinate efficiently and ensure comprehensive analysis."""
             
             analyses = await asyncio.gather(*tasks, return_exceptions=True)
             
-            results["technical"] = analyses[0] if not isinstance(analyses[0], Exception) else {"error": str(analyses[0])}
-            results["fundamental"] = analyses[1] if not isinstance(analyses[1], Exception) else {"error": str(analyses[1])}
-            results["sentiment"] = analyses[2] if not isinstance(analyses[2], Exception) else {"error": str(analyses[2])}
-            results["risk"] = analyses[3] if not isinstance(analyses[3], Exception) else {"error": str(analyses[3])}
-            
+            analysis_keys = ["technical", "fundamental", "sentiment", "risk"]
+            confidence_scores = {}
+            for i, key in enumerate(analysis_keys):
+                if isinstance(analyses[i], Exception):
+                    results[key] = {"error": str(analyses[i])}
+                    confidence_scores[key] = 0.0
+                else:
+                    results[key] = analyses[i]
+                    # Extract confidence from AgentResult if available
+                    if isinstance(analyses[i], dict):
+                        conf = analyses[i].get("confidence", 0.5)
+                        confidence_scores[key] = conf if isinstance(conf, (int, float)) else 0.5
+
+            # Cross-agent validation: flag low-confidence analyses
+            low_confidence = {k: v for k, v in confidence_scores.items() if v < 0.4}
+            if low_confidence:
+                logger.warning(
+                    f"Low confidence analyses for {symbol}: "
+                    f"{', '.join(f'{k}={v:.2f}' for k, v in low_confidence.items())}"
+                )
+                results["confidence_warnings"] = low_confidence
+
+            results["confidence_scores"] = confidence_scores
+            results["overall_confidence"] = (
+                sum(confidence_scores.values()) / len(confidence_scores)
+                if confidence_scores else 0.0
+            )
+
             # Generate report
             report = await self.report_generator.generate_report(symbol, results)
             results["report"] = report
-            
+
             results["completed_at"] = datetime.now(timezone.utc).isoformat()
             results["success"] = True
             
@@ -290,6 +314,7 @@ Coordinate efficiently and ensure comprehensive analysis."""
 
     async def get_observations(
         self, symbol: str, analyses: Optional[Dict[str, Any]] = None,
+        use_llm: bool = True,
     ) -> Dict[str, Any]:
         """
         Generate key observations and insights for a stock.
@@ -298,11 +323,15 @@ Coordinate efficiently and ensure comprehensive analysis."""
             symbol: Stock ticker symbol.
             analyses: Pre-computed analysis results. If None, observation
                       engine will work with empty data.
+            use_llm: If True, use LLM-powered insight engine (falls back
+                     to rule-based automatically if LLM is unavailable).
 
         Returns:
             Observations results dict.
         """
-        logger.info(f"Generating observations for {symbol}")
+        logger.info(f"Generating observations for {symbol} (llm={use_llm})")
+        if use_llm:
+            return await generate_smart_observations(symbol, analyses or {})
         return run_observations(symbol, analyses or {})
 
     async def analyze_insider_activity(

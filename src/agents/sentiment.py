@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime
 from langchain_core.tools import BaseTool, tool
 from src.agents.base import BaseAgent
+from src.tools.document_search import search_transcripts
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -66,7 +67,7 @@ class SentimentAnalystAgent(BaseAgent):
             
             return {"analyst_count": len(rating_data), "consensus": consensus, "average_score": round(avg_score, 2)}
         
-        return [analyze_news_sentiment_tool, analyze_analyst_ratings_tool]
+        return [analyze_news_sentiment_tool, analyze_analyst_ratings_tool, search_transcripts]
     
     def _get_system_prompt(self) -> str:
         """Get the system prompt for sentiment analysis."""
@@ -75,8 +76,15 @@ class SentimentAnalystAgent(BaseAgent):
 Your responsibilities:
 1. Analyze news article sentiment using NLP
 2. Evaluate analyst ratings and price targets
-3. Aggregate all sentiment into a composite score
-4. Identify trending topics and narratives
+3. Search earnings call transcripts for management tone and guidance language
+4. Aggregate all sentiment into a composite score
+5. Identify trending topics and narratives
+6. Detect shifts in management confidence from transcript language
+
+When earnings transcripts are available, pay special attention to:
+- Forward guidance language (confident vs hedging)
+- Tone shifts compared to previous quarters
+- Key phrases around risks, opportunities, and strategic pivots
 
 Output sentiment scores, interpretations, and trading implications."""
     
