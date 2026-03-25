@@ -589,11 +589,21 @@ def _create_provider(name: str) -> MarketDataProvider:
                 "https://site.financialmodelingprep.com/register"
             )
         return FMPProvider(api_key=api_key)
+    elif name == "alphavantage":
+        from src.data.alphavantage_provider import AlphaVantageProvider
+        from src.config import get_settings
+        api_key = get_settings().data_api.alpha_vantage_api_key
+        if not api_key:
+            raise ValueError(
+                "ALPHA_VANTAGE_API_KEY not set. Get a free key at "
+                "https://www.alphavantage.co/support/#api-key"
+            )
+        return AlphaVantageProvider(api_key=api_key)
     elif name == "twelvedata":
         raise NotImplementedError("Twelve Data provider not yet implemented.")
     else:
         raise ValueError(
-            f"Unknown provider: {name!r}. Supported: 'yfinance', 'fmp', 'twelvedata'"
+            f"Unknown provider: {name!r}. Supported: 'yfinance', 'fmp', 'alphavantage'"
         )
 
 

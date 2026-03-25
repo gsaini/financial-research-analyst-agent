@@ -17,4 +17,9 @@ Usage::
 
 from src.data.provider import get_provider, MarketDataProvider, MultiProvider, reset_provider
 
-__all__ = ["get_provider", "MarketDataProvider", "MultiProvider", "reset_provider"]
+__all__ = [
+    "get_provider",
+    "MarketDataProvider",
+    "MultiProvider",
+    "reset_provider",
+]

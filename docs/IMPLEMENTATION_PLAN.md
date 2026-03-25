@@ -17,23 +17,23 @@
 
 **Tasks**:
 
-- [ ] Build document ingestion pipeline (`src/rag/ingester.py`)
+- [x] Build document ingestion pipeline (`src/rag/ingester.py`)
   - SEC EDGAR API integration for 10-K, 10-Q, 8-K filings
   - Earnings call transcript fetching (SEC EDGAR XBRL or free APIs)
   - Chunking strategy: semantic chunking with overlap (512 tokens, 50 overlap)
-- [ ] Build embedding pipeline (`src/rag/embedder.py`)
+- [x] Build embedding pipeline (`src/rag/embedder.py`)
   - Use existing Sentence Transformers config
   - Store embeddings in ChromaDB (already configured)
   - Metadata tagging: ticker, filing type, date, section
-- [ ] Build retrieval pipeline (`src/rag/retriever.py`)
+- [x] Build retrieval pipeline (`src/rag/retriever.py`)
   - Similarity search with metadata filtering
   - Re-ranking with cross-encoder
   - Context window management (fit relevant chunks into LLM context)
-- [ ] Create RAG-aware agent mixin (`src/agents/rag_mixin.py`)
+- [x] Create RAG-aware agent mixin (`src/agents/rag_mixin.py`)
   - Agents can query document store as part of analysis
   - FundamentalAnalyst uses 10-K/10-Q data
   - SentimentAnalyst uses earnings transcript tone
-- [ ] Add RAG tools (`src/tools/document_search.py`)
+- [x] Add RAG tools (`src/tools/document_search.py`)
   - `search_filings(symbol, filing_type, query)` — semantic search over SEC filings
   - `search_transcripts(symbol, quarter, query)` — search earnings call transcripts
   - `get_filing_summary(symbol, filing_type)` — LLM-generated filing summary
@@ -65,18 +65,18 @@
 
 **Tasks**:
 
-- [ ] Upgrade BaseAgent to support ReAct pattern (`src/agents/base.py`)
+- [x] Upgrade BaseAgent to support ReAct pattern (`src/agents/base.py`)
   - Thought → Action → Observation → Thought loop
   - Max reasoning steps configurable (default: 5)
   - Early termination when confidence threshold met
-- [ ] Implement investigation chains in OrchestratorAgent
+- [x] Implement investigation chains in OrchestratorAgent
   - If technical signals conflict with fundamentals → investigate further
   - If sentiment is negative but price is rising → check institutional flows
   - Cross-agent validation: agents can query each other's findings
 - [ ] Add reasoning prompts per agent
   - Each agent gets a system prompt template encouraging multi-step analysis
   - Include few-shot examples of good financial reasoning
-- [ ] Implement confidence scoring
+- [x] Implement confidence scoring
   - Each analysis step produces a confidence score
   - Low confidence triggers deeper investigation
   - Final recommendation weighted by confidence
@@ -99,18 +99,18 @@
 
 **Tasks**:
 
-- [ ] Implement `FMPProvider` (`src/data/fmp_provider.py`)
+- [x] Implement `FMPProvider` (`src/data/fmp_provider.py`)
   - Implements existing `MarketDataProvider` protocol
   - Covers: quotes, historical, financials, earnings, news
   - Free tier: 250 requests/day (sufficient for dev)
-- [ ] Implement provider fallback chain (`src/data/provider.py`)
+- [x] Implement provider fallback chain (`src/data/provider.py`)
   - Primary → Secondary fallback logic
   - Data validation: cross-check between providers
   - Rate limit awareness per provider
-- [ ] Add Alpha Vantage as tertiary provider (`src/data/alphavantage_provider.py`)
+- [x] Add Alpha Vantage as tertiary provider (`src/data/alphavantage_provider.py`)
   - Already in requirements.txt (`alpha-vantage`)
   - Covers: time series, fundamentals, economic indicators
-- [ ] Data quality validation layer (`src/data/validator.py`)
+- [x] Data quality validation layer (`src/data/validator.py`)
   - Check for stale data (last update > threshold)
   - Check for missing required fields
   - Outlier detection on price data
@@ -136,12 +136,12 @@
 
 **Tasks**:
 
-- [ ] Refactor `src/tools/insight_engine.py`
+- [x] Refactor `src/tools/insight_engine.py`
   - Feed all analysis results as structured context to LLM
   - LLM generates observations with reasoning chains
   - Categorize insights: opportunity, risk, anomaly, trend
   - Prioritize by actionability and confidence
-- [ ] Add contradiction detection
+- [x] Add contradiction detection
   - Identify conflicting signals across analyses
   - Generate "what to watch" alerts
 - [ ] Add historical context

@@ -26,9 +26,79 @@ from src.tools.backtesting_engine import run_backtest as execute_backtest
 from src.tools.insight_engine import generate_observations as run_observations
 from src.tools.llm_insight_engine import generate_smart_observations
 from src.tools.insider_activity import analyze_smart_money as run_smart_money
+from src.tools.document_search import ingest_company_filings
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+# ── Cross-agent investigation signals ────────────────────────────
+
+def _detect_conflicting_signals(results: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Detect contradictions across agent results that warrant deeper investigation.
+
+    Returns a list of dicts with keys: ``conflict``, ``investigation``, ``agents``.
+    """
+    conflicts: List[Dict[str, str]] = []
+
+    tech = results.get("technical", {})
+    fund = results.get("fundamental", {})
+    sent = results.get("sentiment", {})
+    risk = results.get("risk", {})
+
+    # Extract nested result data (agents wrap output in "result" key)
+    tech_data = tech.get("result", {}).get("output", "") if isinstance(tech.get("result"), dict) else ""
+    fund_data = fund.get("result", {}).get("output", "") if isinstance(fund.get("result"), dict) else ""
+
+    # 1. Technical bullish but fundamental bearish (or vice versa)
+    tech_conf = results.get("confidence_scores", {}).get("technical", 0.5)
+    fund_conf = results.get("confidence_scores", {}).get("fundamental", 0.5)
+    if tech_conf > 0.6 and fund_conf > 0.6:
+        # Check for directional divergence via simple keyword heuristic
+        tech_bull = any(w in str(tech_data).lower() for w in ["bullish", "buy", "uptrend", "oversold"])
+        tech_bear = any(w in str(tech_data).lower() for w in ["bearish", "sell", "downtrend", "overbought"])
+        fund_bull = any(w in str(fund_data).lower() for w in ["undervalued", "strong buy", "buy", "healthy"])
+        fund_bear = any(w in str(fund_data).lower() for w in ["overvalued", "sell", "weak", "deteriorating"])
+
+        if tech_bull and fund_bear:
+            conflicts.append({
+                "conflict": "Technical signals are bullish but fundamentals suggest weakness",
+                "investigation": "Check if the technical bounce is a dead-cat bounce or if fundamentals are lagging price action",
+                "agents": "technical,fundamental",
+            })
+        elif tech_bear and fund_bull:
+            conflicts.append({
+                "conflict": "Fundamentals are strong but technical indicators show weakness",
+                "investigation": "Check if the stock is in a temporary pullback within a healthy trend or if technicals are leading a fundamental deterioration",
+                "agents": "technical,fundamental",
+            })
+
+    # 2. Sentiment divergence from price action
+    sent_conf = results.get("confidence_scores", {}).get("sentiment", 0.5)
+    if sent_conf > 0.5:
+        sent_data = sent.get("result", {}).get("output", "") if isinstance(sent.get("result"), dict) else ""
+        sent_negative = any(w in str(sent_data).lower() for w in ["negative", "bearish", "pessimistic"])
+        sent_positive = any(w in str(sent_data).lower() for w in ["positive", "bullish", "optimistic"])
+        if sent_negative and tech_bull:
+            conflicts.append({
+                "conflict": "Negative sentiment despite positive price action",
+                "investigation": "Check institutional flows — smart money may be accumulating while retail is fearful",
+                "agents": "sentiment,technical",
+            })
+
+    # 3. Low overall confidence across multiple agents
+    low_conf_agents = [
+        k for k, v in results.get("confidence_scores", {}).items()
+        if v < 0.4
+    ]
+    if len(low_conf_agents) >= 2:
+        conflicts.append({
+            "conflict": f"Low confidence across {', '.join(low_conf_agents)}",
+            "investigation": "Data quality may be poor or the stock may be in an unusual regime — consider widening the analysis window",
+            "agents": ",".join(low_conf_agents),
+        })
+
+    return conflicts
 
 
 class OrchestratorAgent(BaseAgent):
@@ -124,26 +194,42 @@ Available agents:
 Coordinate efficiently and ensure comprehensive analysis."""
     
     async def analyze(self, symbol: str, include_all: bool = True) -> Dict[str, Any]:
-        """Run comprehensive analysis on a symbol."""
+        """Run comprehensive analysis on a symbol.
+
+        Pipeline:
+        1. Ingest RAG documents (SEC filings) in background
+        2. Collect market data
+        3. Run all analysis agents in parallel
+        4. Cross-agent conflict detection
+        5. LLM insight synthesis
+        6. Report generation
+        """
         logger.info(f"Starting comprehensive analysis for {symbol}")
         start_time = datetime.now(timezone.utc)
         results = {"symbol": symbol, "started_at": start_time.isoformat()}
-        
+
         try:
-            # Collect data
+            # Step 1: Kick off RAG ingestion concurrently with data collection
+            rag_task = asyncio.create_task(self._ingest_rag_documents(symbol))
+
+            # Step 2: Collect data
             data_result = await self.data_collector.collect_comprehensive_data(symbol)
             results["data"] = data_result
-            
-            # Run analyses in parallel
+
+            # Wait for RAG ingestion to complete (best-effort)
+            rag_status = await rag_task
+            results["rag_status"] = rag_status
+
+            # Step 3: Run analyses in parallel
             tasks = [
                 self.technical_analyst.analyze_stock(symbol, data_result.get("data", {})),
                 self.fundamental_analyst.analyze_company(symbol, data_result.get("data", {})),
                 self.sentiment_analyst.analyze_sentiment(symbol, []),
                 self.risk_analyst.analyze_risk(symbol, data_result.get("data", {})),
             ]
-            
+
             analyses = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             analysis_keys = ["technical", "fundamental", "sentiment", "risk"]
             confidence_scores = {}
             for i, key in enumerate(analysis_keys):
@@ -157,7 +243,22 @@ Coordinate efficiently and ensure comprehensive analysis."""
                         conf = analyses[i].get("confidence", 0.5)
                         confidence_scores[key] = conf if isinstance(conf, (int, float)) else 0.5
 
-            # Cross-agent validation: flag low-confidence analyses
+            results["confidence_scores"] = confidence_scores
+            results["overall_confidence"] = (
+                sum(confidence_scores.values()) / len(confidence_scores)
+                if confidence_scores else 0.0
+            )
+
+            # Step 4: Cross-agent conflict detection & investigation
+            conflicts = _detect_conflicting_signals(results)
+            if conflicts:
+                logger.info(
+                    f"Detected {len(conflicts)} cross-agent conflicts for {symbol}: "
+                    f"{[c['conflict'] for c in conflicts]}"
+                )
+                results["cross_agent_conflicts"] = conflicts
+
+            # Flag low-confidence analyses
             low_confidence = {k: v for k, v in confidence_scores.items() if v < 0.4}
             if low_confidence:
                 logger.warning(
@@ -166,25 +267,45 @@ Coordinate efficiently and ensure comprehensive analysis."""
                 )
                 results["confidence_warnings"] = low_confidence
 
-            results["confidence_scores"] = confidence_scores
-            results["overall_confidence"] = (
-                sum(confidence_scores.values()) / len(confidence_scores)
-                if confidence_scores else 0.0
-            )
+            # Step 5: Generate LLM-powered insights (includes conflict context)
+            try:
+                observations = await self.get_observations(
+                    symbol, analyses=results, use_llm=True
+                )
+                results["observations"] = observations
+            except Exception as obs_err:
+                logger.warning(f"Observation generation failed: {obs_err}")
 
-            # Generate report
+            # Step 6: Generate report
             report = await self.report_generator.generate_report(symbol, results)
             results["report"] = report
 
             results["completed_at"] = datetime.now(timezone.utc).isoformat()
             results["success"] = True
-            
+
         except Exception as e:
             logger.error(f"Analysis failed for {symbol}: {e}")
             results["error"] = str(e)
             results["success"] = False
-        
+
         return results
+
+    @staticmethod
+    async def _ingest_rag_documents(symbol: str) -> Dict[str, Any]:
+        """Best-effort ingestion of SEC filings for RAG context."""
+        try:
+            result = await ingest_company_filings(
+                symbol=symbol,
+                filing_types=["10-K", "10-Q"],
+                max_filings=2,
+            )
+            logger.info(
+                f"RAG ingestion for {symbol}: {result.get('chunks_ingested', 0)} chunks"
+            )
+            return result
+        except Exception as e:
+            logger.warning(f"RAG ingestion failed for {symbol}: {e}")
+            return {"status": "failed", "error": str(e)}
 
     async def analyze_theme(self, theme_id: str, include_narrative: bool = False) -> Dict[str, Any]:
         """
