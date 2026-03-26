@@ -21,6 +21,8 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+import numpy as np
+
 from src.tools.insight_engine import (
     _detect_technical_signals,
     _detect_valuation_signals,
@@ -34,6 +36,193 @@ from src.tools.insight_engine import (
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+# ─── Historical Context Engine ─────────────────────────────────
+
+
+def compute_historical_context(symbol: str) -> Dict[str, Any]:
+    """
+    Compare current metrics against their own historical ranges.
+
+    Returns a dict of metric comparisons like:
+        {"pe_ratio": {"current": 22.5, "5y_low": 14.2, "5y_high": 35.1,
+                       "percentile": 62, "context": "P/E is in the upper half ..."}}
+
+    Fails gracefully — returns empty dict on any error.
+    """
+    try:
+        from src.data import get_provider
+
+        provider = get_provider()
+        info = provider.get_info(symbol)
+        hist: Any = provider.get_history(symbol, period="5y", interval="1mo")
+
+        if hist is None or (hasattr(hist, "empty") and hist.empty):
+            return {}
+
+        # Convert to DataFrame if not already
+        if isinstance(hist, dict):
+            import pandas as pd
+            hist = pd.DataFrame(hist)
+
+        context: Dict[str, Any] = {}
+
+        # --- Price context ---
+        closes = hist["Close"].dropna() if "Close" in hist.columns else None
+        if closes is not None and len(closes) > 12:
+            current_price = info.get(
+                "currentPrice", info.get("regularMarketPrice", 0)
+            )
+            if current_price and current_price > 0:
+                low_5y = float(closes.min())
+                high_5y = float(closes.max())
+                pct = _percentile_rank(closes.values, current_price)
+                context["price"] = {
+                    "current": round(current_price, 2),
+                    "5y_low": round(low_5y, 2),
+                    "5y_high": round(high_5y, 2),
+                    "percentile": pct,
+                    "context": _range_label("Price", current_price, low_5y, high_5y, pct),
+                }
+
+        # --- P/E context ---
+        pe = info.get("trailingPE")
+        forward_pe = info.get("forwardPE")
+        if pe is not None:
+            # Use trailing P/E with industry comparison
+            industry_pe = info.get("industryPE", info.get("sectorPE"))
+            pe_entry: Dict[str, Any] = {"current": round(pe, 2)}
+            if forward_pe:
+                pe_entry["forward"] = round(forward_pe, 2)
+                if forward_pe < pe:
+                    pe_entry["context"] = (
+                        f"Forward P/E ({forward_pe:.1f}) is below trailing ({pe:.1f}), "
+                        "implying expected earnings growth."
+                    )
+                else:
+                    pe_entry["context"] = (
+                        f"Forward P/E ({forward_pe:.1f}) above trailing ({pe:.1f}), "
+                        "implying expected earnings decline."
+                    )
+            if industry_pe:
+                pe_entry["industry_avg"] = round(industry_pe, 2)
+            context["pe_ratio"] = pe_entry
+
+        # --- P/B context ---
+        pb = info.get("priceToBook")
+        if pb is not None:
+            context["pb_ratio"] = {
+                "current": round(pb, 2),
+                "context": (
+                    "Below book value — potential deep value or distressed"
+                    if pb < 1
+                    else "Moderate premium to book"
+                    if pb < 3
+                    else "High premium to book — priced for growth"
+                ),
+            }
+
+        # --- Dividend yield context ---
+        div_yield = info.get("dividendYield")
+        if div_yield is not None and div_yield > 0:
+            five_yr_avg = info.get("fiveYearAvgDividendYield")
+            dy_entry: Dict[str, Any] = {"current_pct": round(div_yield * 100, 2)}
+            if five_yr_avg:
+                dy_entry["5y_avg_pct"] = round(five_yr_avg, 2)
+                ratio = (div_yield * 100) / five_yr_avg if five_yr_avg > 0 else 1
+                if ratio > 1.2:
+                    dy_entry["context"] = (
+                        f"Yield ({div_yield*100:.2f}%) is significantly above "
+                        f"5-year avg ({five_yr_avg:.2f}%) — may signal price decline "
+                        "or dividend increase."
+                    )
+                elif ratio < 0.8:
+                    dy_entry["context"] = (
+                        f"Yield ({div_yield*100:.2f}%) is below "
+                        f"5-year avg ({five_yr_avg:.2f}%) — price appreciation "
+                        "has compressed yield."
+                    )
+                else:
+                    dy_entry["context"] = "Yield is near its 5-year average."
+            context["dividend_yield"] = dy_entry
+
+        # --- Volatility context (annualized from monthly returns) ---
+        if closes is not None and len(closes) > 12:
+            monthly_returns = closes.pct_change().dropna()
+            if len(monthly_returns) > 6:
+                current_vol = float(monthly_returns[-12:].std() * np.sqrt(12) * 100)
+                hist_vol = float(monthly_returns.std() * np.sqrt(12) * 100)
+                context["volatility"] = {
+                    "current_annual_pct": round(current_vol, 1),
+                    "5y_avg_annual_pct": round(hist_vol, 1),
+                    "context": (
+                        f"Current annualized vol ({current_vol:.1f}%) vs "
+                        f"5-year avg ({hist_vol:.1f}%). "
+                        + (
+                            "Elevated volatility — risk is above normal."
+                            if current_vol > hist_vol * 1.3
+                            else "Compressed volatility — may precede a large move."
+                            if current_vol < hist_vol * 0.7
+                            else "Volatility is near historical average."
+                        )
+                    ),
+                }
+
+        # --- 52-week position ---
+        high_52w = info.get("fiftyTwoWeekHigh", 0)
+        low_52w = info.get("fiftyTwoWeekLow", 0)
+        curr = info.get("currentPrice", info.get("regularMarketPrice", 0))
+        if high_52w and low_52w and curr and (high_52w - low_52w) > 0:
+            pct_of_range = round(
+                (curr - low_52w) / (high_52w - low_52w) * 100
+            )
+            context["52_week_range"] = {
+                "current": round(curr, 2),
+                "low": round(low_52w, 2),
+                "high": round(high_52w, 2),
+                "pct_of_range": pct_of_range,
+                "context": (
+                    f"Trading at {pct_of_range}% of 52-week range. "
+                    + (
+                        "Near 52-week high — momentum intact but limited upside to recent peak."
+                        if pct_of_range > 85
+                        else "Near 52-week low — potential value if fundamentals support."
+                        if pct_of_range < 15
+                        else "Mid-range — no extreme positioning signal."
+                    )
+                ),
+            }
+
+        return context
+
+    except Exception as e:
+        logger.warning(f"Historical context computation failed for {symbol}: {e}")
+        return {}
+
+
+def _percentile_rank(values, current: float) -> int:
+    """What % of historical values are below the current value."""
+    arr = np.array(values, dtype=float)
+    arr = arr[~np.isnan(arr)]
+    if len(arr) == 0:
+        return 50
+    return int(round(np.sum(arr < current) / len(arr) * 100))
+
+
+def _range_label(
+    metric: str, current: float, low: float, high: float, pct: int
+) -> str:
+    """Human-readable label for where current sits in its historical range."""
+    if pct >= 90:
+        return f"{metric} at {current} is near its 5-year high ({high}) — {pct}th percentile."
+    if pct <= 10:
+        return f"{metric} at {current} is near its 5-year low ({low}) — {pct}th percentile."
+    if pct >= 70:
+        return f"{metric} at {current} is in the upper range — {pct}th percentile of 5-year history."
+    if pct <= 30:
+        return f"{metric} at {current} is in the lower range — {pct}th percentile of 5-year history."
+    return f"{metric} at {current} is mid-range — {pct}th percentile of 5-year history."
 
 # ─── LLM Synthesis Prompt ───────────────────────────────────────
 
@@ -56,6 +245,9 @@ IMPORTANT RULES:
 - Rate each insight's confidence (0.0-1.0) based on data quality and signal strength."""
 
 INSIGHT_USER_PROMPT = """Analyze {symbol} using the following multi-dimensional data and generate deep insights.
+
+## Historical Context (current metrics vs their own history)
+{historical_context}
 
 ## Rule-Based Signals Detected
 {rule_based_signals}
@@ -140,6 +332,23 @@ def _summarize_for_llm(data: Any, max_len: int = 2000) -> str:
         return str(data)[:max_len]
 
 
+def _format_historical_context(ctx: Dict[str, Any]) -> str:
+    """Format historical context metrics for LLM consumption."""
+    if not ctx:
+        return "No historical context available."
+    lines = []
+    for metric, data in ctx.items():
+        label = metric.replace("_", " ").title()
+        context_str = data.get("context", "")
+        current = data.get("current", data.get("current_pct", "N/A"))
+        lines.append(f"- **{label}**: Current={current}. {context_str}")
+        # Add sub-details
+        for k, v in data.items():
+            if k not in ("context", "current", "current_pct"):
+                lines.append(f"    {k}: {v}")
+    return "\n".join(lines)
+
+
 def _format_rule_signals(observations: List[Dict]) -> str:
     """Format rule-based observations for LLM consumption."""
     if not observations:
@@ -187,10 +396,13 @@ async def generate_smart_observations(
     rule_based = generate_rule_based_observations(symbol, analyses)
     rule_signals = rule_based.get("observations", [])
 
+    # Step 1b: Compute historical context
+    hist_context = compute_historical_context(symbol)
+
     # Step 2: Try LLM synthesis
     llm_result = None
     try:
-        llm_result = await _run_llm_synthesis(symbol, analyses, rule_signals, llm)
+        llm_result = await _run_llm_synthesis(symbol, analyses, rule_signals, llm, hist_context)
     except Exception as e:
         logger.warning(f"LLM insight synthesis failed for {symbol}: {e}")
         logger.info("Falling back to rule-based observations only")
@@ -199,11 +411,16 @@ async def generate_smart_observations(
 
     # Step 3: Merge LLM insights with rule-based
     if llm_result:
-        return _build_llm_result(symbol, llm_result, rule_based, exec_time)
+        result = _build_llm_result(symbol, llm_result, rule_based, exec_time)
+        if hist_context:
+            result["historical_context"] = hist_context
+        return result
     else:
         # Graceful fallback to rule-based
         rule_based["engine"] = "rule-based (LLM unavailable)"
         rule_based["execution_time_seconds"] = round(exec_time, 3)
+        if hist_context:
+            rule_based["historical_context"] = hist_context
         return rule_based
 
 
@@ -212,6 +429,7 @@ async def _run_llm_synthesis(
     analyses: Dict[str, Any],
     rule_signals: List[Dict],
     llm=None,
+    historical_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Run the LLM synthesis and parse the JSON response."""
     if llm is None:
@@ -219,6 +437,7 @@ async def _run_llm_synthesis(
 
     prompt = INSIGHT_USER_PROMPT.format(
         symbol=symbol,
+        historical_context=_format_historical_context(historical_context or {}),
         rule_based_signals=_format_rule_signals(rule_signals),
         technical_data=_summarize_for_llm(analyses.get("technical")),
         fundamental_data=_summarize_for_llm(analyses.get("fundamental")),

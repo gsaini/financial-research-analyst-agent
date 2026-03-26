@@ -73,7 +73,7 @@
   - If technical signals conflict with fundamentals → investigate further
   - If sentiment is negative but price is rising → check institutional flows
   - Cross-agent validation: agents can query each other's findings
-- [ ] Add reasoning prompts per agent
+- [x] Add reasoning prompts per agent
   - Each agent gets a system prompt template encouraging multi-step analysis
   - Include few-shot examples of good financial reasoning
 - [x] Implement confidence scoring
@@ -144,7 +144,7 @@
 - [x] Add contradiction detection
   - Identify conflicting signals across analyses
   - Generate "what to watch" alerts
-- [ ] Add historical context
+- [x] Add historical context
   - Compare current metrics to historical ranges
   - "P/E is at 5-year high" type insights
 
