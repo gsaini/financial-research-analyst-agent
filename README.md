@@ -104,6 +104,10 @@ This AI agent system addresses these challenges by:
 | 👤 **Insider & Institutional**     | Track insider transactions, institutional holdings & smart money score  |
 | 📊 **Options Flow Analysis**       | Put/Call ratios, implied volatility skew, max pain & unusual activity   |
 | 📑 **Report Generation**           | Automated investment research reports                                   |
+| 🧠 **RAG Document Intelligence**   | Ingest & query SEC filings (10-K, 10-Q, 8-K) and earnings transcripts  |
+| 🔄 **ReAct Multi-Step Reasoning**  | Agents think step-by-step with few-shot examples and confidence scoring |
+| 🗃️ **Multi-Provider Data**         | YFinance + FMP + Alpha Vantage with automatic fallback & validation     |
+| 💡 **LLM-Powered Insights**        | Cross-dimensional synthesis with contradiction detection & historical context |
 | 🔔 **Alert System**                | Configurable alerts for market conditions                               |
 | 🌐 **API Integration**             | REST API for external system integration                                |
 | 📖 **Interactive API Docs**        | Swagger UI & ReDoc with OpenAPI 3.0 specification                       |
@@ -111,17 +115,17 @@ This AI agent system addresses these challenges by:
 
 ### Agent Types
 
-1. **Data Collector Agent**: Gathers financial data from multiple sources
-2. **Technical Analyst Agent**: Performs technical analysis on price data
-3. **Fundamental Analyst Agent**: Analyzes company financials and metrics
-4. **Sentiment Analyst Agent**: Processes news and social media sentiment
-5. **Risk Analyst Agent**: Performs risk assessment and VaR calculations
+1. **Data Collector Agent**: Gathers financial data from multiple providers (YFinance, FMP, Alpha Vantage)
+2. **Technical Analyst Agent**: Multi-step technical analysis with cross-indicator reasoning
+3. **Fundamental Analyst Agent**: Value trap detection, peer comparison, SEC filing analysis via RAG
+4. **Sentiment Analyst Agent**: Triangulates news, analyst ratings, and earnings transcript tone
+5. **Risk Analyst Agent**: Layered risk assessment — volatility, tail risk, beta, drawdown
 6. **Thematic Analyst Agent**: Analyzes stocks grouped by investment themes and megatrends
 7. **Disruption Analyst Agent**: Identifies market disruptors and at-risk companies via R&D, growth, and margin analysis
 8. **Earnings Analyst Agent**: Tracks quarterly EPS surprises, beat/miss patterns, and earnings quality
 9. **Performance Analyst Agent**: Tracks multi-horizon returns, benchmark comparison, risk-adjusted metrics, and drawdown analysis
 10. **Report Generator Agent**: Compiles insights into structured reports
-11. **Orchestrator Agent**: Coordinates all agents and manages workflow
+11. **Orchestrator Agent**: Coordinates all agents with cross-agent conflict detection and RAG document ingestion
 
 ---
 
@@ -143,9 +147,10 @@ This AI agent system addresses these challenges by:
 │  │ DATA COLLECTOR │ │ TECHNICAL │ │ FUNDA │ │ SENTI-  │ │ RISK           │     │
 │  │ AGENT          │ │ ANALYST   │ │ MENTAL│ │ MENT    │ │ ANALYST AGENT  │     │
 │  │                │ │ AGENT     │ │ AGENT │ │ AGENT   │ │                │     │
-│  │ • Yahoo Finance│ │ • RSI     │ │ • P/E │ │ • News  │ │ • VaR Calc     │     │
-│  │ • Alpha Vantage│ │ • MACD    │ │ • EPS │ │ • Social│ │ • Volatility   │     │
-│  │ • News APIs    │ │ • SMA/EMA │ │ • ROE │ │ • Trend │ │ • Correlation  │     │
+│  │ • YFinance     │ │ • RSI     │ │ • P/E │ │ • News  │ │ • VaR/CVaR     │     │
+│  │ • FMP          │ │ • MACD    │ │ • EPS │ │ • Analyst│ │ • Volatility   │     │
+│  │ • Alpha Vantage│ │ • SMA/EMA │ │ • ROE │ │ • Trans.│ │ • Beta/Sharpe  │     │
+│  │ • Auto-fallback│ │ • ReAct   │ │ • RAG │ │ • ReAct │ │ • Drawdown     │     │
 │  └────────────────┘ └───────────┘ └───────┘ └─────────┘ └────────────────┘     │
 │                                                                                  │
 │  ┌─────────────────────────────────┐  ┌──────────────────────────────────────┐  │
@@ -182,6 +187,15 @@ This AI agent system addresses these challenges by:
 │  │ • Topic Extraction                   • Source Diversity Assessment       │  │
 │  └───────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                  │
+│  ┌─────────────────────────────────┐  ┌──────────────────────────────────────┐  │
+│  │ RAG DOCUMENT INTELLIGENCE       │  │ LLM-POWERED INSIGHT ENGINE           │  │
+│  │                                 │  │                                      │  │
+│  │ • SEC Filing Ingestion (10-K/Q) │  │ • Cross-Dimensional Synthesis        │  │
+│  │ • Earnings Transcript Search    │  │ • Contradiction Detection            │  │
+│  │ • Semantic Chunking & Retrieval │  │ • Historical Context Comparison      │  │
+│  │ • Agent RAG Mixin (optional)    │  │ • Watch Items & Catalysts            │  │
+│  └─────────────────────────────────┘  └──────────────────────────────────────┘  │
+│                                                                                  │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │ REPORT GENERATOR AGENT                                                    │  │
 │  │                                                                           │  │
@@ -192,8 +206,9 @@ This AI agent system addresses these challenges by:
 ├──────────────────────────────────────────────────────────────────────────────────┤
 │                                  DATA LAYER                                      │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐ ┌──────────┐ │
-│  │ Vector Store │ │ Cache Layer  │ │ Database     │ │ File Store │ │ Theme    │ │
-│  │ (ChromaDB)   │ │ (Redis)      │ │ (PostgreSQL) │ │ (S3/Local) │ │ Config   │ │
+│  │ Vector Store │ │ Cache Layer  │ │ Database     │ │ Data Valid.│ │ Multi-   │ │
+│  │ (ChromaDB)   │ │ (Redis)      │ │ (PostgreSQL) │ │ (Quality)  │ │ Provider │ │
+│  │ + RAG Embeds │ │              │ │              │ │ + Outliers │ │ Fallback │ │
 │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘ └──────────┘ │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -204,8 +219,10 @@ This AI agent system addresses these challenges by:
 | ------------------- | -------------------------------------------- |
 | **AI Framework**    | LangChain, LangGraph                         |
 | **LLM**             | Ollama (Llama 4, Mistral) / Groq / LM Studio |
+| **RAG**             | Semantic chunking, ChromaDB, cross-encoder re-ranking |
 | **Embeddings**      | Sentence Transformers / HuggingFace / Ollama |
 | **Vector Store**    | ChromaDB / Qdrant / Milvus / Weaviate        |
+| **Data Providers**  | YFinance, Financial Modeling Prep, Alpha Vantage (auto-fallback) |
 | **Backend**         | FastAPI, Python 3.14+                        |
 | **Data Processing** | Pandas, NumPy                                |
 | **Visualization**   | Plotly, TradingView Lightweight Charts       |
@@ -276,9 +293,11 @@ EMBEDDING_PROVIDER=sentence-transformers
 SENTENCE_TRANSFORMER_MODEL=all-MiniLM-L6-v2
 
 # Financial Data APIs (Yahoo Finance is free, others optional)
-USE_YFINANCE=true
+DATA_PROVIDER=yfinance                        # yfinance | fmp | alphavantage
+DATA_FALLBACK_PROVIDER=fmp                    # Auto-fallback if primary fails
 ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key  # Optional
-NEWS_API_KEY=your_news_api_key  # Optional
+FMP_API_KEY=your_fmp_api_key                  # Optional (free tier: 250 req/day)
+NEWS_API_KEY=your_news_api_key                # Optional
 
 # Database Configuration
 DATABASE_URL=sqlite:///./data/financial_agent.db
@@ -419,7 +438,7 @@ pip install -r frontend/requirements.txt
 streamlit run frontend/app.py
 ```
 
-The dashboard provides 11 interactive pages covering stock analysis, thematic investing, peer comparison, market disruption, quarterly earnings, portfolio analysis, reports, financial news, historical performance tracking, and AI-powered sentiment analysis.
+The dashboard provides 12 interactive pages covering stock analysis, thematic investing, peer comparison, market disruption, quarterly earnings, portfolio analysis, reports, financial news, historical performance tracking, AI-powered sentiment analysis, and ETF screening.
 
 ### Command Line Interface
 
@@ -869,16 +888,17 @@ financial-research-analyst-agent/
 │   ├── config.py               # Configuration management
 │   ├── agents/
 │   │   ├── __init__.py
-│   │   ├── base.py             # Base agent class
-│   │   ├── orchestrator.py     # Main orchestrator agent
+│   │   ├── base.py             # Base agent class (ReAct reasoning, confidence scoring)
+│   │   ├── orchestrator.py     # Orchestrator (cross-agent conflict detection, RAG ingestion)
+│   │   ├── rag_mixin.py        # RAG mixin for document-aware agents ✨
 │   │   ├── data_collector.py   # Data collection agent
-│   │   ├── technical.py        # Technical analysis agent
-│   │   ├── fundamental.py      # Fundamental analysis agent
-│   │   ├── sentiment.py        # Sentiment analysis agent
-│   │   ├── risk.py             # Risk analysis agent
-│   │   ├── thematic.py         # Thematic investing analysis agent ✨
-│   │   ├── disruption.py       # Market disruption analysis agent ✨
-│   │   ├── earnings.py         # Quarterly earnings analysis agent ✨
+│   │   ├── technical.py        # Technical analysis (multi-step reasoning prompts) ✨
+│   │   ├── fundamental.py      # Fundamental analysis (SEC filings via RAG) ✨
+│   │   ├── sentiment.py        # Sentiment analysis (transcript tone analysis) ✨
+│   │   ├── risk.py             # Risk analysis (layered risk assessment) ✨
+│   │   ├── thematic.py         # Thematic investing analysis agent
+│   │   ├── disruption.py       # Market disruption analysis agent
+│   │   ├── earnings.py         # Quarterly earnings analysis agent
 │   │   └── report_generator.py # Report generation agent
 │   ├── tools/
 │   │   ├── __init__.py
@@ -896,9 +916,22 @@ financial-research-analyst-agent/
 │   │   ├── event_analyzer.py   # Event calendar, price windows & pattern analysis ✨
 │   │   ├── strategy_definitions.py # 5 predefined trading strategies ✨
 │   │   ├── backtesting_engine.py  # Strategy simulation & performance metrics ✨
-│   │   ├── insight_engine.py     # Cross-dimensional observations & ranking ✨
-│   │   ├── insider_activity.py   # Insider txns, institutional holdings & smart money ✨
-│   │   └── options_analyzer.py   # Options flow, IV skew, max pain & unusual activity ✨
+│   │   ├── insight_engine.py     # Rule-based observations & ranking
+│   │   ├── llm_insight_engine.py # LLM-powered synthesis + historical context ✨
+│   │   ├── document_search.py   # RAG-powered SEC filing & transcript search ✨
+│   │   ├── insider_activity.py   # Insider txns, institutional holdings & smart money
+│   │   └── options_analyzer.py   # Options flow, IV skew, max pain & unusual activity
+│   ├── rag/                        # RAG Pipeline ✨
+│   │   ├── __init__.py
+│   │   ├── ingester.py            # SEC EDGAR document ingestion
+│   │   ├── embedder.py            # Sentence Transformer embedding pipeline
+│   │   └── retriever.py           # Similarity search + cross-encoder re-ranking
+│   ├── data/                       # Multi-Provider Data Layer ✨
+│   │   ├── __init__.py
+│   │   ├── provider.py            # Abstract interface + YFinance + fallback wrapper
+│   │   ├── fmp_provider.py        # Financial Modeling Prep provider
+│   │   ├── alphavantage_provider.py # Alpha Vantage provider
+│   │   └── validator.py           # Data quality validation & outlier detection
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
@@ -940,8 +973,9 @@ financial-research-analyst-agent/
 │   │   ├── 7_Portfolio_Analysis.py # Multi-stock portfolio
 │   │   ├── 8_Reports.py           # Generate & download reports
 │   │   ├── 9_News.py             # Financial news feed
-│   │   ├── 10_Performance.py      # Historical performance tracking ✨
-│   │   └── 11_Sentiment.py       # Enhanced news & sentiment analysis ✨
+│   │   ├── 10_Performance.py      # Historical performance tracking
+│   │   ├── 11_Sentiment.py       # Enhanced news & sentiment analysis
+│   │   └── 12_ETF_Screener.py   # ETF screening & analysis ✨
 │   ├── components/                 # Reusable UI components
 │   │   ├── sidebar.py              # Navigation sidebar
 │   │   ├── charts.py               # TradingView chart wrappers
@@ -996,9 +1030,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [LangChain](https://langchain.com/) - AI Agent Framework
-- [OpenAI](https://openai.com/) - Language Models
+- [Ollama](https://ollama.ai/) - Local LLM Inference
+- [Yahoo Finance](https://finance.yahoo.com/) - Market Data (Primary)
+- [Financial Modeling Prep](https://financialmodelingprep.com/) - Financial Data API
 - [Alpha Vantage](https://www.alphavantage.co/) - Financial Data API
-- [Yahoo Finance](https://finance.yahoo.com/) - Market Data
+- [ChromaDB](https://www.trychroma.com/) - Vector Store for RAG
+- [Sentence Transformers](https://www.sbert.net/) - Embeddings
 
 ---
 
