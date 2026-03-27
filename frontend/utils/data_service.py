@@ -350,6 +350,111 @@ def fetch_etf_data(symbol: str) -> dict:
     return _fn(symbol.upper())
 
 
+# ─── Macro Economic Data (Phase 2) ────────────────────────
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_macro_summary() -> dict:
+    """Get key macroeconomic indicators from FRED."""
+    from src.tools.macro_data import get_macro_summary as _fn
+    return _fn()
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_treasury_yields() -> dict:
+    """Get treasury yields and yield curve status."""
+    from src.tools.macro_data import get_treasury_yields as _fn
+    return _fn()
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_rate_environment() -> dict:
+    """Get rate environment analysis."""
+    from src.tools.macro_data import get_rate_environment as _fn
+    return _fn()
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_macro_context(symbol: str) -> dict:
+    """Get macro context for a specific stock."""
+    from src.tools.macro_data import get_macro_context_for_stock as _fn
+    return _fn(symbol)
+
+
+# ─── DCF Valuation (Phase 2) ─────────────────────────────
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_dcf_analysis(symbol: str) -> dict:
+    """Run DCF valuation analysis with 3 scenarios."""
+    from src.tools.dcf_model import get_dcf_summary as _fn
+    return _fn(symbol)
+
+
+# ─── Social Sentiment (Phase 2) ──────────────────────────
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def get_social_sentiment(symbol: str) -> dict:
+    """Get Reddit and social media sentiment for a stock."""
+    from src.tools.social_sentiment import get_social_sentiment_composite as _fn
+    return _fn(symbol)
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def get_trending_tickers() -> dict:
+    """Get trending tickers from Reddit."""
+    from src.tools.social_sentiment import get_trending_tickers as _fn
+    return _fn()
+
+
+# ─── ML Forecast (Phase 2) ──────────────────────────────
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_price_forecast(symbol: str) -> dict:
+    """Get ML-based price forecast with targets."""
+    from src.tools.ml_forecast import get_price_targets as _fn
+    return _fn(symbol)
+
+
+# ─── Anomaly Detection (Phase 2) ────────────────────────
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def detect_anomalies(symbol: str) -> dict:
+    """Detect volume and price anomalies."""
+    from src.tools.anomaly_detector import detect_volume_anomalies, detect_price_anomalies
+    return {
+        "volume": detect_volume_anomalies(symbol),
+        "price": detect_price_anomalies(symbol),
+    }
+
+
+# ─── Portfolio Optimization (Phase 2) ───────────────────
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def optimize_portfolio(symbols: tuple, method: str = "max_sharpe") -> dict:
+    """Run portfolio optimization."""
+    from src.tools.portfolio_optimizer import optimize_portfolio as _fn
+    return _fn(list(symbols), method=method)
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_efficient_frontier(symbols: tuple) -> dict:
+    """Calculate efficient frontier."""
+    from src.tools.portfolio_optimizer import calculate_efficient_frontier as _fn
+    return _fn(list(symbols))
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_portfolio_benchmark(symbols: tuple, weights: tuple) -> dict:
+    """Compare portfolio vs benchmark."""
+    from src.tools.benchmark import calculate_portfolio_vs_benchmark as _fn
+    return _fn(list(symbols), list(weights))
+
+
 # ─── LLM Chat ──────────────────────────────────────────────
 
 

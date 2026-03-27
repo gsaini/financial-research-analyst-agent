@@ -156,6 +156,68 @@ report_generator:
     - recommendation
     - disclaimers
 
+# Macro Economic Settings (Phase 2)
+macro:
+  fred_series:
+    federal_funds_rate: FEDFUNDS
+    cpi: CPIAUCSL
+    gdp: GDP
+    unemployment: UNRATE
+    consumer_confidence: UMCSENT
+    pmi: NAPM
+    housing_starts: HOUST
+    treasury_2y: DGS2
+    treasury_10y: DGS10
+    treasury_30y: DGS30
+  sector_rate_sensitivity:
+    high_negative: [Real Estate, Utilities, Consumer Defensive]
+    moderate_negative: [Financials, Communication Services]
+    low_impact: [Technology, Healthcare, Energy]
+    positive: [Financial Services]
+
+# DCF Valuation Settings (Phase 2)
+dcf:
+  default_scenarios:
+    bull:
+      growth_premium: 0.02
+      terminal_growth: 0.03
+    base:
+      growth_premium: 0.0
+      terminal_growth: 0.025
+    bear:
+      growth_premium: -0.02
+      terminal_growth: 0.02
+  equity_risk_premium: 0.055
+  default_risk_free_rate: 0.045
+  projection_years: 10
+
+# Portfolio Optimization Settings (Phase 2)
+portfolio:
+  min_weight: 0.0
+  max_weight: 1.0
+  risk_free_rate: 0.05
+  efficient_frontier_points: 50
+  rebalance_threshold: 0.05
+
+# ML Forecast Settings (Phase 2)
+forecast:
+  lookback_years: 2
+  horizons: [30, 60, 90]
+  model: gradient_boosting
+  n_estimators: 200
+  confidence_level: 0.95
+
+# Social Sentiment Settings (Phase 2)
+social_sentiment:
+  subreddits:
+    - wallstreetbets
+    - stocks
+    - investing
+  weights:
+    reddit: 0.30
+    news: 0.70
+  request_timeout: 10
+
 # LLM Settings (Open Source by Default)
 llm:
   provider: "ollama"

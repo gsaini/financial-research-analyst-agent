@@ -26,6 +26,7 @@ NAV_GROUPS = {
     "Data": [
         ("News", "pages/9_News.py", "📰"),
         ("ETF Screener", "pages/12_ETF_Screener.py", "🔍"),
+        ("Macro Economy", "pages/13_Macro_Economy.py", "🌐"),
     ],
 }
 
