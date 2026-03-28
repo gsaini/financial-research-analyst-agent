@@ -23,6 +23,8 @@ from src.tools.financial_metrics import (
 )
 from src.tools.peer_comparison import compare_peers
 from src.tools.document_search import search_filings, get_filing_context
+from src.tools.dcf_model import get_dcf_summary
+from src.tools.macro_data import get_macro_context_for_stock
 import json
 from src.utils.logger import get_logger
 
@@ -156,6 +158,36 @@ class FundamentalAnalystAgent(BaseAgent):
             """
             return await compare_peers(symbol)
         
+        @tool("run_dcf_valuation")
+        def run_dcf_valuation_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Run DCF (Discounted Cash Flow) valuation with bull/base/bear scenarios.
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with intrinsic values per scenario, WACC, sensitivity matrix,
+                margin of safety, and buy/sell recommendation.
+            """
+            return get_dcf_summary(symbol)
+
+        @tool("get_macro_context")
+        def get_macro_context_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Get macroeconomic context for a stock's sector.
+
+            Analyzes how current Fed policy, inflation, and rate environment
+            affect the stock's sector. Useful for contextualizing valuations.
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with sector, rate sensitivity, impact direction, and key factors.
+            """
+            return get_macro_context_for_stock(symbol)
+
         return [
             calculate_valuation_ratios_tool,
             calculate_profitability_ratios_tool,
@@ -166,6 +198,8 @@ class FundamentalAnalystAgent(BaseAgent):
             analyze_peer_group_tool,
             search_filings,
             get_filing_context,
+            run_dcf_valuation_tool,
+            get_macro_context_tool,
         ]
     
     def _get_system_prompt(self) -> str:

@@ -21,6 +21,8 @@ from src.tools.technical_indicators import (
     identify_support_resistance,
     detect_patterns,
 )
+from src.tools.ml_forecast import get_price_targets
+from src.tools.anomaly_detector import detect_volume_anomalies, detect_price_anomalies, detect_pattern_breaks
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -167,6 +169,56 @@ class TechnicalAnalystAgent(BaseAgent):
             price_data = json.loads(prices) if isinstance(prices, str) else prices
             return detect_patterns(price_data)
         
+        @tool("get_ml_price_targets")
+        def get_ml_price_targets_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Get ML-based price targets for 30/60/90 days using gradient boosting.
+
+            Uses engineered features (lag returns, moving averages, RSI, volatility)
+            to forecast future prices with confidence intervals.
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with 30d/60d/90d targets, confidence bands, trend, model quality.
+            """
+            return get_price_targets(symbol)
+
+        @tool("detect_anomalies")
+        def detect_anomalies_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Detect volume and price anomalies in recent trading data.
+
+            Flags unusual volume surges, extreme price moves, and gap events
+            using Z-score analysis.
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with volume anomalies, price anomalies, and gap events.
+            """
+            vol = detect_volume_anomalies(symbol)
+            price = detect_price_anomalies(symbol)
+            return {"volume_anomalies": vol, "price_anomalies": price}
+
+        @tool("detect_regime_changes")
+        def detect_regime_changes_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Detect pattern breaks and regime changes in a stock.
+
+            Identifies volatility expansion/compression, trend breaks
+            (SMA-50 crossovers), and volume regime changes.
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with detected breaks and their significance.
+            """
+            return detect_pattern_breaks(symbol)
+
         return [
             calculate_rsi_tool,
             calculate_macd_tool,
@@ -174,6 +226,9 @@ class TechnicalAnalystAgent(BaseAgent):
             calculate_bollinger_bands_tool,
             identify_support_resistance_tool,
             detect_patterns_tool,
+            get_ml_price_targets_tool,
+            detect_anomalies_tool,
+            detect_regime_changes_tool,
         ]
     
     def _get_system_prompt(self) -> str:

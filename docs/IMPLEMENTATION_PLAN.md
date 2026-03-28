@@ -163,15 +163,15 @@
 
 **Tasks**:
 
-- [ ] Create FRED data tool (`src/tools/macro_data.py`)
+- [x] Create FRED data tool (`src/tools/macro_data.py`)
   - Federal funds rate, CPI, GDP, unemployment, yield curve
   - Treasury yields (2Y, 10Y, 30Y) and spread
   - Consumer confidence, PMI, housing starts
-- [ ] Add macro context to analysis
+- [x] Add macro context to analysis
   - Rate environment affects sector recommendations
   - Yield curve inversion signals
   - Inflation impact on valuation multiples
-- [ ] Create macro dashboard frontend page
+- [x] Create macro dashboard frontend page
 
 **New Dependencies**: `fredapi`
 **Files to Create**: `src/tools/macro_data.py`, `frontend/pages/13_Macro_Economy.py`
@@ -183,14 +183,14 @@
 
 **Tasks**:
 
-- [ ] Reddit sentiment tool (`src/tools/social_sentiment.py`)
+- [x] Reddit sentiment tool (`src/tools/social_sentiment.py`)
   - r/wallstreetbets, r/stocks, r/investing monitoring
   - Post/comment volume and sentiment scoring
   - Trending ticker detection
-- [ ] Aggregate social + news sentiment
+- [x] Aggregate social + news sentiment
   - Weighted composite sentiment score
   - Sentiment momentum (trending up/down)
-- [ ] Add social sentiment to frontend Sentiment page
+- [x] Add social sentiment to frontend Sentiment page
 
 **New Dependencies**: `praw` (Reddit API)
 **Files to Create**: `src/tools/social_sentiment.py`
@@ -202,15 +202,15 @@
 
 **Tasks**:
 
-- [ ] Implement DCF calculator (`src/tools/dcf_model.py`)
+- [x] Implement DCF calculator (`src/tools/dcf_model.py`)
   - Free cash flow projection (3 scenarios: bull/base/bear)
   - WACC calculation (CAPM-based)
   - Terminal value (perpetuity growth + exit multiple)
   - Sensitivity analysis (discount rate vs growth rate matrix)
-- [ ] Integrate with FundamentalAnalyst
+- [x] Integrate with FundamentalAnalyst
   - Auto-populate inputs from financial statements
   - LLM-assisted growth rate estimation
-- [ ] Add DCF visualization to Stock Analysis page
+- [x] Add DCF visualization to Stock Analysis page
 
 **Files to Create**: `src/tools/dcf_model.py`
 **Files to Modify**: `src/agents/fundamental.py`, `frontend/pages/2_Stock_Analysis.py`
@@ -221,16 +221,16 @@
 
 **Tasks**:
 
-- [ ] Time-series forecasting tool (`src/tools/ml_forecast.py`)
-  - Prophet for trend + seasonality decomposition
+- [x] Time-series forecasting tool (`src/tools/ml_forecast.py`)
+  - GradientBoosting with engineered features (lag returns, MAs, RSI, volatility)
   - Feature engineering: technical indicators as features
   - Confidence intervals on predictions
   - 30/60/90-day price targets
-- [ ] Anomaly detection (`src/tools/anomaly_detector.py`)
+- [x] Anomaly detection (`src/tools/anomaly_detector.py`)
   - Volume anomaly detection (Z-score based)
   - Price movement anomaly detection
   - Pattern break detection
-- [ ] Add forecast visualization to frontend
+- [x] Add forecast visualization to frontend
 
 **New Dependencies**: `prophet`, `scikit-learn`
 **Files to Create**: `src/tools/ml_forecast.py`, `src/tools/anomaly_detector.py`
@@ -242,18 +242,18 @@
 
 **Tasks**:
 
-- [ ] Portfolio optimizer tool (`src/tools/portfolio_optimizer.py`)
+- [x] Portfolio optimizer tool (`src/tools/portfolio_optimizer.py`)
   - Mean-variance optimization (Markowitz)
   - Efficient frontier calculation
   - Maximum Sharpe ratio portfolio
   - Minimum volatility portfolio
   - Risk-parity allocation
   - Constraints: min/max weights, sector limits
-- [ ] Benchmark comparison tool (`src/tools/benchmark.py`)
+- [x] Benchmark comparison tool (`src/tools/benchmark.py`)
   - Alpha, beta, tracking error vs S&P 500
   - Rolling alpha/beta over time
   - Information ratio
-- [ ] Add optimization UI to Portfolio Analysis page
+- [x] Add optimization UI to Portfolio Analysis page
 
 **New Dependencies**: `pypfopt` (or scipy.optimize)
 **Files to Create**: `src/tools/portfolio_optimizer.py`, `src/tools/benchmark.py`
@@ -265,12 +265,12 @@
 
 **Tasks**:
 
-- [ ] Implement validation in data provider (`src/data/validator.py`)
+- [x] Implement validation in data provider (`src/data/validator.py`)
   - Stale data detection (market hours awareness)
   - Missing field handling with defaults/warnings
   - Price outlier detection (>20% daily move flagged)
   - Cross-provider consistency checks
-- [ ] Fix news fetcher sample data fallback
+- [x] Fix news fetcher sample data fallback
   - Log warnings when falling back to sample data
   - Try multiple news sources before fallback
   - Make fallback behavior configurable

@@ -9,6 +9,7 @@ from datetime import datetime
 from langchain_core.tools import BaseTool, tool
 from src.agents.base import BaseAgent
 from src.tools.document_search import search_transcripts
+from src.tools.social_sentiment import get_reddit_sentiment, get_social_sentiment_composite
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -67,7 +68,42 @@ class SentimentAnalystAgent(BaseAgent):
             
             return {"analyst_count": len(rating_data), "consensus": consensus, "average_score": round(avg_score, 2)}
         
-        return [analyze_news_sentiment_tool, analyze_analyst_ratings_tool, search_transcripts]
+        @tool("get_reddit_sentiment")
+        def get_reddit_sentiment_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Get Reddit sentiment for a stock from r/wallstreetbets, r/stocks, r/investing.
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with post count, average sentiment, top posts, and subreddit breakdown.
+            """
+            return get_reddit_sentiment(symbol)
+
+        @tool("get_composite_sentiment")
+        def get_composite_sentiment_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Get composite social + news sentiment for a stock.
+
+            Combines Reddit sentiment (30% weight) with news sentiment (70% weight)
+            for a more balanced view.
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with composite score, label, and component breakdowns.
+            """
+            return get_social_sentiment_composite(symbol)
+
+        return [
+            analyze_news_sentiment_tool,
+            analyze_analyst_ratings_tool,
+            search_transcripts,
+            get_reddit_sentiment_tool,
+            get_composite_sentiment_tool,
+        ]
     
     def _get_system_prompt(self) -> str:
         """Get the system prompt for sentiment analysis with ReAct reasoning."""

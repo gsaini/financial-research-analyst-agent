@@ -11,6 +11,7 @@ import numpy as np
 from langchain_core.tools import BaseTool, tool
 from src.agents.base import BaseAgent
 from src.tools.performance_tracker import track_performance
+from src.tools.macro_data import get_rate_environment
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -167,6 +168,20 @@ class RiskAnalystAgent(BaseAgent):
             result = track_performance(symbol)
             return json.dumps(result, indent=2, default=str)
 
+        @tool("get_rate_environment")
+        def get_rate_environment_tool() -> Dict[str, Any]:
+            """
+            Get the current macroeconomic rate environment from FRED.
+
+            Returns Fed stance (hiking/cutting/holding), inflation trend,
+            real rate, and sector-level impact assessment.
+            Useful for contextualizing risk metrics with macro backdrop.
+
+            Returns:
+                Dictionary with fed_stance, inflation_trend, real_rate, sector_impact.
+            """
+            return get_rate_environment()
+
         return [
             calculate_volatility_tool,
             calculate_var_tool,
@@ -175,6 +190,7 @@ class RiskAnalystAgent(BaseAgent):
             calculate_sortino_ratio_tool,
             calculate_beta_tool,
             track_stock_performance_tool,
+            get_rate_environment_tool,
         ]
     
     def _get_system_prompt(self) -> str:
