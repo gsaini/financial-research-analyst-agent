@@ -12,6 +12,7 @@ from langchain_core.tools import BaseTool, tool
 from src.agents.base import BaseAgent
 from src.tools.performance_tracker import track_performance
 from src.tools.macro_data import get_rate_environment
+from src.tools.monte_carlo import simulate_stock, probability_of_target
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -182,6 +183,36 @@ class RiskAnalystAgent(BaseAgent):
             """
             return get_rate_environment()
 
+        @tool("run_monte_carlo")
+        def run_monte_carlo_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Run Monte Carlo simulation (10,000 paths) for a stock.
+
+            Uses Geometric Brownian Motion with historical drift and volatility.
+            Returns VaR, CVaR, price distributions, and probability metrics.
+
+            Args:
+                symbol: Stock ticker symbol (e.g., 'AAPL').
+
+            Returns:
+                Dictionary with simulation statistics, VaR/CVaR, and distribution.
+            """
+            return simulate_stock(symbol)
+
+        @tool("probability_of_price_target")
+        def probability_of_price_target_tool(symbol: str, target_price: float) -> Dict[str, Any]:
+            """
+            Calculate Monte Carlo probability of reaching a target price.
+
+            Args:
+                symbol: Stock ticker symbol (e.g., 'AAPL').
+                target_price: Price target to evaluate.
+
+            Returns:
+                Dictionary with probability, expected days to touch, and interpretation.
+            """
+            return probability_of_target(symbol, target_price)
+
         return [
             calculate_volatility_tool,
             calculate_var_tool,
@@ -191,6 +222,8 @@ class RiskAnalystAgent(BaseAgent):
             calculate_beta_tool,
             track_stock_performance_tool,
             get_rate_environment_tool,
+            run_monte_carlo_tool,
+            probability_of_price_target_tool,
         ]
     
     def _get_system_prompt(self) -> str:

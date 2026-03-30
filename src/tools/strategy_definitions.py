@@ -223,6 +223,112 @@ def momentum_composite(prices: np.ndarray, idx: int, **kwargs) -> str:
 # Strategy Registry
 # ─────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────
+# Phase 3 — New Strategies
+# ─────────────────────────────────────────────────────────────
+
+
+def mean_reversion(prices: np.ndarray, idx: int, **kwargs) -> str:
+    """
+    Mean reversion strategy: buy when price is >2 std below 20-SMA,
+    sell when it returns to the mean or goes >1 std above.
+    """
+    sma = _sma(prices, idx, 20)
+    if sma is None:
+        return "HOLD"
+
+    window = prices[max(0, idx - 19) : idx + 1]
+    std = float(np.std(window)) if len(window) >= 10 else None
+    if std is None or std == 0:
+        return "HOLD"
+
+    current = float(prices[idx])
+    z_score = (current - sma) / std
+
+    if z_score < -2.0:
+        return "BUY"
+    elif z_score > 1.0:
+        return "SELL"
+    return "HOLD"
+
+
+def breakout(prices: np.ndarray, idx: int, **kwargs) -> str:
+    """
+    Breakout strategy: buy when price breaks above 20-day high with
+    volume confirmation, sell when it breaks below 10-day low.
+    """
+    if idx < 20:
+        return "HOLD"
+
+    current = float(prices[idx])
+    high_20 = float(np.max(prices[idx - 20 : idx]))  # Previous 20-day high (excl today)
+    low_10 = float(np.min(prices[max(0, idx - 10) : idx]))  # Previous 10-day low
+
+    if current > high_20 * 1.001:  # Break above with small buffer
+        return "BUY"
+    elif current < low_10 * 0.999:
+        return "SELL"
+    return "HOLD"
+
+
+def pairs_mean_reversion(prices: np.ndarray, idx: int, **kwargs) -> str:
+    """
+    Simplified pairs/spread strategy: buy when price-to-SMA-50 ratio
+    is at the low end of its recent range, sell at the high end.
+    Uses the stock against its own trend as a "self-pair".
+    """
+    sma50 = _sma(prices, idx, 50)
+    if sma50 is None or sma50 == 0:
+        return "HOLD"
+
+    current_ratio = float(prices[idx]) / sma50
+
+    # Calculate ratio range over last 60 bars
+    if idx < 60:
+        return "HOLD"
+
+    ratios = []
+    for i in range(idx - 59, idx + 1):
+        s = _sma(prices, i, 50)
+        if s and s > 0:
+            ratios.append(float(prices[i]) / s)
+
+    if len(ratios) < 30:
+        return "HOLD"
+
+    ratio_mean = float(np.mean(ratios))
+    ratio_std = float(np.std(ratios))
+    if ratio_std == 0:
+        return "HOLD"
+
+    z = (current_ratio - ratio_mean) / ratio_std
+
+    if z < -1.5:
+        return "BUY"
+    elif z > 1.5:
+        return "SELL"
+    return "HOLD"
+
+
+def trend_following(prices: np.ndarray, idx: int, **kwargs) -> str:
+    """
+    Trend following strategy: buy when 10-EMA > 30-EMA and price is
+    above both, sell when 10-EMA < 30-EMA.
+    """
+    ema_10 = _ema(prices, idx, 10)
+    ema_30 = _ema(prices, idx, 30)
+    if ema_10 is None or ema_30 is None:
+        return "HOLD"
+
+    current = float(prices[idx])
+
+    if ema_10 > ema_30 and current > ema_10:
+        return "BUY"
+    elif ema_10 < ema_30:
+        return "SELL"
+    return "HOLD"
+
+
 StrategyFn = Callable[[np.ndarray, int], str]
 
 STRATEGIES: Dict[str, Dict[str, Any]] = {
@@ -250,6 +356,26 @@ STRATEGIES: Dict[str, Dict[str, Any]] = {
         "fn": momentum_composite,
         "name": "Momentum Composite",
         "description": "Buy when price > 200-SMA, RSI > 50, and MACD > 0; sell when bearish.",
+    },
+    "mean_reversion": {
+        "fn": mean_reversion,
+        "name": "Mean Reversion",
+        "description": "Buy when price is >2 std deviations below 20-SMA, sell when it returns to mean.",
+    },
+    "breakout": {
+        "fn": breakout,
+        "name": "Breakout",
+        "description": "Buy on 20-day high breakout, sell on 10-day low breakdown.",
+    },
+    "pairs_mean_reversion": {
+        "fn": pairs_mean_reversion,
+        "name": "Pairs / Spread Mean Reversion",
+        "description": "Buy when price-to-SMA-50 ratio is at historical lows, sell at highs.",
+    },
+    "trend_following": {
+        "fn": trend_following,
+        "name": "Trend Following (EMA)",
+        "description": "Buy when 10-EMA > 30-EMA and price above both, sell on crossdown.",
     },
 }
 

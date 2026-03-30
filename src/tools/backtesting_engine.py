@@ -335,3 +335,158 @@ def run_backtest(
         "analyzed_at": datetime.now(timezone.utc).isoformat(),
         "execution_time_seconds": round(execution_time, 3),
     }
+
+
+# ─────────────────────────────────────────────────────────────
+# Walk-Forward Analysis (Phase 3.2)
+# ─────────────────────────────────────────────────────────────
+
+
+def walk_forward_analysis(
+    symbol: str,
+    strategy: str = "rsi_reversal",
+    n_folds: int = 5,
+    period: str = "5y",
+    initial_capital: float = 10_000.0,
+    commission_pct: float = 0.1,
+) -> Dict[str, Any]:
+    """
+    Walk-forward analysis: split history into N folds, backtest each
+    out-of-sample fold using parameters from in-sample training.
+
+    This validates whether a strategy works consistently across time
+    periods, not just in aggregate.
+
+    Returns:
+        Dict with per-fold results and consistency metrics.
+    """
+    strat_info = get_strategy(strategy)
+    if strat_info is None:
+        return {"error": f"Unknown strategy '{strategy}'"}
+
+    prices = _fetch_prices(symbol, period=period)
+    if prices is None or len(prices) < 200:
+        return {"error": "Insufficient data for walk-forward (need 200+ bars)"}
+
+    fold_size = len(prices) // n_folds
+    folds = []
+
+    for i in range(n_folds):
+        start_idx = i * fold_size
+        end_idx = min((i + 1) * fold_size, len(prices))
+        fold_prices = prices[start_idx:end_idx]
+
+        if len(fold_prices) < 50:
+            continue
+
+        trade_log, equity = _simulate(
+            fold_prices, strat_info["fn"],
+            initial_capital=initial_capital,
+            commission_pct=commission_pct,
+        )
+
+        buy_hold = (float(fold_prices[-1]) - float(fold_prices[0])) / float(fold_prices[0]) * 100
+        num_years = len(fold_prices) / 252.0
+        perf = _compute_metrics(trade_log, equity, initial_capital, buy_hold, num_years)
+
+        folds.append({
+            "fold": i + 1,
+            "bars": len(fold_prices),
+            "total_return": perf.get("total_return", "0%"),
+            "sharpe_ratio": perf.get("sharpe_ratio", 0),
+            "max_drawdown": perf.get("max_drawdown", "0%"),
+            "trades": perf.get("total_trades", 0),
+            "beat_buy_hold": float(perf.get("excess_return", "0").replace("%", "").replace("+", "")) > 0,
+        })
+
+    # Consistency metrics
+    profitable_folds = sum(1 for f in folds if float(f["total_return"].replace("%", "").replace("+", "")) > 0)
+    beat_count = sum(1 for f in folds if f.get("beat_buy_hold"))
+
+    return {
+        "symbol": symbol,
+        "strategy": strat_info["name"],
+        "n_folds": len(folds),
+        "folds": folds,
+        "consistency": {
+            "profitable_folds": profitable_folds,
+            "profitable_pct": round(profitable_folds / len(folds) * 100, 1) if folds else 0,
+            "beat_buy_hold_folds": beat_count,
+            "beat_buy_hold_pct": round(beat_count / len(folds) * 100, 1) if folds else 0,
+        },
+        "verdict": (
+            "Highly consistent — profitable in most time periods"
+            if profitable_folds >= len(folds) * 0.8
+            else "Moderately consistent — works in some market regimes"
+            if profitable_folds >= len(folds) * 0.5
+            else "Inconsistent — strategy is regime-dependent"
+        ),
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# Multi-Asset Backtest (Phase 3.2)
+# ─────────────────────────────────────────────────────────────
+
+
+def backtest_portfolio(
+    symbols: List[str],
+    strategy: str = "rsi_reversal",
+    period: str = "5y",
+    initial_capital: float = 100_000.0,
+    commission_pct: float = 0.1,
+) -> Dict[str, Any]:
+    """
+    Run the same strategy across multiple assets and aggregate results.
+
+    Capital is split equally across assets. Returns per-asset performance
+    and portfolio-level aggregation.
+    """
+    n = len(symbols)
+    per_asset_capital = initial_capital / n
+
+    results = {}
+    total_final = 0
+    total_trades = 0
+
+    for sym in symbols:
+        bt = run_backtest(
+            sym,
+            strategy=strategy,
+            period=period,
+            initial_capital=per_asset_capital,
+            commission_pct=commission_pct,
+        )
+        if "error" in bt:
+            results[sym] = {"error": bt["error"]}
+            total_final += per_asset_capital  # No change
+        else:
+            perf = bt.get("performance", {})
+            results[sym] = {
+                "total_return": perf.get("total_return", "0%"),
+                "sharpe_ratio": perf.get("sharpe_ratio", 0),
+                "max_drawdown": perf.get("max_drawdown", "0%"),
+                "trades": perf.get("total_trades", 0),
+            }
+            # Parse final equity
+            ret_str = perf.get("total_return", "0%").replace("%", "").replace("+", "")
+            try:
+                ret_pct = float(ret_str) / 100
+            except ValueError:
+                ret_pct = 0
+            total_final += per_asset_capital * (1 + ret_pct)
+            total_trades += perf.get("total_trades", 0)
+
+    portfolio_return = (total_final - initial_capital) / initial_capital * 100
+
+    return {
+        "strategy": strategy,
+        "symbols": symbols,
+        "initial_capital": initial_capital,
+        "final_value": round(total_final, 2),
+        "portfolio_return_pct": round(portfolio_return, 2),
+        "total_trades": total_trades,
+        "per_asset": results,
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
+    }

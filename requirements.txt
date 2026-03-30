@@ -66,9 +66,10 @@ plotly>=5.18.0
 matplotlib>=3.8.2
 seaborn>=0.13.1
 
-# PDF Generation
+# PDF & Excel Generation
 reportlab>=4.0.8
 pypdf>=4.0.1
+openpyxl>=3.1.2              # Excel export (Phase 3)
 
 # Utilities
 python-dotenv>=1.0.0

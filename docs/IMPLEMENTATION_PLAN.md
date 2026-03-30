@@ -287,13 +287,13 @@
 
 **Tasks**:
 
-- [ ] Monte Carlo risk tool (`src/tools/monte_carlo.py`)
+- [x] Monte Carlo risk tool (`src/tools/monte_carlo.py`)
   - Geometric Brownian Motion simulation
   - 10,000+ paths for VaR/CVaR estimation
   - Probability of reaching target price
-  - Portfolio-level simulation with correlations
-- [ ] Integrate with RiskAnalyst
-- [ ] Add visualization (distribution plots, fan charts)
+  - Portfolio-level simulation with correlations (Cholesky)
+- [x] Integrate with RiskAnalyst
+- [x] Add visualization (distribution plots, fan charts)
 
 ---
 
@@ -301,10 +301,10 @@
 
 **Tasks**:
 
-- [ ] Add more strategies (mean reversion, breakout, pairs trading)
-- [ ] Walk-forward analysis
-- [ ] Multi-asset backtesting
-- [ ] Transaction cost modeling improvements
+- [x] Add more strategies (mean reversion, breakout, pairs trading, trend following)
+- [x] Walk-forward analysis
+- [x] Multi-asset backtesting
+- [x] Transaction cost modeling improvements
 
 ---
 
@@ -312,9 +312,9 @@
 
 **Tasks**:
 
-- [ ] Complete PDF generation pipeline
-- [ ] Add Excel export (openpyxl)
-- [ ] Report templates (executive summary, deep dive, portfolio review)
+- [x] Complete PDF generation pipeline
+- [x] Add Excel export (openpyxl)
+- [x] Report templates (executive summary, deep dive, portfolio review)
 
 ---
 
@@ -322,10 +322,10 @@
 
 **Tasks**:
 
-- [ ] Define SQLAlchemy ORM models for analyses, portfolios, watchlists
-- [ ] Session-based user identification (no full auth yet)
-- [ ] Persistent watchlists and portfolio tracking
-- [ ] Analysis history with comparison
+- [x] Define SQLAlchemy ORM models for analyses, portfolios, watchlists
+- [x] Session-based user identification (no full auth yet)
+- [x] Persistent watchlists and portfolio tracking
+- [x] Analysis history with comparison
 
 ---
 
@@ -333,9 +333,9 @@
 
 **Tasks**:
 
-- [ ] API key authentication for API routes
-- [ ] Rate limiting enforcement
-- [ ] Input sanitization audit
+- [x] API key authentication for API routes
+- [x] Rate limiting enforcement
+- [x] Input sanitization audit
 
 ---
 
