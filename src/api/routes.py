@@ -1169,6 +1169,67 @@ async def http_exception_handler(request, exc):
     )
 
 
+# ── WebSocket: Real-Time Alerts (Phase 4) ────────────────────
+
+from fastapi import WebSocket, WebSocketDisconnect
+
+
+@app.websocket("/ws/alerts")
+async def websocket_alerts(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time alert notifications.
+
+    Clients connect and receive JSON messages when alerts trigger.
+    Send {"action": "subscribe", "symbols": ["AAPL"]} to subscribe.
+    Send {"action": "add_alert", "symbol": "AAPL", "type": "price_above", "threshold": 200} to add alerts.
+    """
+    await websocket.accept()
+    logger.info("WebSocket client connected for alerts")
+
+    try:
+        from src.tools.alerts import get_alert_manager
+        manager = get_alert_manager()
+
+        while True:
+            # Receive client messages (non-blocking with timeout)
+            try:
+                data = await asyncio.wait_for(websocket.receive_json(), timeout=30)
+
+                action = data.get("action", "")
+                if action == "add_alert":
+                    result = manager.add_alert(
+                        symbol=data.get("symbol", ""),
+                        alert_type=data.get("type", "price_above"),
+                        threshold=data.get("threshold", 0),
+                    )
+                    await websocket.send_json({"type": "alert_added", "data": result})
+
+                elif action == "list":
+                    alerts = manager.list_alerts()
+                    await websocket.send_json({"type": "alert_list", "data": alerts})
+
+                elif action == "check":
+                    triggered = manager.evaluate_all()
+                    if triggered:
+                        await websocket.send_json({"type": "alerts_triggered", "data": triggered})
+                    else:
+                        await websocket.send_json({"type": "no_alerts", "data": []})
+
+            except asyncio.TimeoutError:
+                # Periodic check for triggered alerts
+                triggered = manager.evaluate_all()
+                if triggered:
+                    await websocket.send_json({"type": "alerts_triggered", "data": triggered})
+
+    except WebSocketDisconnect:
+        logger.info("WebSocket client disconnected")
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+
+
+import asyncio
+
+
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}")

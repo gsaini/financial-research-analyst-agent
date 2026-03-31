@@ -339,20 +339,20 @@
 
 ---
 
-## Phase 4: Advanced Features (P3 — Future)
->
-> Deferred, planned for later stages
+## Phase 4: Advanced Features (P3)
 
-- Real-time streaming (Polygon.io, Alpaca, IEX Cloud)
-- Real-time alerts and notifications
-- Factor modeling (Fama-French)
-- Tax-loss harvesting
-- Strategy optimization (genetic algorithms)
-- Performance attribution (Brinson)
-- Mobile-responsive UI
-- Scheduled reports and email digests
-- Supply chain analysis
-- Dark/light theme toggle
+**Goal**: Advanced analytics, automation, and UX polish
+
+- [x] Factor modeling — Fama-French style decomposition via ETF proxies (`src/tools/factor_model.py`)
+- [x] Performance attribution — Brinson-Fachler allocation/selection/interaction effects (`src/tools/brinson_attribution.py`)
+- [x] Tax-loss harvesting — identify harvestable losses, replacement securities, wash sale warnings (`src/tools/tax_loss_harvesting.py`)
+- [x] Strategy optimization — genetic algorithm parameter tuning with train/validation split (`src/tools/strategy_optimizer.py`)
+- [x] Supply chain analysis — suppliers, customers, competitors, correlation risk (`src/tools/supply_chain.py`)
+- [x] Real-time alerts — price/volume/technical signal alerts with WebSocket endpoint (`src/tools/alerts.py`, `ws/alerts`)
+- [x] Scheduled reports — daily/weekly/monthly digests, SMTP email delivery with disk fallback (`src/tools/scheduled_reports.py`)
+- [x] Dark/light theme toggle — dual color palette with `render_theme_toggle()` in header
+- [x] Mobile-responsive UI — responsive breakpoints for 768px and 480px
+- [ ] Real-time streaming (Polygon.io, Alpaca, IEX Cloud) — deferred pending API subscriptions
 
 ---
 

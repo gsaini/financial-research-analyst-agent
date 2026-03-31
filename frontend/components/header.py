@@ -147,6 +147,13 @@ def render_header():
                     ):
                         st.switch_page(page_path)
 
+    # Theme toggle (compact, in-line)
+    from utils.theme import render_theme_toggle
+    with st.container():
+        c1, c2 = st.columns([10, 1])
+        with c2:
+            render_theme_toggle()
+
     # Divider
     st.markdown(
         "<div style='height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.3), transparent); margin: 0.35rem 0 0.5rem;'></div>",
