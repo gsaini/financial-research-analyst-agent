@@ -103,29 +103,49 @@ This AI agent system addresses these challenges by:
 | 🔍 **Key Observations**            | Cross-dimensional insights, confluences, anomalies & ranked signals     |
 | 👤 **Insider & Institutional**     | Track insider transactions, institutional holdings & smart money score  |
 | 📊 **Options Flow Analysis**       | Put/Call ratios, implied volatility skew, max pain & unusual activity   |
-| 📑 **Report Generation**           | Automated investment research reports                                   |
+| 📑 **Report Generation**           | PDF & Excel reports with executive summary, deep dive templates         |
 | 🧠 **RAG Document Intelligence**   | Ingest & query SEC filings (10-K, 10-Q, 8-K) and earnings transcripts  |
 | 🔄 **ReAct Multi-Step Reasoning**  | Agents think step-by-step with few-shot examples and confidence scoring |
 | 🗃️ **Multi-Provider Data**         | YFinance + FMP + Alpha Vantage with automatic fallback & validation     |
 | 💡 **LLM-Powered Insights**        | Cross-dimensional synthesis with contradiction detection & historical context |
-| 🔔 **Alert System**                | Configurable alerts for market conditions                               |
-| 🌐 **API Integration**             | REST API for external system integration                                |
+| 🌍 **Macro Economic Data**         | FRED API: Fed funds, CPI, GDP, unemployment, treasury yields           |
+| 💬 **Social Media Sentiment**      | Reddit (WSB, r/stocks, r/investing) sentiment + composite scoring      |
+| 💰 **DCF Valuation Model**         | WACC/CAPM, 3-scenario DCF, 5x5 sensitivity matrix, margin of safety   |
+| 🤖 **ML Price Forecasting**        | GradientBoosting 30/60/90-day targets with confidence intervals        |
+| 🔎 **Anomaly Detection**           | Z-score volume/price anomalies, gap events, regime change detection    |
+| 📐 **Portfolio Optimization**      | Markowitz mean-variance, efficient frontier, risk-parity allocation    |
+| 📊 **Benchmark Comparison**        | Alpha, beta, tracking error, information ratio, return attribution     |
+| 🎲 **Monte Carlo Simulation**      | 10K-path GBM for VaR/CVaR, target price probability, portfolio risk   |
+| 🧬 **Factor Modeling**             | Fama-French style decomposition (market, size, value, momentum, quality) |
+| 🏷️ **Brinson Attribution**         | Allocation, selection & interaction effects at sector level            |
+| 🧮 **Tax-Loss Harvesting**         | Identify harvestable losses, replacement securities, wash sale warnings |
+| 🧪 **Strategy Optimization**       | Genetic algorithm parameter tuning with overfitting detection          |
+| 🔗 **Supply Chain Analysis**       | Map suppliers, customers, competitors with correlation risk scoring    |
+| 🔔 **Real-Time Alerts**            | Price/volume/RSI/52-week alerts with WebSocket push notifications      |
+| 📬 **Scheduled Reports**           | Daily/weekly/monthly digests with SMTP email or disk delivery          |
+| 🌓 **Dark/Light Theme**            | Toggle between Bloomberg-dark and light color modes                    |
+| 📱 **Mobile-Responsive UI**        | Responsive breakpoints at 768px and 480px                              |
+| 🔒 **API Security**                | API key auth, rate limiting, input sanitization (SQL/XSS/injection)    |
+| 💾 **Persistence Layer**           | SQLAlchemy ORM: watchlists, portfolios, analysis history               |
+| 🌐 **API Integration**             | REST API + WebSocket for external system integration                   |
 | 📖 **Interactive API Docs**        | Swagger UI & ReDoc with OpenAPI 3.0 specification                       |
-| 📱 **Web Dashboard**               | Interactive visualization dashboard                                     |
+| 📱 **Web Dashboard**               | 13-page interactive visualization dashboard                            |
 
 ### Agent Types
 
-1. **Data Collector Agent**: Gathers financial data from multiple providers (YFinance, FMP, Alpha Vantage)
-2. **Technical Analyst Agent**: Multi-step technical analysis with cross-indicator reasoning
-3. **Fundamental Analyst Agent**: Value trap detection, peer comparison, SEC filing analysis via RAG
-4. **Sentiment Analyst Agent**: Triangulates news, analyst ratings, and earnings transcript tone
-5. **Risk Analyst Agent**: Layered risk assessment — volatility, tail risk, beta, drawdown
-6. **Thematic Analyst Agent**: Analyzes stocks grouped by investment themes and megatrends
-7. **Disruption Analyst Agent**: Identifies market disruptors and at-risk companies via R&D, growth, and margin analysis
-8. **Earnings Analyst Agent**: Tracks quarterly EPS surprises, beat/miss patterns, and earnings quality
-9. **Performance Analyst Agent**: Tracks multi-horizon returns, benchmark comparison, risk-adjusted metrics, and drawdown analysis
-10. **Report Generator Agent**: Compiles insights into structured reports
-11. **Orchestrator Agent**: Coordinates all agents with cross-agent conflict detection and RAG document ingestion
+| # | Agent | Key Capabilities |
+|---|-------|-----------------|
+| 1 | **Data Collector** | Multi-provider data gathering (YFinance, FMP, Alpha Vantage) with auto-fallback |
+| 2 | **Technical Analyst** | RSI, MACD, Bollinger, patterns + ML price forecasting + anomaly/regime detection |
+| 3 | **Fundamental Analyst** | Valuation, DCF (3-scenario), peer comparison, SEC filings via RAG, macro context |
+| 4 | **Sentiment Analyst** | News + Reddit social sentiment, analyst ratings, earnings transcript tone |
+| 5 | **Risk Analyst** | VaR/CVaR, Monte Carlo (10K paths), beta, drawdown, rate environment context |
+| 6 | **Thematic Analyst** | Investment themes (AI, EV, Green Energy), momentum & health scoring |
+| 7 | **Disruption Analyst** | R&D intensity, disruption scoring, disruptor vs at-risk classification |
+| 8 | **Earnings Analyst** | EPS surprises, beat/miss patterns, earnings quality scoring |
+| 9 | **Performance Analyst** | Multi-horizon returns, benchmark comparison, Sharpe/Sortino/Beta |
+| 10 | **Report Generator** | PDF & Excel reports, executive summaries, multi-agent insight aggregation |
+| 11 | **Orchestrator** | Cross-agent conflict detection, RAG document ingestion, confidence scoring |
 
 ---
 
@@ -196,10 +216,28 @@ This AI agent system addresses these challenges by:
 │  │ • Agent RAG Mixin (optional)    │  │ • Watch Items & Catalysts            │  │
 │  └─────────────────────────────────┘  └──────────────────────────────────────┘  │
 │                                                                                  │
+│  ┌─────────────────────────────────┐  ┌──────────────────────────────────────┐  │
+│  │ PREDICTIVE MODELS               │  │ PORTFOLIO ANALYTICS                  │  │
+│  │                                 │  │                                      │  │
+│  │ • ML Price Forecast (GBM)       │  │ • Markowitz Optimization             │  │
+│  │ • DCF Valuation (3 scenarios)   │  │ • Monte Carlo Simulation (10K)       │  │
+│  │ • Anomaly Detection (Z-score)   │  │ • Fama-French Factor Model           │  │
+│  │ • Strategy Optimizer (GA)       │  │ • Brinson Attribution                │  │
+│  └─────────────────────────────────┘  └──────────────────────────────────────┘  │
+│                                                                                  │
+│  ┌─────────────────────────────────┐  ┌──────────────────────────────────────┐  │
+│  │ MACRO & ALTERNATIVE DATA        │  │ AUTOMATION & ALERTS                  │  │
+│  │                                 │  │                                      │  │
+│  │ • FRED API (rates, CPI, GDP)    │  │ • Real-Time Alert Engine (9 types)   │  │
+│  │ • Reddit Sentiment (WSB)        │  │ • WebSocket Push Notifications       │  │
+│  │ • Supply Chain Mapping          │  │ • Scheduled Report Digests           │  │
+│  │ • Tax-Loss Harvesting           │  │ • Email Delivery (SMTP)              │  │
+│  └─────────────────────────────────┘  └──────────────────────────────────────┘  │
+│                                                                                  │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │ REPORT GENERATOR AGENT                                                    │  │
 │  │                                                                           │  │
-│  │ • PDF / Markdown / JSON Reports  • Actionable Recommendations             │  │
+│  │ • PDF / Excel / Markdown / JSON  • Actionable Recommendations             │  │
 │  │ • Executive Summaries            • Multi-Agent Insight Aggregation        │  │
 │  └───────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                  │
@@ -208,7 +246,8 @@ This AI agent system addresses these challenges by:
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐ ┌──────────┐ │
 │  │ Vector Store │ │ Cache Layer  │ │ Database     │ │ Data Valid.│ │ Multi-   │ │
 │  │ (ChromaDB)   │ │ (Redis)      │ │ (PostgreSQL) │ │ (Quality)  │ │ Provider │ │
-│  │ + RAG Embeds │ │              │ │              │ │ + Outliers │ │ Fallback │ │
+│  │ + RAG Embeds │ │              │ │ + ORM Models │ │ + Outliers │ │ Fallback │ │
+│  │              │ │              │ │ + Watchlists │ │ + Mkt Hrs  │ │ + FRED   │ │
 │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘ └──────────┘ │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -221,14 +260,17 @@ This AI agent system addresses these challenges by:
 | **LLM**             | Ollama (Llama 4, Mistral) / Groq / LM Studio |
 | **RAG**             | Semantic chunking, ChromaDB, cross-encoder re-ranking |
 | **Embeddings**      | Sentence Transformers / HuggingFace / Ollama |
+| **ML/Forecasting**  | scikit-learn (GradientBoosting), NumPy, SciPy |
 | **Vector Store**    | ChromaDB / Qdrant / Milvus / Weaviate        |
-| **Data Providers**  | YFinance, Financial Modeling Prep, Alpha Vantage (auto-fallback) |
-| **Backend**         | FastAPI, Python 3.14+                        |
-| **Data Processing** | Pandas, NumPy                                |
+| **Data Providers**  | YFinance, FMP, Alpha Vantage, FRED, Reddit (auto-fallback) |
+| **Backend**         | FastAPI + WebSocket, Python 3.14+            |
+| **Data Processing** | Pandas, NumPy, SciPy                         |
 | **Visualization**   | Plotly, TradingView Lightweight Charts       |
-| **Frontend**        | Streamlit, HTML5, CSS3                       |
-| **Database**        | PostgreSQL / SQLite                          |
+| **Frontend**        | Streamlit, HTML5, CSS3 (dark/light themes)   |
+| **Database**        | PostgreSQL / SQLite + SQLAlchemy ORM          |
 | **Caching**         | Redis                                        |
+| **Reports**         | reportlab (PDF), openpyxl (Excel)             |
+| **Security**        | API key auth, rate limiting, input sanitization |
 
 ---
 
@@ -299,6 +341,9 @@ ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key  # Optional
 FMP_API_KEY=your_fmp_api_key                  # Optional (free tier: 250 req/day)
 NEWS_API_KEY=your_news_api_key                # Optional
 
+# FRED Macroeconomic Data (free key)
+FRED_API_KEY=your_fred_api_key                # Optional
+
 # Database Configuration
 DATABASE_URL=sqlite:///./data/financial_agent.db
 REDIS_URL=redis://localhost:6379
@@ -312,6 +357,17 @@ DEBUG=false
 LOG_LEVEL=INFO
 API_HOST=0.0.0.0
 API_PORT=8000
+
+# Security (optional — disabled in dev mode)
+# API_KEYS=key1,key2                          # Comma-separated API keys
+# RATE_LIMIT_REQUESTS=100                     # Per-window limit
+# RATE_LIMIT_WINDOW_SECONDS=60
+
+# Email Digests (optional)
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USER=your@email.com
+# SMTP_PASSWORD=your_app_password
 ```
 
 ### Agent Configuration
@@ -438,7 +494,7 @@ pip install -r frontend/requirements.txt
 streamlit run frontend/app.py
 ```
 
-The dashboard provides 12 interactive pages covering stock analysis, thematic investing, peer comparison, market disruption, quarterly earnings, portfolio analysis, reports, financial news, historical performance tracking, AI-powered sentiment analysis, and ETF screening.
+The dashboard provides 13 interactive pages covering stock analysis, thematic investing, peer comparison, market disruption, quarterly earnings, portfolio analysis, reports, financial news, historical performance, AI-powered sentiment, ETF screening, and macroeconomic data — with dark/light theme toggle and mobile-responsive layout.
 
 ### Command Line Interface
 
@@ -461,7 +517,7 @@ The API includes built-in interactive documentation powered by **OpenAPI 3.0** s
 
 ### Swagger UI
 
-Access the interactive Swagger UI at: **http://localhost:8000/docs**
+Access the interactive Swagger UI at: **<http://localhost:8000/docs>**
 
 Features:
 
@@ -472,7 +528,7 @@ Features:
 
 ### ReDoc
 
-Access the ReDoc documentation at: **http://localhost:8000/redoc**
+Access the ReDoc documentation at: **<http://localhost:8000/redoc>**
 
 Features:
 
@@ -483,7 +539,7 @@ Features:
 
 ### OpenAPI JSON Schema
 
-Download the raw OpenAPI specification: **http://localhost:8000/openapi.json**
+Download the raw OpenAPI specification: **<http://localhost:8000/openapi.json>**
 
 Use this to:
 
@@ -914,11 +970,27 @@ financial-research-analyst-agent/
 │   │   ├── sentiment_engine.py  # FinBERT/VADER financial sentiment scoring ✨
 │   │   ├── news_impact.py       # News volume, trends & source diversity ✨
 │   │   ├── event_analyzer.py   # Event calendar, price windows & pattern analysis ✨
-│   │   ├── strategy_definitions.py # 5 predefined trading strategies ✨
-│   │   ├── backtesting_engine.py  # Strategy simulation & performance metrics ✨
+│   │   ├── strategy_definitions.py # 9 trading strategies (incl. mean reversion, breakout) ✨
+│   │   ├── backtesting_engine.py  # Backtest + walk-forward + multi-asset ✨
+│   │   ├── strategy_optimizer.py  # Genetic algorithm parameter tuning ✨
 │   │   ├── insight_engine.py     # Rule-based observations & ranking
 │   │   ├── llm_insight_engine.py # LLM-powered synthesis + historical context ✨
 │   │   ├── document_search.py   # RAG-powered SEC filing & transcript search ✨
+│   │   ├── macro_data.py        # FRED API: rates, CPI, GDP, yields ✨
+│   │   ├── social_sentiment.py  # Reddit sentiment + composite scoring ✨
+│   │   ├── dcf_model.py         # DCF valuation (WACC, 3 scenarios, sensitivity) ✨
+│   │   ├── ml_forecast.py       # ML price forecasting (GradientBoosting) ✨
+│   │   ├── anomaly_detector.py  # Volume/price anomalies + regime detection ✨
+│   │   ├── portfolio_optimizer.py # Markowitz, efficient frontier, risk-parity ✨
+│   │   ├── benchmark.py         # Alpha/beta/tracking error, attribution ✨
+│   │   ├── monte_carlo.py       # GBM simulation, VaR/CVaR, portfolio risk ✨
+│   │   ├── factor_model.py      # Fama-French factor decomposition ✨
+│   │   ├── brinson_attribution.py # Brinson-Fachler performance attribution ✨
+│   │   ├── tax_loss_harvesting.py # Tax-loss harvesting + wash sale warnings ✨
+│   │   ├── supply_chain.py      # Supplier/customer/competitor mapping ✨
+│   │   ├── alerts.py            # Real-time alert engine (9 types) ✨
+│   │   ├── scheduled_reports.py # Digest generation + SMTP delivery ✨
+│   │   ├── report_export.py     # PDF (reportlab) + Excel (openpyxl) export ✨
 │   │   ├── insider_activity.py   # Insider txns, institutional holdings & smart money
 │   │   └── options_analyzer.py   # Options flow, IV skew, max pain & unusual activity
 │   ├── rag/                        # RAG Pipeline ✨
@@ -935,11 +1007,13 @@ financial-research-analyst-agent/
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── analysis.py         # Analysis data models
-│   │   └── report.py           # Report data models
+│   │   ├── report.py           # Report data models
+│   │   └── persistence.py      # SQLAlchemy ORM: users, watchlists, portfolios, history ✨
 │   ├── api/
 │   │   ├── __init__.py
-│   │   ├── routes.py           # API routes (incl. thematic endpoints)
-│   │   └── schemas.py          # Pydantic schemas (incl. theme schemas)
+│   │   ├── routes.py           # API routes + WebSocket alerts endpoint
+│   │   ├── schemas.py          # Pydantic schemas
+│   │   └── security.py         # API key auth, rate limiting, input sanitization ✨
 │   └── utils/
 │       ├── __init__.py
 │       ├── logger.py           # Logging utility
@@ -962,7 +1036,7 @@ financial-research-analyst-agent/
 ├── frontend/                       # Streamlit web dashboard ✨
 │   ├── app.py                      # Main entry point & landing page
 │   ├── requirements.txt            # Streamlit dependencies
-│   ├── assets/style.css            # Bloomberg-inspired dark theme CSS
+│   ├── assets/style.css            # Dark/light theme CSS + mobile responsive ✨
 │   ├── pages/
 │   │   ├── 1_Dashboard.py          # Market overview & quick analysis
 │   │   ├── 2_Stock_Analysis.py     # Technical + fundamental + sentiment
@@ -975,7 +1049,8 @@ financial-research-analyst-agent/
 │   │   ├── 9_News.py             # Financial news feed
 │   │   ├── 10_Performance.py      # Historical performance tracking
 │   │   ├── 11_Sentiment.py       # Enhanced news & sentiment analysis
-│   │   └── 12_ETF_Screener.py   # ETF screening & analysis ✨
+│   │   ├── 12_ETF_Screener.py   # ETF screening & analysis
+│   │   └── 13_Macro_Economy.py  # FRED macro indicators & rate environment ✨
 │   ├── components/                 # Reusable UI components
 │   │   ├── sidebar.py              # Navigation sidebar
 │   │   ├── charts.py               # TradingView chart wrappers
@@ -985,13 +1060,14 @@ financial-research-analyst-agent/
 │   └── utils/
 │       ├── data_service.py         # Cached tool wrappers
 │       ├── formatters.py           # Number/date formatting
-│       ├── theme.py                # CSS injection & color constants
+│       ├── theme.py                # Dark/light theme toggle + CSS injection ✨
 │       └── session.py              # Session state management
 ├── data/
 │   └── sample_data.csv
 ├── docs/
-│   ├── architecture.md
-│   ├── api_reference.md        # API reference (incl. peer comparison endpoints)
+│   ├── ARCHITECTURE.md         # System architecture design document ✨
+│   ├── IMPLEMENTATION_PLAN.md  # 4-phase implementation roadmap ✨
+│   ├── GAP_ANALYSIS.md         # Gap analysis vs smart financial analyzer ✨
 │   └── SCOPE.md                # Feature scope & enhancement roadmap
 ├── notebooks/
 │   └── exploration.ipynb
@@ -1034,8 +1110,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Yahoo Finance](https://finance.yahoo.com/) - Market Data (Primary)
 - [Financial Modeling Prep](https://financialmodelingprep.com/) - Financial Data API
 - [Alpha Vantage](https://www.alphavantage.co/) - Financial Data API
+- [FRED](https://fred.stlouisfed.org/) - Federal Reserve Economic Data
 - [ChromaDB](https://www.trychroma.com/) - Vector Store for RAG
 - [Sentence Transformers](https://www.sbert.net/) - Embeddings
+- [scikit-learn](https://scikit-learn.org/) - ML Forecasting
+- [SciPy](https://scipy.org/) - Portfolio Optimization
 
 ---
 
