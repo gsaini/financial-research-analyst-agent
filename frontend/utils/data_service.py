@@ -418,6 +418,30 @@ def get_price_forecast(symbol: str) -> dict:
     return _fn(symbol)
 
 
+# ─── Short Interest Analysis ────────────────────────────
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_short_interest(symbol: str) -> dict:
+    """Get short interest analysis and squeeze scoring."""
+    from src.tools.short_interest import analyze_short_interest as _fn
+    return _fn(symbol)
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def compare_short_interest(symbols: tuple) -> dict:
+    """Compare short interest across multiple stocks."""
+    from src.tools.short_interest import compare_short_interest as _fn
+    return _fn(list(symbols))
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_squeeze_watchlist(min_score: int = 50) -> dict:
+    """Screen for short squeeze candidates."""
+    from src.tools.short_interest import get_short_squeeze_watchlist as _fn
+    return _fn(min_squeeze_score=min_score)
+
+
 # ─── Anomaly Detection (Phase 2) ────────────────────────
 
 

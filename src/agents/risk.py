@@ -13,6 +13,7 @@ from src.agents.base import BaseAgent
 from src.tools.performance_tracker import track_performance
 from src.tools.macro_data import get_rate_environment
 from src.tools.monte_carlo import simulate_stock, probability_of_target
+from src.tools.short_interest import analyze_short_interest
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -213,6 +214,22 @@ class RiskAnalystAgent(BaseAgent):
             """
             return probability_of_target(symbol, target_price)
 
+        @tool("analyze_short_interest")
+        def analyze_short_interest_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Analyze short interest and short squeeze potential for a stock.
+
+            Returns shares short, % of float, days to cover, squeeze score (0-100),
+            and risk assessment for both long and short positions.
+
+            Args:
+                symbol: Stock ticker symbol (e.g., 'GME').
+
+            Returns:
+                Dictionary with short interest metrics, squeeze analysis, and risk assessment.
+            """
+            return analyze_short_interest(symbol)
+
         return [
             calculate_volatility_tool,
             calculate_var_tool,
@@ -224,6 +241,7 @@ class RiskAnalystAgent(BaseAgent):
             get_rate_environment_tool,
             run_monte_carlo_tool,
             probability_of_price_target_tool,
+            analyze_short_interest_tool,
         ]
     
     def _get_system_prompt(self) -> str:

@@ -1169,6 +1169,51 @@ async def http_exception_handler(request, exc):
     )
 
 
+# ── Short Interest Analysis (Feature 14) ─────────────────────
+
+
+@router.get("/shorts/{symbol}")
+async def get_short_interest(symbol: str):
+    """Get short interest analysis and squeeze scoring for a stock."""
+    try:
+        from src.tools.short_interest import analyze_short_interest
+        result = analyze_short_interest(symbol.upper())
+        if "error" in result:
+            raise HTTPException(status_code=404, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/shorts/compare")
+async def compare_short_interest(request: Dict[str, Any]):
+    """Compare short interest across multiple stocks."""
+    try:
+        from src.tools.short_interest import compare_short_interest
+        symbols = request.get("symbols", [])
+        if not symbols or len(symbols) < 2:
+            raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
+        result = compare_short_interest(symbols)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/shorts/watchlist")
+async def short_squeeze_watchlist(min_score: int = 50):
+    """Screen stocks for short squeeze potential."""
+    try:
+        from src.tools.short_interest import get_short_squeeze_watchlist
+        result = get_short_squeeze_watchlist(min_squeeze_score=min_score)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── WebSocket: Real-Time Alerts (Phase 4) ────────────────────
 
 from fastapi import WebSocket, WebSocketDisconnect
