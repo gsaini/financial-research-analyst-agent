@@ -22,6 +22,7 @@ NAV_GROUPS = {
     ],
     "Portfolio": [
         ("Portfolio Analysis", "pages/7_Portfolio_Analysis.py", "💼"),
+        ("Dividends", "pages/15_Dividends.py", "💰"),
         ("Reports", "pages/8_Reports.py", "📄"),
     ],
     "Data": [
