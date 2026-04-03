@@ -1169,6 +1169,39 @@ async def http_exception_handler(request, exc):
     )
 
 
+# ── Analyst Consensus (Feature 16) ────────────────────────────
+
+
+@router.get("/analysts/{symbol}")
+async def get_analyst_data(symbol: str):
+    """Get analyst consensus, price targets, and estimate revisions."""
+    try:
+        from src.tools.analyst_tracker import get_analyst_consensus
+        result = get_analyst_consensus(symbol.upper())
+        if "error" in result:
+            raise HTTPException(status_code=404, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/analysts/compare")
+async def compare_analyst_data(request: Dict[str, Any]):
+    """Compare analyst consensus across multiple stocks."""
+    try:
+        from src.tools.analyst_tracker import compare_analyst_consensus
+        symbols = request.get("symbols", [])
+        if not symbols or len(symbols) < 2:
+            raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
+        return compare_analyst_consensus(symbols)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Short Interest Analysis (Feature 14) ─────────────────────
 
 

@@ -25,6 +25,7 @@ from src.tools.peer_comparison import compare_peers
 from src.tools.document_search import search_filings, get_filing_context
 from src.tools.dcf_model import get_dcf_summary
 from src.tools.macro_data import get_macro_context_for_stock
+from src.tools.analyst_tracker import get_analyst_consensus
 import json
 from src.utils.logger import get_logger
 
@@ -188,6 +189,24 @@ class FundamentalAnalystAgent(BaseAgent):
             """
             return get_macro_context_for_stock(symbol)
 
+        @tool("get_analyst_consensus")
+        def get_analyst_consensus_tool(symbol: str) -> Dict[str, Any]:
+            """
+            Get Wall Street analyst consensus for a stock.
+
+            Returns rating distribution (Strong Buy/Buy/Hold/Sell), consensus
+            price target with upside/downside, recent upgrades/downgrades,
+            EPS estimate revisions, and an overall analyst signal score (0-100).
+
+            Args:
+                symbol: Stock ticker symbol (e.g. 'AAPL')
+
+            Returns:
+                Dictionary with consensus_rating, price_targets, recent_changes,
+                estimate_revisions, and analyst_signal.
+            """
+            return get_analyst_consensus(symbol)
+
         return [
             calculate_valuation_ratios_tool,
             calculate_profitability_ratios_tool,
@@ -200,6 +219,7 @@ class FundamentalAnalystAgent(BaseAgent):
             get_filing_context,
             run_dcf_valuation_tool,
             get_macro_context_tool,
+            get_analyst_consensus_tool,
         ]
     
     def _get_system_prompt(self) -> str:

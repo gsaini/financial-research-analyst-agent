@@ -19,6 +19,7 @@ NAV_GROUPS = {
         ("Market Disruption", "pages/5_Market_Disruption.py", "🚀"),
         ("Quarterly Earnings", "pages/6_Quarterly_Earnings.py", "📑"),
         ("Short Interest", "pages/14_Short_Interest.py", "📉"),
+        ("Analyst Consensus", "pages/16_Analyst_Consensus.py", "🎯"),
     ],
     "Portfolio": [
         ("Portfolio Analysis", "pages/7_Portfolio_Analysis.py", "💼"),

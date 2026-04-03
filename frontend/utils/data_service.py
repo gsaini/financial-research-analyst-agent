@@ -418,6 +418,23 @@ def get_price_forecast(symbol: str) -> dict:
     return _fn(symbol)
 
 
+# ─── Analyst Consensus ──────────────────────────────────
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_analyst_consensus(symbol: str) -> dict:
+    """Get analyst consensus, price targets, and estimate revisions."""
+    from src.tools.analyst_tracker import get_analyst_consensus as _fn
+    return _fn(symbol)
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def compare_analyst_consensus(symbols: tuple) -> dict:
+    """Compare analyst consensus across multiple stocks."""
+    from src.tools.analyst_tracker import compare_analyst_consensus as _fn
+    return _fn(list(symbols))
+
+
 # ─── Short Interest Analysis ────────────────────────────
 
 
