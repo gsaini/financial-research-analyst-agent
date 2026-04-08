@@ -418,6 +418,45 @@ def get_price_forecast(symbol: str) -> dict:
     return _fn(symbol)
 
 
+# ─── Alerts (Feature 18) ────────────────────────────────
+
+
+def create_alert(symbol: str, alert_type: str, threshold: float = 0, message: str = "", repeat: bool = False) -> dict:
+    """Create a new alert (not cached — mutates state)."""
+    from src.tools.alerts import add_alert as _fn
+    return _fn(symbol, alert_type, threshold, message, repeat=repeat)
+
+
+def remove_alert(alert_id: str) -> dict:
+    """Remove an alert."""
+    from src.tools.alerts import remove_alert as _fn
+    return _fn(alert_id)
+
+
+def get_all_alerts(status: str = None) -> list:
+    """List all alerts."""
+    from src.tools.alerts import list_alerts as _fn
+    return _fn(status=status)
+
+
+def evaluate_alerts() -> list:
+    """Evaluate all pending alerts."""
+    from src.tools.alerts import check_alerts as _fn
+    return _fn()
+
+
+def get_alert_types() -> list:
+    """Get available alert types."""
+    from src.tools.alerts import get_available_alert_types as _fn
+    return _fn()
+
+
+def get_triggered_alerts() -> list:
+    """Get triggered alert history."""
+    from src.tools.alerts import get_triggered_history as _fn
+    return _fn()
+
+
 # ─── Analyst Consensus ──────────────────────────────────
 
 

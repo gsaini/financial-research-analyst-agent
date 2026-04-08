@@ -1169,6 +1169,79 @@ async def http_exception_handler(request, exc):
     )
 
 
+# ── Alert CRUD Endpoints (Feature 18) ────────────────────────
+
+
+@router.post("/alerts")
+async def create_alert(request: Dict[str, Any]):
+    """Create a new alert."""
+    from src.tools.alerts import add_alert
+    symbol = request.get("symbol", "")
+    alert_type = request.get("type", request.get("alert_type", ""))
+    threshold = request.get("threshold", request.get("value", 0))
+    message = request.get("message", "")
+    repeat = request.get("repeat", False)
+    if not symbol or not alert_type:
+        raise HTTPException(status_code=400, detail="symbol and type are required")
+    return add_alert(symbol, alert_type, threshold, message, repeat=repeat)
+
+
+@router.get("/alerts")
+async def get_alerts(status: Optional[str] = None):
+    """List all alerts. Optional status filter: active, triggered."""
+    from src.tools.alerts import list_alerts
+    return {"alerts": list_alerts(status=status)}
+
+
+@router.get("/alerts/types")
+async def get_alert_types():
+    """List available alert types with descriptions."""
+    from src.tools.alerts import get_available_alert_types
+    return {"types": get_available_alert_types()}
+
+
+@router.get("/alerts/triggered")
+async def get_triggered():
+    """Get recently triggered alerts."""
+    from src.tools.alerts import get_triggered_history
+    return {"triggered": get_triggered_history()}
+
+
+@router.get("/alerts/{alert_id}")
+async def get_single_alert(alert_id: str):
+    """Get a single alert by ID."""
+    from src.tools.alerts import get_alert
+    result = get_alert(alert_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    return result
+
+
+@router.patch("/alerts/{alert_id}")
+async def patch_alert(alert_id: str, request: Dict[str, Any]):
+    """Update an alert."""
+    from src.tools.alerts import update_alert
+    return update_alert(alert_id, **request)
+
+
+@router.delete("/alerts/{alert_id}")
+async def delete_alert(alert_id: str):
+    """Delete an alert."""
+    from src.tools.alerts import remove_alert
+    return remove_alert(alert_id)
+
+
+@router.post("/alerts/evaluate")
+async def evaluate_alerts():
+    """Manually trigger evaluation of all pending alerts."""
+    from src.tools.alerts import check_alerts
+    triggered = check_alerts()
+    return {"evaluated": True, "triggered_count": len(triggered), "triggered": triggered}
+
+
+from typing import Optional
+
+
 # ── Analyst Consensus (Feature 16) ────────────────────────────
 
 
