@@ -8,7 +8,11 @@ import numpy as np
 from utils.theme import inject_css
 from utils.session import init_session_state
 from utils.formatters import format_currency, format_percent, format_large_number
-from utils.data_service import get_stock_price, get_historical_data, get_company_info, get_technical_analysis
+from utils.data_service import (
+    get_stock_price, get_historical_data, get_company_info, get_technical_analysis,
+    optimize_portfolio, get_efficient_frontier, get_correlation_analysis,
+    get_portfolio_benchmark, get_rebalance_suggestions,
+)
 from components.header import render_header
 from components.plotly_charts import create_donut_chart, create_heatmap, create_gauge_chart
 from components.charts import render_area_chart
@@ -253,3 +257,108 @@ if analyze or symbols:
         c2.metric("Expected Return", format_percent(port_mean_return * 100))
         c3.metric("Sharpe Ratio", f"{sharpe:.2f}")
         c4.metric("Max Drawdown", format_percent(-max_dd * 100))
+
+    # ─── Portfolio Optimization (Feature 19) ────────────────
+    st.markdown("---")
+    st.markdown("### Portfolio Optimization")
+    st.caption("Optimize allocation using Modern Portfolio Theory (Markowitz)")
+
+    opt_method = st.selectbox(
+        "Optimization Method",
+        options=["max_sharpe", "min_volatility", "risk_parity"],
+        format_func=lambda x: {
+            "max_sharpe": "Maximum Sharpe Ratio (best risk-adjusted return)",
+            "min_volatility": "Minimum Volatility (lowest risk)",
+            "risk_parity": "Risk Parity (equal risk contribution)",
+        }.get(x, x),
+        key="opt_method",
+    )
+
+    if st.button("Optimize Portfolio", type="primary", key="optimize_btn"):
+        syms_tuple = tuple(valid_symbols)
+
+        with st.spinner("Running portfolio optimization..."):
+            opt_result = optimize_portfolio(syms_tuple, method=opt_method)
+
+        if "error" in opt_result:
+            st.error(opt_result["error"])
+        else:
+            # Optimized weights vs current (equal weight)
+            alloc = opt_result.get("allocation", {})
+            opt_metrics = opt_result.get("portfolio_metrics", {})
+
+            ocol1, ocol2 = st.columns(2)
+
+            with ocol1:
+                st.markdown("**Optimized Allocation**")
+                alloc_rows = []
+                for sym, data in alloc.items():
+                    eq_w = round(100 / len(valid_symbols), 1)
+                    opt_w = data.get("weight_pct", 0)
+                    change = round(opt_w - eq_w, 1)
+                    alloc_rows.append({
+                        "Symbol": sym,
+                        "Current (%)": eq_w,
+                        "Optimal (%)": opt_w,
+                        "Change": f"{change:+.1f}%",
+                    })
+                st.dataframe(pd.DataFrame(alloc_rows), use_container_width=True, hide_index=True)
+
+            with ocol2:
+                st.markdown("**Optimized Metrics**")
+                st.metric("Expected Return", f"{opt_metrics.get('expected_return_pct', 0):.2f}%")
+                st.metric("Volatility", f"{opt_metrics.get('volatility_pct', 0):.2f}%")
+                st.metric("Sharpe Ratio", f"{opt_metrics.get('sharpe_ratio', 0):.3f}")
+
+            # Efficient frontier
+            st.markdown("---")
+            st.markdown("**Efficient Frontier**")
+            with st.spinner("Calculating efficient frontier..."):
+                frontier = get_efficient_frontier(syms_tuple)
+
+            if "error" not in frontier and frontier.get("frontier"):
+                f_data = frontier["frontier"]
+                f_df = pd.DataFrame([
+                    {"Risk (%)": p["volatility_pct"], "Return (%)": p["return_pct"]}
+                    for p in f_data
+                ])
+                st.scatter_chart(f_df, x="Risk (%)", y="Return (%)", color=None)
+
+                # Mark special portfolios
+                for p in f_data:
+                    label = p.get("label")
+                    if label:
+                        st.caption(f"**{label}**: Return {p['return_pct']}%, Risk {p['volatility_pct']}%, Sharpe {p['sharpe']:.3f}")
+
+            # Correlation insights
+            st.markdown("---")
+            st.markdown("**Correlation Insights**")
+            with st.spinner("Analyzing correlations..."):
+                corr_result = get_correlation_analysis(syms_tuple)
+
+            if "error" not in corr_result:
+                insights = corr_result.get("insights", [])
+                rating = corr_result.get("diversification_rating", "N/A")
+                avg = corr_result.get("average_correlation", 0)
+
+                st.markdown(f"**Diversification Rating:** {rating} (avg correlation: {avg:.3f})")
+                for insight in insights:
+                    st.markdown(f"- {insight}")
+
+            # Benchmark comparison
+            st.markdown("---")
+            st.markdown("**vs S&P 500 Benchmark**")
+            eq_weights = tuple([1 / len(valid_symbols)] * len(valid_symbols))
+            with st.spinner("Comparing to benchmark..."):
+                bench = get_portfolio_benchmark(syms_tuple, eq_weights)
+
+            if "error" not in bench:
+                rel = bench.get("relative_metrics", {})
+                bcol1, bcol2, bcol3, bcol4 = st.columns(4)
+                bcol1.metric("Alpha", f"{rel.get('alpha_pct', 0):+.2f}%")
+                bcol2.metric("Beta", f"{rel.get('beta', 0):.3f}")
+                bcol3.metric("Tracking Error", f"{rel.get('tracking_error_pct', 0):.2f}%")
+                bcol4.metric("Info Ratio", f"{rel.get('information_ratio', 0):.3f}")
+
+                interp = bench.get("interpretation", {})
+                st.caption(f"Alpha: {interp.get('alpha', '')} | Beta: {interp.get('beta', '')}")

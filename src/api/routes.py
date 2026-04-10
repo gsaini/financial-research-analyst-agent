@@ -1169,6 +1169,114 @@ async def http_exception_handler(request, exc):
     )
 
 
+# ── Portfolio Optimization (Feature 19) ──────────────────────
+
+
+@router.post("/portfolio/optimize")
+async def optimize_portfolio_endpoint(request: Dict[str, Any]):
+    """
+    Optimize portfolio allocation.
+
+    Body: {"symbols": ["AAPL","MSFT","GOOGL"], "method": "max_sharpe"}
+    Methods: max_sharpe, min_volatility, risk_parity
+    """
+    try:
+        from src.tools.portfolio_optimizer import optimize_portfolio
+        symbols = request.get("symbols", [])
+        method = request.get("method", "max_sharpe")
+        if not symbols or len(symbols) < 2:
+            raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
+        return optimize_portfolio(symbols, method=method)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/portfolio/efficient-frontier")
+async def efficient_frontier_endpoint(request: Dict[str, Any]):
+    """Generate efficient frontier curve."""
+    try:
+        from src.tools.portfolio_optimizer import calculate_efficient_frontier
+        symbols = request.get("symbols", [])
+        n_points = request.get("n_points", 30)
+        if not symbols or len(symbols) < 2:
+            raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
+        return calculate_efficient_frontier(symbols, n_points=n_points)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/portfolio/correlation")
+async def correlation_endpoint(request: Dict[str, Any]):
+    """Compute correlation matrix with insights."""
+    try:
+        from src.tools.portfolio_optimizer import correlation_analysis
+        symbols = request.get("symbols", [])
+        if not symbols or len(symbols) < 2:
+            raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
+        return correlation_analysis(symbols)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/portfolio/full-optimization")
+async def full_optimization_endpoint(request: Dict[str, Any]):
+    """
+    Run comprehensive optimization: correlation, max Sharpe, min vol,
+    risk parity, efficient frontier, and rebalancing suggestions.
+    """
+    try:
+        from src.tools.portfolio_optimizer import full_portfolio_optimization
+        symbols = request.get("symbols", [])
+        weights = request.get("current_weights")
+        if not symbols or len(symbols) < 2:
+            raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
+        return full_portfolio_optimization(symbols, current_weights=weights)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/portfolio/rebalance")
+async def rebalance_endpoint(request: Dict[str, Any]):
+    """Get rebalancing suggestions vs optimal weights."""
+    try:
+        from src.tools.portfolio_optimizer import rebalance_suggestions
+        symbols = request.get("symbols", [])
+        weights = request.get("current_weights", [])
+        method = request.get("method", "max_sharpe")
+        if not symbols or not weights:
+            raise HTTPException(status_code=400, detail="symbols and current_weights required")
+        return rebalance_suggestions(symbols, weights, target_method=method)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/portfolio/benchmark")
+async def portfolio_benchmark_endpoint(request: Dict[str, Any]):
+    """Compare portfolio vs benchmark (alpha, beta, tracking error)."""
+    try:
+        from src.tools.benchmark import calculate_portfolio_vs_benchmark
+        symbols = request.get("symbols", [])
+        weights = request.get("weights", [])
+        benchmark = request.get("benchmark", "SPY")
+        if not symbols or not weights:
+            raise HTTPException(status_code=400, detail="symbols and weights required")
+        return calculate_portfolio_vs_benchmark(symbols, weights, benchmark=benchmark)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Alert CRUD Endpoints (Feature 18) ────────────────────────
 
 

@@ -535,6 +535,27 @@ def get_portfolio_benchmark(symbols: tuple, weights: tuple) -> dict:
     return _fn(list(symbols), list(weights))
 
 
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_correlation_analysis(symbols: tuple) -> dict:
+    """Get correlation matrix with insights."""
+    from src.tools.portfolio_optimizer import correlation_analysis as _fn
+    return _fn(list(symbols))
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_full_portfolio_optimization(symbols: tuple, weights: tuple = None) -> dict:
+    """Run comprehensive portfolio optimization."""
+    from src.tools.portfolio_optimizer import full_portfolio_optimization as _fn
+    return _fn(list(symbols), current_weights=list(weights) if weights else None)
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_rebalance_suggestions(symbols: tuple, weights: tuple, method: str = "max_sharpe") -> dict:
+    """Get rebalancing suggestions."""
+    from src.tools.portfolio_optimizer import rebalance_suggestions as _fn
+    return _fn(list(symbols), list(weights), target_method=method)
+
+
 # ─── LLM Chat ──────────────────────────────────────────────
 
 
