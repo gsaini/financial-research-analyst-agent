@@ -348,3 +348,158 @@ def rebalance_suggestions(
         "target_metrics": optimal.get("portfolio_metrics", {}),
         "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def correlation_analysis(symbols: List[str]) -> Dict[str, Any]:
+    """
+    Compute correlation matrix with actionable insights.
+
+    Identifies high-correlation pairs, concentration risks,
+    and diversification opportunities.
+    """
+    returns = _get_returns(symbols)
+    if returns is None:
+        return {"error": "Could not fetch return data"}
+
+    valid = list(returns.columns)
+    corr_matrix = returns.corr()
+
+    # Build pairwise correlations
+    pairs = []
+    for i in range(len(valid)):
+        for j in range(i + 1, len(valid)):
+            c = float(corr_matrix.iloc[i, j])
+            pairs.append({
+                "pair": f"{valid[i]}-{valid[j]}",
+                "correlation": round(c, 3),
+                "relationship": (
+                    "Very high" if c > 0.8 else "High" if c > 0.6
+                    else "Moderate" if c > 0.3 else "Low" if c > 0
+                    else "Negative"
+                ),
+            })
+
+    pairs.sort(key=lambda p: abs(p["correlation"]), reverse=True)
+
+    # Average correlation
+    n = len(valid)
+    avg_corr = round(float((corr_matrix.values.sum() - n) / (n * (n - 1))), 3) if n > 1 else 0
+
+    # Generate insights
+    insights = []
+    high_pairs = [p for p in pairs if p["correlation"] > 0.7]
+    low_pairs = [p for p in pairs if abs(p["correlation"]) < 0.2]
+
+    if high_pairs:
+        worst = high_pairs[0]
+        insights.append(
+            f"{worst['pair']} correlation of {worst['correlation']:.2f} is very high — "
+            "consider reducing one position to avoid concentration risk"
+        )
+
+    if low_pairs:
+        best = low_pairs[0]
+        insights.append(
+            f"{best['pair']} provides good diversification (correlation: {best['correlation']:.2f})"
+        )
+
+    # Sector concentration check
+    try:
+        provider = get_provider()
+        sectors = {}
+        for sym in valid:
+            info = provider.get_info(sym)
+            sec = info.get("sector", "Other")
+            sectors.setdefault(sec, []).append(sym)
+
+        for sec, syms in sectors.items():
+            if len(syms) >= 3:
+                pct = len(syms) / len(valid) * 100
+                insights.append(
+                    f"{sec} concentration: {', '.join(syms)} = {pct:.0f}% of portfolio "
+                    "with likely high inter-correlation"
+                )
+    except Exception:
+        pass
+
+    if avg_corr < 0.3:
+        insights.append("Portfolio is well-diversified with low average correlation")
+    elif avg_corr > 0.6:
+        insights.append("Portfolio has high average correlation — returns will move together")
+
+    return {
+        "symbols": valid,
+        "correlation_matrix": {
+            sym: {s: round(float(corr_matrix.loc[sym, s]), 3) for s in valid}
+            for sym in valid
+        },
+        "pairwise": pairs,
+        "average_correlation": avg_corr,
+        "diversification_rating": (
+            "Good" if avg_corr < 0.3 else "Moderate" if avg_corr < 0.6 else "Poor"
+        ),
+        "insights": insights,
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def full_portfolio_optimization(
+    symbols: List[str],
+    current_weights: Optional[List[float]] = None,
+) -> Dict[str, Any]:
+    """
+    Run comprehensive portfolio optimization: correlation analysis,
+    max Sharpe, min volatility, risk parity, and rebalancing suggestions.
+
+    This is the main entry point matching the Feature 19 scope.
+    """
+    n = len(symbols)
+    if current_weights is None:
+        current_weights = [1 / n] * n
+
+    # Correlation
+    corr = correlation_analysis(symbols)
+
+    # Optimizations
+    max_sharpe = optimize_portfolio(symbols, method="max_sharpe")
+    min_vol = optimize_portfolio(symbols, method="min_volatility")
+    risk_par = risk_parity_allocation(symbols)
+
+    # Efficient frontier
+    frontier = calculate_efficient_frontier(symbols, n_points=30)
+
+    # Rebalancing suggestions
+    rebalance = rebalance_suggestions(symbols, current_weights)
+
+    # Current portfolio metrics
+    returns = _get_returns(symbols)
+    current_metrics = {}
+    if returns is not None:
+        valid = [s for s in symbols if s in returns.columns]
+        w = np.array([current_weights[symbols.index(s)] for s in valid])
+        w = w / w.sum()
+        mean_ret = returns[valid].mean().values * _TRADING_DAYS
+        cov = returns[valid].cov().values * _TRADING_DAYS
+        c_ret = float(np.dot(w, mean_ret))
+        c_vol = float(np.sqrt(np.dot(w.T, np.dot(cov, w))))
+        c_sharpe = (c_ret - _RISK_FREE_RATE) / c_vol if c_vol > 0 else 0
+        current_metrics = {
+            "expected_return_pct": round(c_ret * 100, 2),
+            "volatility_pct": round(c_vol * 100, 2),
+            "sharpe_ratio": round(c_sharpe, 3),
+        }
+
+    return {
+        "symbols": symbols,
+        "current_weights": {s: round(w, 4) for s, w in zip(symbols, current_weights)},
+        "current_portfolio_metrics": current_metrics,
+        "correlation": corr if "error" not in corr else None,
+        "optimized_portfolios": {
+            "max_sharpe": max_sharpe if "error" not in max_sharpe else None,
+            "min_volatility": min_vol if "error" not in min_vol else None,
+            "risk_parity": risk_par if "error" not in risk_par else None,
+        },
+        "efficient_frontier": frontier if "error" not in frontier else None,
+        "rebalancing": rebalance if "error" not in rebalance else None,
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
+    }
