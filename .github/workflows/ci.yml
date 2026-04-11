@@ -1,0 +1,61 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.14"
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Tests
+      run: |
+        # Set dummy environment variables to avoid provider init errors
+        export OPENAI_API_KEY="sk-dummy"
+        export FMP_API_KEY="dummy"
+        export GROQ_API_KEY="dummy"
+        export ANTHROPIC_API_KEY="dummy"
+        
+        # Run tests and ignore pydantic warnings we've already addressed/suppressed
+        pytest tests/ -v -W ignore::pydantic.warnings.PydanticDeprecatedSince20 -W ignore::DeprecationWarning
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.14"
+        cache: 'pip'
+        
+    - name: Install Linting Tools
+      run: |
+        pip install black isort flake8
+
+    - name: Check Formatting (Black)
+      run: black --check src tests
+
+    - name: Check Imports (isort)
+      run: isort --check-only src tests
+
+    - name: Lint with flake8
+      run: flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics

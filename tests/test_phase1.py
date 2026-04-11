@@ -238,6 +238,11 @@ class TestDataValidator:
             "currentPrice": 175.50,
             "marketCap": 2800000000000,
             "trailingPE": 28.5,
+            "sector": "Technology",
+            "industry": "Consumer Electronics",
+            "trailingEps": 6.16,
+            "fiftyTwoWeekHigh": 190.0,
+            "fiftyTwoWeekLow": 150.0,
         })
         assert len(issues) == 0
 

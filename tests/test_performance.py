@@ -325,10 +325,10 @@ class TestRiskAgentTools:
         assert "track_stock_performance" in tool_names
 
     def test_risk_agent_total_tools(self):
-        """Risk Agent should have 7 tools total."""
+        """Risk Agent should have 11 tools total."""
         from src.agents.risk import RiskAnalystAgent
 
         agent = RiskAnalystAgent()
         tools = agent._get_default_tools()
 
-        assert len(tools) == 7
+        assert len(tools) == 11

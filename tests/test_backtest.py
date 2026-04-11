@@ -106,16 +106,19 @@ class TestStrategySignals:
         assert momentum_composite(prices, 99) == "HOLD"
 
     def test_strategy_registry_complete(self):
-        """All 5 strategies should be registered."""
-        assert len(STRATEGIES) == 5
-        expected = {"rsi_reversal", "macd_crossover", "golden_death_cross",
-                     "bollinger_reversion", "momentum_composite"}
+        """All 9 strategies should be registered."""
+        assert len(STRATEGIES) == 9
+        expected = {
+            "rsi_reversal", "macd_crossover", "golden_death_cross",
+            "bollinger_reversion", "momentum_composite", "mean_reversion",
+            "breakout", "pairs_mean_reversion", "trend_following"
+        }
         assert set(STRATEGIES.keys()) == expected
 
     def test_list_strategy_names(self):
         """list_strategy_names returns all keys."""
         names = list_strategy_names()
-        assert len(names) == 5
+        assert len(names) == 9
         assert "rsi_reversal" in names
 
 
@@ -320,7 +323,7 @@ class TestListStrategies:
 
         result = list_strategies()
         assert isinstance(result, list)
-        assert len(result) == 5
+        assert len(result) == 9
         for entry in result:
             assert "key" in entry
             assert "name" in entry
