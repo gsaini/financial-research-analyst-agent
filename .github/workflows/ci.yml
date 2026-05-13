@@ -52,10 +52,10 @@ jobs:
         pip install black isort flake8
 
     - name: Check Formatting (Black)
-      run: black --check src tests
+      run: black --check --line-length=100 src tests
 
     - name: Check Imports (isort)
-      run: isort --check-only src tests
+      run: isort --check-only --profile black src tests
 
     - name: Lint with flake8
       run: flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
