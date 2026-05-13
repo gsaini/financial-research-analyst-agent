@@ -3,15 +3,21 @@ News - Browse latest financial news across multiple tickers.
 """
 
 import streamlit as st
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_date
-from utils.data_service import get_company_news
 from components.header import render_header
 from components.metrics_cards import render_news_card
 
+from utils.data_service import get_company_news
+from utils.formatters import format_date
+from utils.session import init_session_state
+from utils.theme import inject_css
+
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="News | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="News | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -56,10 +62,12 @@ for sym in symbols:
         article["_symbol"] = sym
         all_articles.append(article)
 
+
 # Sort by date (newest first)
 def _sort_key(article):
     d = article.get("published_at", "")
     return d if d else "0"
+
 
 all_articles.sort(key=_sort_key, reverse=True)
 
@@ -72,7 +80,9 @@ for a in all_articles:
         seen_titles.add(title)
         unique_articles.append(a)
 
-st.markdown(f"**{len(unique_articles)} articles** from {len(symbols)} sources: {', '.join(symbols)}")
+st.markdown(
+    f"**{len(unique_articles)} articles** from {len(symbols)} sources: {', '.join(symbols)}"
+)
 st.markdown("---")
 
 if not unique_articles:
@@ -144,8 +154,8 @@ for i, article in enumerate(filtered[:20]):
     with cols[i % 2]:
         sym_badge = (
             f'<span style="display: inline-block; font-size: 0.6rem; padding: 0.1rem 0.4rem; '
-            f'border-radius: 999px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; '
-            f'border: 1px solid rgba(59, 130, 246, 0.2); font-weight: 600; '
+            f"border-radius: 999px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; "
+            f"border: 1px solid rgba(59, 130, 246, 0.2); font-weight: 600; "
             f'margin-right: 0.25rem;">{article.get("_symbol", "")}</span>'
         )
 

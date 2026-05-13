@@ -3,14 +3,15 @@ Dividend Analysis - Yield, safety scoring, growth history,
 classification (King/Aristocrat), and yield comparison.
 """
 
-import streamlit as st
 import pandas as pd
-from utils.theme import inject_css, COLORS
-from utils.session import init_session_state
-from utils.formatters import format_percent, format_currency
-from utils.data_service import analyze_dividends, compare_dividends
+import streamlit as st
 from components.header import render_header
 from components.plotly_charts import create_gauge_chart, create_horizontal_bar
+
+from utils.data_service import analyze_dividends, compare_dividends
+from utils.formatters import format_currency, format_percent
+from utils.session import init_session_state
+from utils.theme import COLORS, inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
 st.set_page_config(
@@ -24,7 +25,9 @@ init_session_state()
 render_header()
 
 st.markdown("## Dividend Analysis")
-st.caption("Dividend safety scoring, growth tracking, yield comparison, and income investing insights")
+st.caption(
+    "Dividend safety scoring, growth tracking, yield comparison, and income investing insights"
+)
 
 # ─── Tabs ────────────────────────────────────────────────────
 tab1, tab2 = st.tabs(["Single Stock", "Compare"])
@@ -33,12 +36,16 @@ tab1, tab2 = st.tabs(["Single Stock", "Compare"])
 with tab1:
     col1, col2 = st.columns([3, 1])
     with col1:
-        symbol = st.text_input(
-            "Stock Symbol",
-            value=st.session_state.get("selected_symbol", "JNJ"),
-            placeholder="Enter ticker (e.g., JNJ, KO, PG)",
-            key="div_symbol",
-        ).strip().upper()
+        symbol = (
+            st.text_input(
+                "Stock Symbol",
+                value=st.session_state.get("selected_symbol", "JNJ"),
+                placeholder="Enter ticker (e.g., JNJ, KO, PG)",
+                key="div_symbol",
+            )
+            .strip()
+            .upper()
+        )
     with col2:
         st.markdown("<br>", unsafe_allow_html=True)
         analyze_btn = st.button("Analyze", use_container_width=True, type="primary", key="div_btn")
@@ -92,34 +99,51 @@ with tab1:
                 cut_prob = safety.get("dividend_cut_probability", "N/A")
 
                 color = (
-                    COLORS.get("success", "#22c55e") if score >= 70
-                    else COLORS.get("warning", "#eab308") if score >= 40
-                    else COLORS.get("danger", "#ef4444")
+                    COLORS.get("success", "#22c55e")
+                    if score >= 70
+                    else (
+                        COLORS.get("warning", "#eab308")
+                        if score >= 40
+                        else COLORS.get("danger", "#ef4444")
+                    )
                 )
 
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="text-align:center; padding:20px; border-radius:8px; border:1px solid {color};">
                     <div style="font-size:3em; font-weight:bold; color:{color};">{score}</div>
                     <div style="font-size:0.9em; color:{COLORS.get('text_secondary', '#a1a1aa')};">Safety Score</div>
                     <div style="font-size:1.1em; color:{color}; font-weight:bold; margin-top:4px;">{rating}</div>
                     <div style="font-size:0.85em; color:{COLORS.get('text_muted', '#71717a')}; margin-top:4px;">Cut probability: {cut_prob}</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
 
                 # Classification badge
                 classification = growth.get("classification", "")
                 if classification:
                     badge_color = (
-                        "#FFD700" if "King" in classification
-                        else "#C0C0C0" if "Aristocrat" in classification
-                        else "#CD7F32" if "Champion" in classification
-                        else COLORS.get("accent_primary", "#6366f1")
+                        "#FFD700"
+                        if "King" in classification
+                        else (
+                            "#C0C0C0"
+                            if "Aristocrat" in classification
+                            else (
+                                "#CD7F32"
+                                if "Champion" in classification
+                                else COLORS.get("accent_primary", "#6366f1")
+                            )
+                        )
                     )
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     <div style="text-align:center; margin-top:12px; padding:8px; border-radius:6px; background:{badge_color}20; border:1px solid {badge_color};">
                         <span style="color:{badge_color}; font-weight:bold;">{classification}</span>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """,
+                        unsafe_allow_html=True,
+                    )
 
             with scol2:
                 st.markdown("**Safety Factor Breakdown**")
@@ -128,13 +152,17 @@ with tab1:
                     factor_rows = []
                     for factor_name, factor_data in factors.items():
                         if isinstance(factor_data, dict):
-                            factor_rows.append({
-                                "Factor": factor_name.replace("_", " ").title(),
-                                "Value": factor_data.get("value", "N/A"),
-                                "Assessment": factor_data.get("assessment", ""),
-                            })
+                            factor_rows.append(
+                                {
+                                    "Factor": factor_name.replace("_", " ").title(),
+                                    "Value": factor_data.get("value", "N/A"),
+                                    "Assessment": factor_data.get("assessment", ""),
+                                }
+                            )
                     if factor_rows:
-                        st.dataframe(pd.DataFrame(factor_rows), use_container_width=True, hide_index=True)
+                        st.dataframe(
+                            pd.DataFrame(factor_rows), use_container_width=True, hide_index=True
+                        )
 
                 # Red flags
                 flags = safety.get("red_flags", [])
@@ -168,7 +196,9 @@ with tab1:
                     growth_data.append({"Period": "Last Increase", "Growth": f"{last_inc:.1f}%"})
 
                 if growth_data:
-                    st.dataframe(pd.DataFrame(growth_data), use_container_width=True, hide_index=True)
+                    st.dataframe(
+                        pd.DataFrame(growth_data), use_container_width=True, hide_index=True
+                    )
 
             with gcol2:
                 st.markdown("**Yield Comparison**")
@@ -179,12 +209,17 @@ with tab1:
 
                 comparison_data = [
                     {"Benchmark": f"{active}", "Yield (%)": stock_yield or 0},
-                    {"Benchmark": f"Sector Avg ({yields.get('sector', 'N/A')})", "Yield (%)": sector_avg or 0},
+                    {
+                        "Benchmark": f"Sector Avg ({yields.get('sector', 'N/A')})",
+                        "Yield (%)": sector_avg or 0,
+                    },
                     {"Benchmark": "S&P 500 Avg", "Yield (%)": sp500_avg or 0},
                     {"Benchmark": "10Y Treasury", "Yield (%)": treasury or 0},
                 ]
                 comp_df = pd.DataFrame(comparison_data)
-                st.bar_chart(comp_df.set_index("Benchmark"), color=COLORS.get("accent_primary", "#6366f1"))
+                st.bar_chart(
+                    comp_df.set_index("Benchmark"), color=COLORS.get("accent_primary", "#6366f1")
+                )
 
                 assessment = yields.get("yield_assessment", "")
                 if assessment:
@@ -235,24 +270,24 @@ with tab2:
                     for c in comparison:
                         if "error" in c:
                             continue
-                        rows.append({
-                            "Symbol": c.get("symbol", ""),
-                            "Yield (%)": c.get("dividend_yield", 0),
-                            "Safety Score": c.get("safety_score", 0),
-                            "Payout Ratio (%)": c.get("payout_ratio", 0),
-                            "Consec. Years": c.get("consecutive_years_increased", 0),
-                            "Classification": c.get("classification", "N/A"),
-                            "5Y CAGR (%)": c.get("cagr_5_year", 0),
-                        })
+                        rows.append(
+                            {
+                                "Symbol": c.get("symbol", ""),
+                                "Yield (%)": c.get("dividend_yield", 0),
+                                "Safety Score": c.get("safety_score", 0),
+                                "Payout Ratio (%)": c.get("payout_ratio", 0),
+                                "Consec. Years": c.get("consecutive_years_increased", 0),
+                                "Classification": c.get("classification", "N/A"),
+                                "5Y CAGR (%)": c.get("cagr_5_year", 0),
+                            }
+                        )
 
                     if rows:
                         df = pd.DataFrame(rows)
                         st.dataframe(
                             df.style.background_gradient(
                                 subset=["Safety Score"], cmap="YlGn"
-                            ).background_gradient(
-                                subset=["Yield (%)"], cmap="YlOrRd"
-                            ),
+                            ).background_gradient(subset=["Yield (%)"], cmap="YlOrRd"),
                             use_container_width=True,
                             hide_index=True,
                         )
@@ -273,4 +308,6 @@ with tab2:
 
 # ─── Footer ─────────────────────────────────────────────────
 st.markdown("---")
-st.caption("Dividend data from Yahoo Finance. Safety scores are algorithmic estimates — not investment advice.")
+st.caption(
+    "Dividend data from Yahoo Finance. Safety scores are algorithmic estimates — not investment advice."
+)

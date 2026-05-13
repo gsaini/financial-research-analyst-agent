@@ -6,6 +6,7 @@ positioning, and unusual volatility/volume signals.
 """
 
 from typing import Any, Dict, List
+
 from src.agents.base import BaseAgent
 from src.tools.options_analyzer import analyze_options
 from src.utils.logger import get_logger
@@ -56,16 +57,12 @@ class OptionsAnalystAgent(BaseAgent):
             Dict containing options analysis results.
         """
         logger.info(f"[{self.name}] Analyzing options data for {symbol}")
-        
+
         try:
             options_data = analyze_options(symbol)
-            
+
             # Additional LLM-based narrative could be generated here in the future
-            return {
-                "symbol": symbol,
-                "data": options_data,
-                "agent_name": self.name
-            }
+            return {"symbol": symbol, "data": options_data, "agent_name": self.name}
         except Exception as e:
             logger.error(f"[{self.name}] Error analyzing options for {symbol}: {e}")
             return {"error": str(e), "symbol": symbol}

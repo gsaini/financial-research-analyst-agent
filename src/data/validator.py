@@ -90,8 +90,13 @@ def validate_info(info: Dict[str, Any]) -> List[str]:
 
     # Check for missing key fields used by downstream tools
     recommended = [
-        "marketCap", "sector", "industry", "trailingPE", "trailingEps",
-        "fiftyTwoWeekHigh", "fiftyTwoWeekLow",
+        "marketCap",
+        "sector",
+        "industry",
+        "trailingPE",
+        "trailingEps",
+        "fiftyTwoWeekHigh",
+        "fiftyTwoWeekLow",
     ]
     missing = [f for f in recommended if info.get(f) is None]
     if missing:
@@ -159,9 +164,7 @@ def validate_history(
         extreme = returns.abs() > 0.50
         if extreme.any():
             count = int(extreme.sum())
-            issues.append(
-                f"{prefix}{count} day(s) with >50% price change — likely data error"
-            )
+            issues.append(f"{prefix}{count} day(s) with >50% price change — likely data error")
         elif flagged.any():
             count = int(flagged.sum())
             dates = list(returns[flagged].index[:3])
@@ -181,12 +184,20 @@ def validate_history(
     if vol_col:
         zero_vol = (df[vol_col] <= 0).sum()
         if zero_vol > len(df) * 0.1:
-            issues.append(f"{prefix}{zero_vol} row(s) with zero/negative volume ({zero_vol/len(df):.0%})")
+            issues.append(
+                f"{prefix}{zero_vol} row(s) with zero/negative volume ({zero_vol/len(df):.0%})"
+            )
 
     # Expected row count
     period_min_rows = {
-        "1d": 1, "5d": 3, "1mo": 15, "3mo": 50,
-        "6mo": 100, "1y": 200, "2y": 400, "5y": 1000,
+        "1d": 1,
+        "5d": 3,
+        "1mo": 15,
+        "3mo": 50,
+        "6mo": 100,
+        "1y": 200,
+        "2y": 400,
+        "5y": 1000,
     }
     min_rows = period_min_rows.get(expected_period, 0)
     if min_rows and len(df) < min_rows:
@@ -210,7 +221,9 @@ def validate_financials(df: pd.DataFrame, symbol: str = "") -> List[str]:
         return issues
 
     if len(df.columns) < 2:
-        issues.append(f"{prefix}Financial statement has fewer than 2 periods — limited trend analysis")
+        issues.append(
+            f"{prefix}Financial statement has fewer than 2 periods — limited trend analysis"
+        )
 
     # Check for all-NaN rows (line items with no data)
     all_nan_rows = df.isna().all(axis=1).sum()
@@ -291,7 +304,9 @@ def validate_all(
     warnings = [i for i in all_issues if i not in critical]
 
     if all_issues:
-        logger.warning(f"[{symbol}] Data quality: {len(critical)} critical, {len(warnings)} warnings")
+        logger.warning(
+            f"[{symbol}] Data quality: {len(critical)} critical, {len(warnings)} warnings"
+        )
 
     return {
         "symbol": symbol,

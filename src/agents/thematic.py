@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Thematic Analyst Agent for the Financial Research Analyst.
 
@@ -7,25 +8,25 @@ themes (e.g., AI, EV, Green Energy) rather than traditional sectors, and
 producing comprehensive theme-level insights.
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.tools.theme_mapper import (
-    list_available_themes,
-    get_theme_definition,
-    get_theme_constituents,
     analyze_theme,
-    fetch_theme_stock_data,
-    calculate_theme_performance,
-    calculate_theme_correlation,
     calculate_momentum_score,
     calculate_sector_overlap,
+    calculate_theme_correlation,
     calculate_theme_health_score,
+    calculate_theme_performance,
+    fetch_theme_stock_data,
+    get_theme_constituents,
+    get_theme_definition,
+    list_available_themes,
 )
 from src.utils.logger import get_logger
 
@@ -121,20 +122,22 @@ class ThematicAnalystAgent(BaseAgent):
             for tid in ids:
                 result = analyze_theme(tid)
                 if "error" not in result:
-                    comparison.append({
-                        "theme": result.get("theme"),
-                        "theme_id": tid,
-                        "performance": result.get("theme_performance", {}),
-                        "momentum_score": result.get("momentum_score", 0),
-                        "health_score": result.get("theme_health_score", 0),
-                        "diversification": result.get("theme_risk", {}).get(
-                            "diversification_score", "N/A"
-                        ),
-                        "intra_correlation": result.get("theme_risk", {}).get(
-                            "intra_correlation"
-                        ),
-                        "top_performers": result.get("top_performers", [])[:2],
-                    })
+                    comparison.append(
+                        {
+                            "theme": result.get("theme"),
+                            "theme_id": tid,
+                            "performance": result.get("theme_performance", {}),
+                            "momentum_score": result.get("momentum_score", 0),
+                            "health_score": result.get("theme_health_score", 0),
+                            "diversification": result.get("theme_risk", {}).get(
+                                "diversification_score", "N/A"
+                            ),
+                            "intra_correlation": result.get("theme_risk", {}).get(
+                                "intra_correlation"
+                            ),
+                            "top_performers": result.get("top_performers", [])[:2],
+                        }
+                    )
                 else:
                     comparison.append({"theme_id": tid, "error": result["error"]})
 
@@ -190,18 +193,14 @@ decision-making. Include a short narrative outlook at the end."""
 
         try:
             result = analyze_theme(theme_id)
-            result["execution_time_seconds"] = (
-                datetime.now(timezone.utc) - start
-            ).total_seconds()
+            result["execution_time_seconds"] = (datetime.now(timezone.utc) - start).total_seconds()
             return result
         except Exception as e:
             logger.error(f"Thematic analysis failed for '{theme_id}': {e}")
             return {
                 "error": str(e),
                 "theme_id": theme_id,
-                "execution_time_seconds": (
-                    datetime.now(timezone.utc) - start
-                ).total_seconds(),
+                "execution_time_seconds": (datetime.now(timezone.utc) - start).total_seconds(),
             }
 
     async def analyze_with_narrative(self, theme_id: str) -> Dict[str, Any]:
@@ -220,8 +219,8 @@ decision-making. Include a short narrative outlook at the end."""
             return data
 
         # Ask the LLM to synthesize an outlook
-        task = f"""Based on the following thematic analysis data for the 
-'{data.get("theme", theme_id)}' investment theme, write a concise 2-3 sentence 
+        task = f"""Based on the following thematic analysis data for the
+'{data.get("theme", theme_id)}' investment theme, write a concise 2-3 sentence
 investment outlook:
 
 Performance: {json.dumps(data.get('theme_performance', {}), indent=2)}
@@ -246,9 +245,7 @@ Provide a balanced outlook covering momentum, risk, and portfolio implications."
 
         return data
 
-    async def compare_themes_direct(
-        self, theme_ids: List[str]
-    ) -> Dict[str, Any]:
+    async def compare_themes_direct(self, theme_ids: List[str]) -> Dict[str, Any]:
         """
         Compare multiple themes side by side.
 
@@ -262,21 +259,21 @@ Provide a balanced outlook covering momentum, risk, and portfolio implications."
         for tid in theme_ids:
             result = await self.analyze_theme_direct(tid)
             if "error" not in result:
-                comparison.append({
-                    "theme": result.get("theme"),
-                    "theme_id": tid,
-                    "performance": result.get("theme_performance", {}),
-                    "momentum_score": result.get("momentum_score", 0),
-                    "health_score": result.get("theme_health_score", 0),
-                    "diversification": result.get("theme_risk", {}).get(
-                        "diversification_score", "N/A"
-                    ),
-                    "intra_correlation": result.get("theme_risk", {}).get(
-                        "intra_correlation"
-                    ),
-                    "top_performers": result.get("top_performers", [])[:2],
-                    "laggards": result.get("laggards", [])[:2],
-                })
+                comparison.append(
+                    {
+                        "theme": result.get("theme"),
+                        "theme_id": tid,
+                        "performance": result.get("theme_performance", {}),
+                        "momentum_score": result.get("momentum_score", 0),
+                        "health_score": result.get("theme_health_score", 0),
+                        "diversification": result.get("theme_risk", {}).get(
+                            "diversification_score", "N/A"
+                        ),
+                        "intra_correlation": result.get("theme_risk", {}).get("intra_correlation"),
+                        "top_performers": result.get("top_performers", [])[:2],
+                        "laggards": result.get("laggards", [])[:2],
+                    }
+                )
             else:
                 comparison.append({"theme_id": tid, "error": result.get("error")})
 

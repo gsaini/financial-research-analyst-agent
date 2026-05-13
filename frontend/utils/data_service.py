@@ -7,8 +7,8 @@ All functions use @st.cache_data for performance:
 - Analysis results: 30 min TTL
 """
 
-import sys
 import os
+import sys
 
 # Ensure the project root is importable
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,8 +17,8 @@ if PROJECT_ROOT not in sys.path:
 
 import streamlit as st
 
-
 # ─── Symbol Search ─────────────────────────────────────────────
+
 
 @st.cache_data(ttl=300, show_spinner="Searching stocks...")
 def search_symbols(query: str, max_results: int = 8) -> list:
@@ -52,12 +52,14 @@ def search_symbols(query: str, max_results: int = 8) -> list:
             # Only include equities and ETFs
             if q_type not in ("EQUITY", "ETF"):
                 continue
-            results.append({
-                "symbol": quote.get("symbol", ""),
-                "name": quote.get("shortname") or quote.get("longname") or "",
-                "exchange": quote.get("exchDisp", ""),
-                "type": q_type,
-            })
+            results.append(
+                {
+                    "symbol": quote.get("symbol", ""),
+                    "name": quote.get("shortname") or quote.get("longname") or "",
+                    "exchange": quote.get("exchDisp", ""),
+                    "type": q_type,
+                }
+            )
         return results
     except Exception:
         return []
@@ -65,10 +67,12 @@ def search_symbols(query: str, max_results: int = 8) -> list:
 
 # ─── Market Data ───────────────────────────────────────────────
 
+
 @st.cache_data(ttl=60, show_spinner=False)
 def get_stock_price(symbol: str) -> dict:
     """Get current stock price and key data points."""
     from src.tools.market_data import get_stock_price as _fn
+
     return _fn(symbol)
 
 
@@ -76,6 +80,7 @@ def get_stock_price(symbol: str) -> dict:
 def get_historical_data(symbol: str, period: str = "1y") -> dict:
     """Get OHLCV historical data."""
     from src.tools.market_data import get_historical_data as _fn
+
     return _fn(symbol, period=period)
 
 
@@ -83,6 +88,7 @@ def get_historical_data(symbol: str, period: str = "1y") -> dict:
 def get_company_info(symbol: str) -> dict:
     """Get company profile information."""
     from src.tools.market_data import get_company_info as _fn
+
     return _fn(symbol)
 
 
@@ -90,10 +96,12 @@ def get_company_info(symbol: str) -> dict:
 def get_financial_statements(symbol: str) -> dict:
     """Get income statement, balance sheet, and cash flow."""
     from src.tools.market_data import get_financial_statements as _fn
+
     return _fn(symbol)
 
 
 # ─── Technical Analysis ───────────────────────────────────────
+
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_technical_analysis(symbol: str, period: str = "1y") -> dict:
@@ -107,12 +115,12 @@ def get_technical_analysis(symbol: str, period: str = "1y") -> dict:
         return {"error": "Insufficient historical data for technical analysis."}
 
     from src.tools.technical_indicators import (
-        calculate_rsi,
+        calculate_bollinger_bands,
         calculate_macd,
         calculate_moving_averages,
-        calculate_bollinger_bands,
-        identify_support_resistance,
+        calculate_rsi,
         detect_patterns,
+        identify_support_resistance,
     )
 
     return {
@@ -126,6 +134,7 @@ def get_technical_analysis(symbol: str, period: str = "1y") -> dict:
 
 
 # ─── Financial Metrics ────────────────────────────────────────
+
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def get_financial_health(symbol: str) -> dict:
@@ -210,10 +219,12 @@ def get_profitability_ratios(symbol: str) -> dict:
 
 # ─── News ─────────────────────────────────────────────────────
 
+
 @st.cache_data(ttl=600, show_spinner=False)
 def get_company_news(symbol: str) -> list:
     """Fetch company-related news articles."""
     from src.tools.news_fetcher import fetch_company_news as _fn
+
     try:
         return _fn(symbol)
     except Exception:
@@ -222,25 +233,30 @@ def get_company_news(symbol: str) -> list:
 
 # ─── Sentiment & News Impact ─────────────────────────────────
 
+
 @st.cache_data(ttl=600, show_spinner="Analyzing sentiment...")
 def analyze_news_sentiment(symbol: str) -> dict:
     """Full news & sentiment impact analysis for a symbol."""
     from src.tools.news_impact import analyze_news_impact as _fn
+
     return _fn(symbol.upper())
 
 
 # ─── Theme Analysis ───────────────────────────────────────────
 
+
 @st.cache_data(ttl=60, show_spinner=False)
 def get_themes_list() -> list:
     """List all available investment themes. Auto-refreshes when themes.yaml changes."""
     from src.tools.theme_mapper import list_available_themes as _fn
+
     return _fn()
 
 
 def refresh_themes_cache():
     """Clear all theme caches so changes to themes.yaml are picked up immediately."""
     from src.tools.theme_mapper import reload_themes_config
+
     reload_themes_config()
     get_themes_list.clear()
     analyze_theme.clear()
@@ -250,15 +266,18 @@ def refresh_themes_cache():
 def analyze_theme(theme_id: str) -> dict:
     """Analyze an investment theme."""
     from src.tools.theme_mapper import analyze_theme as _fn
+
     return _fn(theme_id)
 
 
 # ─── Disruption Analysis ─────────────────────────────────────
 
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def analyze_disruption(symbol: str) -> dict:
     """Analyze a company's disruption profile."""
     from src.tools.disruption_metrics import analyze_disruption as _fn
+
     return _fn(symbol.upper())
 
 
@@ -266,15 +285,18 @@ def analyze_disruption(symbol: str) -> dict:
 def compare_disruption(symbols: tuple) -> dict:
     """Compare disruption profiles across companies. Pass symbols as tuple for caching."""
     from src.tools.disruption_metrics import compare_disruption as _fn
+
     return _fn(list(symbols))
 
 
 # ─── Earnings Analysis ────────────────────────────────────────
 
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def analyze_earnings(symbol: str) -> dict:
     """Analyze quarterly earnings."""
     from src.tools.earnings_data import analyze_earnings as _fn
+
     return _fn(symbol.upper())
 
 
@@ -282,15 +304,18 @@ def analyze_earnings(symbol: str) -> dict:
 def compare_earnings(symbols: tuple) -> dict:
     """Compare earnings profiles. Pass symbols as tuple for caching."""
     from src.tools.earnings_data import compare_earnings as _fn
+
     return _fn(list(symbols))
 
 
 # ─── Peer Comparison ──────────────────────────────────────────
 
+
 @st.cache_data(ttl=1800, show_spinner="Analyzing performance...")
 def track_performance(symbol: str) -> dict:
     """Track comprehensive historical performance for a symbol."""
     from src.tools.performance_tracker import track_performance as _fn
+
     return _fn(symbol.upper())
 
 
@@ -298,10 +323,12 @@ def track_performance(symbol: str) -> dict:
 def compare_peers(symbol: str, peers: tuple = None) -> dict:
     """Compare a stock against peers. Wraps async function."""
     import asyncio
+
     from src.tools.peer_comparison import compare_peers as _fn
 
     try:
         import nest_asyncio
+
         nest_asyncio.apply()
     except ImportError:
         pass
@@ -319,10 +346,12 @@ def compare_peers(symbol: str, peers: tuple = None) -> dict:
 
 # ─── Dividend Analysis ───────────────────────────────────────
 
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def analyze_dividends(symbol: str) -> dict:
     """Analyze dividend profile for a stock."""
     from src.tools.dividend_analyzer import analyze_dividends as _fn
+
     return _fn(symbol.upper())
 
 
@@ -330,15 +359,18 @@ def analyze_dividends(symbol: str) -> dict:
 def compare_dividends(symbols: tuple) -> dict:
     """Compare dividend profiles. Pass symbols as tuple for caching."""
     from src.tools.dividend_analyzer import compare_dividends as _fn
+
     return _fn(list(symbols))
 
 
 # ─── ETF Screener ────────────────────────────────────────────
 
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def screen_etfs(theme_ids: tuple = None, max_risk: str = None, top_n: int = 10) -> dict:
     """Screen and rank ETFs across investment themes."""
     from src.tools.etf_screener import screen_etfs as _fn
+
     ids = list(theme_ids) if theme_ids else None
     return _fn(theme_ids=ids, max_risk=max_risk, top_n=top_n)
 
@@ -347,6 +379,7 @@ def screen_etfs(theme_ids: tuple = None, max_risk: str = None, top_n: int = 10) 
 def fetch_etf_data(symbol: str) -> dict:
     """Fetch data for a single ETF."""
     from src.tools.etf_screener import fetch_etf_data as _fn
+
     return _fn(symbol.upper())
 
 
@@ -357,6 +390,7 @@ def fetch_etf_data(symbol: str) -> dict:
 def get_macro_summary() -> dict:
     """Get key macroeconomic indicators from FRED."""
     from src.tools.macro_data import get_macro_summary as _fn
+
     return _fn()
 
 
@@ -364,6 +398,7 @@ def get_macro_summary() -> dict:
 def get_treasury_yields() -> dict:
     """Get treasury yields and yield curve status."""
     from src.tools.macro_data import get_treasury_yields as _fn
+
     return _fn()
 
 
@@ -371,6 +406,7 @@ def get_treasury_yields() -> dict:
 def get_rate_environment() -> dict:
     """Get rate environment analysis."""
     from src.tools.macro_data import get_rate_environment as _fn
+
     return _fn()
 
 
@@ -378,6 +414,7 @@ def get_rate_environment() -> dict:
 def get_macro_context(symbol: str) -> dict:
     """Get macro context for a specific stock."""
     from src.tools.macro_data import get_macro_context_for_stock as _fn
+
     return _fn(symbol)
 
 
@@ -388,6 +425,7 @@ def get_macro_context(symbol: str) -> dict:
 def get_dcf_analysis(symbol: str) -> dict:
     """Run DCF valuation analysis with 3 scenarios."""
     from src.tools.dcf_model import get_dcf_summary as _fn
+
     return _fn(symbol)
 
 
@@ -398,6 +436,7 @@ def get_dcf_analysis(symbol: str) -> dict:
 def get_social_sentiment(symbol: str) -> dict:
     """Get Reddit and social media sentiment for a stock."""
     from src.tools.social_sentiment import get_social_sentiment_composite as _fn
+
     return _fn(symbol)
 
 
@@ -405,6 +444,7 @@ def get_social_sentiment(symbol: str) -> dict:
 def get_trending_tickers() -> dict:
     """Get trending tickers from Reddit."""
     from src.tools.social_sentiment import get_trending_tickers as _fn
+
     return _fn()
 
 
@@ -415,45 +455,54 @@ def get_trending_tickers() -> dict:
 def get_price_forecast(symbol: str) -> dict:
     """Get ML-based price forecast with targets."""
     from src.tools.ml_forecast import get_price_targets as _fn
+
     return _fn(symbol)
 
 
 # ─── Alerts (Feature 18) ────────────────────────────────
 
 
-def create_alert(symbol: str, alert_type: str, threshold: float = 0, message: str = "", repeat: bool = False) -> dict:
+def create_alert(
+    symbol: str, alert_type: str, threshold: float = 0, message: str = "", repeat: bool = False
+) -> dict:
     """Create a new alert (not cached — mutates state)."""
     from src.tools.alerts import add_alert as _fn
+
     return _fn(symbol, alert_type, threshold, message, repeat=repeat)
 
 
 def remove_alert(alert_id: str) -> dict:
     """Remove an alert."""
     from src.tools.alerts import remove_alert as _fn
+
     return _fn(alert_id)
 
 
 def get_all_alerts(status: str = None) -> list:
     """List all alerts."""
     from src.tools.alerts import list_alerts as _fn
+
     return _fn(status=status)
 
 
 def evaluate_alerts() -> list:
     """Evaluate all pending alerts."""
     from src.tools.alerts import check_alerts as _fn
+
     return _fn()
 
 
 def get_alert_types() -> list:
     """Get available alert types."""
     from src.tools.alerts import get_available_alert_types as _fn
+
     return _fn()
 
 
 def get_triggered_alerts() -> list:
     """Get triggered alert history."""
     from src.tools.alerts import get_triggered_history as _fn
+
     return _fn()
 
 
@@ -464,6 +513,7 @@ def get_triggered_alerts() -> list:
 def get_analyst_consensus(symbol: str) -> dict:
     """Get analyst consensus, price targets, and estimate revisions."""
     from src.tools.analyst_tracker import get_analyst_consensus as _fn
+
     return _fn(symbol)
 
 
@@ -471,6 +521,7 @@ def get_analyst_consensus(symbol: str) -> dict:
 def compare_analyst_consensus(symbols: tuple) -> dict:
     """Compare analyst consensus across multiple stocks."""
     from src.tools.analyst_tracker import compare_analyst_consensus as _fn
+
     return _fn(list(symbols))
 
 
@@ -481,6 +532,7 @@ def compare_analyst_consensus(symbols: tuple) -> dict:
 def get_short_interest(symbol: str) -> dict:
     """Get short interest analysis and squeeze scoring."""
     from src.tools.short_interest import analyze_short_interest as _fn
+
     return _fn(symbol)
 
 
@@ -488,6 +540,7 @@ def get_short_interest(symbol: str) -> dict:
 def compare_short_interest(symbols: tuple) -> dict:
     """Compare short interest across multiple stocks."""
     from src.tools.short_interest import compare_short_interest as _fn
+
     return _fn(list(symbols))
 
 
@@ -495,6 +548,7 @@ def compare_short_interest(symbols: tuple) -> dict:
 def get_squeeze_watchlist(min_score: int = 50) -> dict:
     """Screen for short squeeze candidates."""
     from src.tools.short_interest import get_short_squeeze_watchlist as _fn
+
     return _fn(min_squeeze_score=min_score)
 
 
@@ -504,7 +558,11 @@ def get_squeeze_watchlist(min_score: int = 50) -> dict:
 @st.cache_data(ttl=1800, show_spinner=False)
 def detect_anomalies(symbol: str) -> dict:
     """Detect volume and price anomalies."""
-    from src.tools.anomaly_detector import detect_volume_anomalies, detect_price_anomalies
+    from src.tools.anomaly_detector import (
+        detect_price_anomalies,
+        detect_volume_anomalies,
+    )
+
     return {
         "volume": detect_volume_anomalies(symbol),
         "price": detect_price_anomalies(symbol),
@@ -518,6 +576,7 @@ def detect_anomalies(symbol: str) -> dict:
 def optimize_portfolio(symbols: tuple, method: str = "max_sharpe") -> dict:
     """Run portfolio optimization."""
     from src.tools.portfolio_optimizer import optimize_portfolio as _fn
+
     return _fn(list(symbols), method=method)
 
 
@@ -525,6 +584,7 @@ def optimize_portfolio(symbols: tuple, method: str = "max_sharpe") -> dict:
 def get_efficient_frontier(symbols: tuple) -> dict:
     """Calculate efficient frontier."""
     from src.tools.portfolio_optimizer import calculate_efficient_frontier as _fn
+
     return _fn(list(symbols))
 
 
@@ -532,6 +592,7 @@ def get_efficient_frontier(symbols: tuple) -> dict:
 def get_portfolio_benchmark(symbols: tuple, weights: tuple) -> dict:
     """Compare portfolio vs benchmark."""
     from src.tools.benchmark import calculate_portfolio_vs_benchmark as _fn
+
     return _fn(list(symbols), list(weights))
 
 
@@ -539,6 +600,7 @@ def get_portfolio_benchmark(symbols: tuple, weights: tuple) -> dict:
 def get_correlation_analysis(symbols: tuple) -> dict:
     """Get correlation matrix with insights."""
     from src.tools.portfolio_optimizer import correlation_analysis as _fn
+
     return _fn(list(symbols))
 
 
@@ -546,6 +608,7 @@ def get_correlation_analysis(symbols: tuple) -> dict:
 def get_full_portfolio_optimization(symbols: tuple, weights: tuple = None) -> dict:
     """Run comprehensive portfolio optimization."""
     from src.tools.portfolio_optimizer import full_portfolio_optimization as _fn
+
     return _fn(list(symbols), current_weights=list(weights) if weights else None)
 
 
@@ -553,6 +616,7 @@ def get_full_portfolio_optimization(symbols: tuple, weights: tuple = None) -> di
 def get_rebalance_suggestions(symbols: tuple, weights: tuple, method: str = "max_sharpe") -> dict:
     """Get rebalancing suggestions."""
     from src.tools.portfolio_optimizer import rebalance_suggestions as _fn
+
     return _fn(list(symbols), list(weights), target_method=method)
 
 
@@ -574,6 +638,7 @@ def _get_llm():
 
     if provider == "ollama":
         from langchain_ollama import ChatOllama
+
         return ChatOllama(
             model=settings.llm.ollama_model,
             base_url=settings.llm.ollama_base_url,
@@ -581,6 +646,7 @@ def _get_llm():
         )
     elif provider == "lmstudio":
         from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
             model=settings.llm.lmstudio_model,
             base_url=settings.llm.lmstudio_base_url,
@@ -589,6 +655,7 @@ def _get_llm():
         )
     elif provider == "vllm":
         from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
             model=settings.llm.vllm_model,
             base_url=settings.llm.vllm_base_url,
@@ -597,6 +664,7 @@ def _get_llm():
         )
     elif provider == "groq":
         from langchain_groq import ChatGroq
+
         return ChatGroq(
             model=settings.llm.groq_model,
             api_key=settings.llm.groq_api_key,
@@ -604,6 +672,7 @@ def _get_llm():
         )
     elif provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
+
         return ChatAnthropic(
             model=settings.llm.model,
             api_key=settings.llm.anthropic_api_key,
@@ -612,6 +681,7 @@ def _get_llm():
         )
     elif provider == "openai":
         from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
             model=settings.llm.model,
             temperature=temperature,
@@ -620,6 +690,7 @@ def _get_llm():
         )
     else:
         from langchain_ollama import ChatOllama
+
         return ChatOllama(
             model=settings.llm.ollama_model,
             base_url=settings.llm.ollama_base_url,
@@ -656,7 +727,7 @@ def ask_financial_question(
     Returns:
         The LLM response text.
     """
-    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
     llm = _get_llm()
 
@@ -723,19 +794,102 @@ import re as _re
 
 # Common tickers that are also English words — avoid false positives
 _COMMON_WORD_TICKERS = {
-    "A", "I", "IT", "ALL", "ARE", "AT", "BE", "BIG", "CAN", "CEO",
-    "DO", "FOR", "GO", "HAS", "HE", "HER", "HIM", "HIS", "IF",
-    "IN", "IS", "ITS", "LOW", "ME", "MY", "NEW", "NOW", "OLD",
-    "ON", "ONE", "OR", "OUT", "OWN", "PAY", "SO", "THE", "TO",
-    "TOO", "TWO", "UP", "US", "WAS", "WAR", "WAY", "WE",
-    "WHO", "WHY", "WIN", "YOU", "AN", "AM", "AS", "BY", "OF",
-    "HOLD", "BUY", "SELL", "LONG", "PUT", "CALL", "RUN",
-    "VERY", "WELL", "GOOD", "BEST", "TOP", "HIGH", "ANY",
-    "HOW", "WHAT", "WHEN", "JUST", "THAN", "THEN",
-    "MOST", "NOT", "YET", "BUT", "AND", "THAT", "THIS",
-    "FROM", "WILL", "BEEN", "HAVE", "WITH", "THEM",
-    "ETF", "AI", "SEC", "IPO", "CEO", "CFO", "COO",
+    "A",
+    "I",
+    "IT",
+    "ALL",
+    "ARE",
+    "AT",
+    "BE",
+    "BIG",
+    "CAN",
+    "CEO",
+    "DO",
+    "FOR",
+    "GO",
+    "HAS",
+    "HE",
+    "HER",
+    "HIM",
+    "HIS",
+    "IF",
+    "IN",
+    "IS",
+    "ITS",
+    "LOW",
+    "ME",
+    "MY",
+    "NEW",
+    "NOW",
+    "OLD",
+    "ON",
+    "ONE",
+    "OR",
+    "OUT",
+    "OWN",
+    "PAY",
+    "SO",
+    "THE",
+    "TO",
+    "TOO",
+    "TWO",
+    "UP",
+    "US",
+    "WAS",
+    "WAR",
+    "WAY",
+    "WE",
+    "WHO",
+    "WHY",
+    "WIN",
+    "YOU",
+    "AN",
+    "AM",
+    "AS",
+    "BY",
+    "OF",
+    "HOLD",
+    "BUY",
+    "SELL",
+    "LONG",
+    "PUT",
+    "CALL",
+    "RUN",
+    "VERY",
+    "WELL",
+    "GOOD",
+    "BEST",
+    "TOP",
+    "HIGH",
+    "ANY",
+    "HOW",
+    "WHAT",
+    "WHEN",
+    "JUST",
+    "THAN",
+    "THEN",
+    "MOST",
+    "NOT",
+    "YET",
+    "BUT",
+    "AND",
+    "THAT",
+    "THIS",
+    "FROM",
+    "WILL",
+    "BEEN",
+    "HAVE",
+    "WITH",
+    "THEM",
+    "ETF",
+    "AI",
+    "SEC",
+    "IPO",
+    "CEO",
+    "CFO",
+    "COO",
 }
+
 
 def _extract_tickers(text: str) -> list[str]:
     """
@@ -816,7 +970,9 @@ def _extract_user_profile(chat_history: list[dict]) -> dict:
         if not profile.get("investment_horizon"):
             if any(w in text for w in ["long term", "long-term", "10 year", "5 year", "retire"]):
                 profile["investment_horizon"] = "long-term (5+ years)"
-            elif any(w in text for w in ["short term", "short-term", "quick", "day trade", "swing"]):
+            elif any(
+                w in text for w in ["short term", "short-term", "quick", "day trade", "swing"]
+            ):
                 profile["investment_horizon"] = "short-term (< 1 year)"
             elif any(w in text for w in ["medium term", "medium-term", "1-3 year", "few years"]):
                 profile["investment_horizon"] = "medium-term (1-5 years)"
@@ -899,6 +1055,7 @@ def _format_user_profile(profile: dict) -> str:
 
 # ─── Chat Summarization ───────────────────────────────────
 
+
 def _summarize_chat_history(
     chat_history: list[dict],
     keep_recent: int = 6,
@@ -941,6 +1098,7 @@ def _summarize_chat_history(
 def _fetch_ticker_snapshot(symbol: str) -> str:
     """Fetch a quick data snapshot for a single ticker (stock or ETF). ~1-2s."""
     import json
+
     import yfinance as yf
 
     try:
@@ -961,6 +1119,7 @@ def _fetch_ticker_snapshot(symbol: str) -> str:
                         returns[label] = round(((price - start) / start) * 100, 2)
             # YTD
             from datetime import datetime
+
             year_data = closes[closes.index.year == datetime.now().year]
             if not year_data.empty:
                 ytd_start = float(year_data.iloc[0])
@@ -976,7 +1135,9 @@ def _fetch_ticker_snapshot(symbol: str) -> str:
             "pe_ratio": info.get("trailingPE"),
             "forward_pe": info.get("forwardPE"),
             "peg_ratio": info.get("pegRatio"),
-            "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
+            "dividend_yield": (
+                round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None
+            ),
             "market_cap": info.get("marketCap"),
             "52w_high": info.get("fiftyTwoWeekHigh"),
             "52w_low": info.get("fiftyTwoWeekLow"),
@@ -998,6 +1159,7 @@ def _fetch_ticker_snapshot(symbol: str) -> str:
 def _run_technical_analysis(symbol: str) -> str:
     """Run technical analysis (RSI, MACD, moving averages, Bollinger Bands)."""
     import json
+
     try:
         result = get_technical_analysis(symbol)
         if "error" in result:
@@ -1020,16 +1182,21 @@ def _run_technical_analysis(symbol: str) -> str:
 def _run_fundamental_analysis(symbol: str) -> str:
     """Run fundamental analysis (valuation ratios, profitability, financial health)."""
     import json
+
     try:
         health = get_financial_health(symbol)
         valuation = get_valuation_ratios(symbol)
         profitability = get_profitability_ratios(symbol)
-        return json.dumps({
-            "symbol": symbol,
-            "financial_health": health if "error" not in health else None,
-            "valuation": valuation if "error" not in valuation else None,
-            "profitability": profitability if "error" not in profitability else None,
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "symbol": symbol,
+                "financial_health": health if "error" not in health else None,
+                "valuation": valuation if "error" not in valuation else None,
+                "profitability": profitability if "error" not in profitability else None,
+            },
+            indent=2,
+            default=str,
+        )
     except Exception as e:
         return json.dumps({"symbol": symbol, "error": str(e)})
 
@@ -1037,8 +1204,10 @@ def _run_fundamental_analysis(symbol: str) -> str:
 def _run_dividend_analysis(symbol: str) -> str:
     """Run dividend analysis (yield, safety, growth history)."""
     import json
+
     try:
         from src.tools.dividend_analyzer import analyze_dividends as _fn
+
         result = _fn(symbol)
         return json.dumps(result, indent=2, default=str)
     except Exception as e:
@@ -1048,8 +1217,10 @@ def _run_dividend_analysis(symbol: str) -> str:
 def _run_earnings_analysis(symbol: str) -> str:
     """Run earnings analysis (EPS surprises, beat/miss patterns, quality)."""
     import json
+
     try:
         from src.tools.earnings_data import analyze_earnings as _fn
+
         result = _fn(symbol)
         return json.dumps(result, indent=2, default=str)
     except Exception as e:
@@ -1059,6 +1230,7 @@ def _run_earnings_analysis(symbol: str) -> str:
 def _run_sentiment_analysis(symbol: str) -> str:
     """Run news sentiment analysis."""
     import json
+
     try:
         result = analyze_news_sentiment(symbol)
         return json.dumps(result, indent=2, default=str)
@@ -1069,6 +1241,7 @@ def _run_sentiment_analysis(symbol: str) -> str:
 def _run_peer_comparison(symbol: str) -> str:
     """Run peer comparison analysis."""
     import json
+
     try:
         result = compare_peers(symbol)
         return json.dumps(result, indent=2, default=str)
@@ -1079,8 +1252,10 @@ def _run_peer_comparison(symbol: str) -> str:
 def _run_options_analysis(symbol: str) -> str:
     """Run options flow analysis (put/call ratio, IV, max pain, unusual activity)."""
     import json
+
     try:
         from src.tools.options_analyzer import analyze_options as _fn
+
         result = _fn(symbol)
         return json.dumps(result, indent=2, default=str)
     except Exception as e:
@@ -1090,8 +1265,10 @@ def _run_options_analysis(symbol: str) -> str:
 def _run_insider_analysis(symbol: str) -> str:
     """Run insider & institutional activity analysis (smart money signal)."""
     import json
+
     try:
         from src.tools.insider_activity import analyze_smart_money as _fn
+
         result = _fn(symbol)
         return json.dumps(result, indent=2, default=str)
     except Exception as e:
@@ -1249,9 +1426,10 @@ def ask_advisor(
     Returns:
         The LLM response text.
     """
-    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-    from langchain_core.tools import tool as lc_tool
     import concurrent.futures
+
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+    from langchain_core.tools import tool as lc_tool
 
     def _emit(key: str, label: str):
         if on_progress:
@@ -1331,7 +1509,10 @@ def ask_advisor(
         Use when the user asks about valuation, whether a stock is overvalued, or financials.
         Examples: run_fundamentals("MSFT"), run_fundamentals("GOOGL")"""
         sym = symbol.upper().strip()
-        _emit("fundamentals", f"Running fundamental analysis on {sym} (Valuation, Profitability, Health)...")
+        _emit(
+            "fundamentals",
+            f"Running fundamental analysis on {sym} (Valuation, Profitability, Health)...",
+        )
         return _run_fundamental_analysis(sym)
 
     @lc_tool
@@ -1398,9 +1579,15 @@ def ask_advisor(
         return _run_insider_analysis(sym)
 
     all_tools = [
-        lookup_ticker, run_technical, run_fundamentals,
-        run_dividends, run_earnings, run_sentiment, run_peers,
-        run_options, run_insider,
+        lookup_ticker,
+        run_technical,
+        run_fundamentals,
+        run_dividends,
+        run_earnings,
+        run_sentiment,
+        run_peers,
+        run_options,
+        run_insider,
     ]
 
     _emit("analyzing", "Analyzing your question...")
@@ -1435,7 +1622,11 @@ def ask_advisor(
                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
                     future_to_tc = {
                         ex.submit(
-                            tool_map[tc["name"]].invoke if tc["name"] in tool_map else lambda _: f"Unknown tool: {tc['name']}",
+                            (
+                                tool_map[tc["name"]].invoke
+                                if tc["name"] in tool_map
+                                else lambda _: f"Unknown tool: {tc['name']}"
+                            ),
                             tc["args"],
                         ): tc
                         for tc in tool_calls
@@ -1457,9 +1648,7 @@ def ask_advisor(
                     tool_result = tool_fn.invoke(tc["args"])
                 else:
                     tool_result = f"Unknown tool: {tc['name']}"
-                messages.append(
-                    ToolMessage(content=str(tool_result), tool_call_id=tc["id"])
-                )
+                messages.append(ToolMessage(content=str(tool_result), tool_call_id=tc["id"]))
 
             _emit("synthesizing", "Synthesizing insights & preparing recommendation...")
             response = llm_with_tools.invoke(messages)
@@ -1480,10 +1669,16 @@ def ask_advisor(
     except Exception as e:
         error_msg = str(e)
         # Detect tool-calling failures (Groq/some models format tool calls incorrectly)
-        if "tool_use_failed" in error_msg or "failed_generation" in error_msg or "Failed to call a function" in error_msg:
+        if (
+            "tool_use_failed" in error_msg
+            or "failed_generation" in error_msg
+            or "Failed to call a function" in error_msg
+        ):
             _emit("fallback", "Retrying without tool calling...")
             context = prefetch_context + profile_context
-            return ask_financial_question(question=question, context=context, chat_history=chat_history)
+            return ask_financial_question(
+                question=question, context=context, chat_history=chat_history
+            )
         return f"I'm unable to answer right now. Please check that your LLM provider is running.\n\nError: {e}"
 
 
@@ -1507,16 +1702,26 @@ def _validate_advisor_response(response: str, question: str) -> str:
 
     # Keywords that indicate a recommendation was made
     recommendation_keywords = [
-        "recommend", "suggest", "consider", "buy", "sell", "hold",
-        "allocate", "invest", "position", "portfolio",
+        "recommend",
+        "suggest",
+        "consider",
+        "buy",
+        "sell",
+        "hold",
+        "allocate",
+        "invest",
+        "position",
+        "portfolio",
     ]
-    has_recommendation = any(
-        kw in response.lower() for kw in recommendation_keywords
-    )
+    has_recommendation = any(kw in response.lower() for kw in recommendation_keywords)
 
     # Ensure disclaimer is present for recommendations
     if has_recommendation:
-        disclaimer_fragments = ["not personalized", "financial advice", "licensed financial advisor"]
+        disclaimer_fragments = [
+            "not personalized",
+            "financial advice",
+            "licensed financial advisor",
+        ]
         has_disclaimer = any(frag in response.lower() for frag in disclaimer_fragments)
         if not has_disclaimer:
             response += _DISCLAIMER

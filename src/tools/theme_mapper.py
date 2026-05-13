@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Theme Mapper Tools for the Thematic Investing Analysis feature.
 
@@ -6,9 +7,10 @@ This module provides theme-to-ticker mapping, batch stock data fetching,
 theme performance aggregation, correlation analysis, and momentum scoring.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import yaml
 
@@ -54,7 +56,12 @@ def _load_themes_config() -> Dict[str, Any]:
         return _themes_cache
     except Exception as e:
         logger.error(f"Failed to load themes config: {e}")
-        return {"themes": {}, "benchmarks": {}, "performance_periods": [], "scoring": {}}
+        return {
+            "themes": {},
+            "benchmarks": {},
+            "performance_periods": [],
+            "scoring": {},
+        }
 
 
 def reload_themes_config() -> Dict[str, Any]:
@@ -83,17 +90,19 @@ def list_available_themes() -> List[Dict[str, Any]]:
 
     result = []
     for theme_id, theme_data in themes.items():
-        result.append({
-            "theme_id": theme_id,
-            "name": theme_data.get("name", theme_id),
-            "description": theme_data.get("description", "").strip(),
-            "constituent_count": len(theme_data.get("constituents", [])),
-            "constituents": theme_data.get("constituents", []),
-            "reference_etfs": theme_data.get("reference_etfs", []),
-            "sector_tags": theme_data.get("sector_tags", []),
-            "risk_level": theme_data.get("risk_level", "Unknown"),
-            "growth_stage": theme_data.get("growth_stage", "Unknown"),
-        })
+        result.append(
+            {
+                "theme_id": theme_id,
+                "name": theme_data.get("name", theme_id),
+                "description": theme_data.get("description", "").strip(),
+                "constituent_count": len(theme_data.get("constituents", [])),
+                "constituents": theme_data.get("constituents", []),
+                "reference_etfs": theme_data.get("reference_etfs", []),
+                "sector_tags": theme_data.get("sector_tags", []),
+                "risk_level": theme_data.get("risk_level", "Unknown"),
+                "growth_stage": theme_data.get("growth_stage", "Unknown"),
+            }
+        )
     return result
 
 
@@ -179,11 +188,11 @@ def fetch_theme_stock_data(
                 "dates": dates,
                 "current_price": closes[-1] if closes else 0,
                 "start_price": closes[0] if closes else 0,
-                "total_return_pct": round(
-                    ((closes[-1] - closes[0]) / closes[0]) * 100, 2
-                )
-                if closes and closes[0] > 0
-                else 0,
+                "total_return_pct": (
+                    round(((closes[-1] - closes[0]) / closes[0]) * 100, 2)
+                    if closes and closes[0] > 0
+                    else 0
+                ),
                 "market_cap": info.get("marketCap", 0),
                 "sector": info.get("sector", "N/A"),
                 "industry": info.get("industry", "N/A"),
@@ -228,9 +237,7 @@ def calculate_theme_performance(
     periods = config.get("performance_periods", [])
 
     # Filter valid symbols
-    valid_symbols = {
-        sym: data for sym, data in stock_data.items() if "error" not in data
-    }
+    valid_symbols = {sym: data for sym, data in stock_data.items() if "error" not in data}
 
     if not valid_symbols:
         return {"error": "No valid stock data to compute performance"}
@@ -271,11 +278,17 @@ def calculate_theme_performance(
     sym_returns.sort(key=lambda x: x["total_return"], reverse=True)
 
     top_performers = [
-        {"symbol": s["symbol"], "1_year_return": f"{'+' if s['total_return'] >= 0 else ''}{s['total_return']}%"}
+        {
+            "symbol": s["symbol"],
+            "1_year_return": f"{'+' if s['total_return'] >= 0 else ''}{s['total_return']}%",
+        }
         for s in sym_returns[:3]
     ]
     laggards = [
-        {"symbol": s["symbol"], "1_year_return": f"{'+' if s['total_return'] >= 0 else ''}{s['total_return']}%"}
+        {
+            "symbol": s["symbol"],
+            "1_year_return": f"{'+' if s['total_return'] >= 0 else ''}{s['total_return']}%",
+        }
         for s in sym_returns[-3:]
     ]
 
@@ -306,7 +319,8 @@ def calculate_theme_correlation(stock_data: Dict[str, Any]) -> Dict[str, Any]:
         and pairwise correlation matrix.
     """
     valid = {
-        sym: data for sym, data in stock_data.items()
+        sym: data
+        for sym, data in stock_data.items()
         if "error" not in data and len(data.get("returns", [])) > 20
     }
 
@@ -321,9 +335,7 @@ def calculate_theme_correlation(stock_data: Dict[str, Any]) -> Dict[str, Any]:
     symbols = list(valid.keys())
     # Align to shortest series
     min_len = min(len(v["returns"]) for v in valid.values())
-    returns_matrix = np.array(
-        [valid[sym]["returns"][-min_len:] for sym in symbols]
-    )
+    returns_matrix = np.array([valid[sym]["returns"][-min_len:] for sym in symbols])
 
     corr_matrix = np.corrcoef(returns_matrix)
 
@@ -378,9 +390,7 @@ def calculate_sector_overlap(stock_data: Dict[str, Any]) -> Dict[str, str]:
     Returns:
         Dict with sector -> percentage string.
     """
-    valid = {
-        sym: data for sym, data in stock_data.items() if "error" not in data
-    }
+    valid = {sym: data for sym, data in stock_data.items() if "error" not in data}
     total = len(valid)
     if total == 0:
         return {}
@@ -420,9 +430,7 @@ def calculate_momentum_score(stock_data: Dict[str, Any]) -> int:
     med_w = scoring.get("medium_term_weight", 0.4)
     long_w = scoring.get("long_term_weight", 0.3)
 
-    valid = {
-        sym: data for sym, data in stock_data.items() if "error" not in data
-    }
+    valid = {sym: data for sym, data in stock_data.items() if "error" not in data}
     if not valid:
         return 0
 
@@ -506,12 +514,7 @@ def calculate_theme_health_score(
     # Less risk -> higher score
     risk_score = max(0, min(100, 100 - abs(perf_val) * 0.5))
 
-    health = int(
-        perf_score * perf_w
-        + mom_score * mom_w
-        + div_score * div_w
-        + risk_score * risk_w
-    )
+    health = int(perf_score * perf_w + mom_score * mom_w + div_score * div_w + risk_score * risk_w)
     health = max(0, min(100, health))
 
     return {
@@ -556,9 +559,7 @@ def analyze_theme(theme_id: str) -> Dict[str, Any]:
     if not constituents:
         return {"error": f"Theme '{theme_id}' has no constituents"}
 
-    logger.info(
-        f"Analyzing theme '{theme_def.get('name')}' with {len(constituents)} constituents"
-    )
+    logger.info(f"Analyzing theme '{theme_def.get('name')}' with {len(constituents)} constituents")
 
     # 1. Fetch stock data
     stock_data = fetch_theme_stock_data(constituents, period="1y")
@@ -594,9 +595,7 @@ def analyze_theme(theme_id: str) -> Dict[str, Any]:
         "theme_risk": {
             "intra_correlation": correlation.get("intra_correlation"),
             "diversification_score": correlation.get("diversification_score"),
-            "diversification_description": correlation.get(
-                "diversification_description", ""
-            ),
+            "diversification_description": correlation.get("diversification_description", ""),
         },
         "theme_health_score": health.get("health_score", 0),
         "health_components": health.get("components", {}),
@@ -611,8 +610,6 @@ def analyze_theme(theme_id: str) -> Dict[str, Any]:
             for sym, data in stock_data.items()
             if "error" not in data
         },
-        "failed_constituents": [
-            sym for sym, data in stock_data.items() if "error" in data
-        ],
+        "failed_constituents": [sym for sym, data in stock_data.items() if "error" in data],
         "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }

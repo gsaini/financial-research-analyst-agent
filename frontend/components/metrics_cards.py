@@ -51,7 +51,9 @@ def render_score_badge(label: str, score, classification: str = "", badge_class:
     )
 
 
-def render_company_header(symbol: str, name: str, price: float, change_pct: float, market_cap: str = "", sector: str = ""):
+def render_company_header(
+    symbol: str, name: str, price: float, change_pct: float, market_cap: str = "", sector: str = ""
+):
     """Render a company header bar with price and key info."""
     change_class = "change-positive" if change_pct >= 0 else "change-negative"
     change_sign = "+" if change_pct >= 0 else ""
@@ -117,7 +119,8 @@ def render_news_card(
 
     title_html = (
         f'<a href="{url}" target="_blank" style="color: inherit; text-decoration: none;">{title}</a>'
-        if url else title
+        if url
+        else title
     )
 
     thumb_html = ""
@@ -125,7 +128,7 @@ def render_news_card(
         thumb_html = (
             f'<img src="{thumbnail}" alt="" '
             f'style="width: 100%; height: 120px; object-fit: cover; border-radius: 0.5rem; margin-bottom: 0.5rem;" '
-            f'onerror="this.style.display=\'none\'" />'
+            f"onerror=\"this.style.display='none'\" />"
         )
 
     type_badge = ""
@@ -141,7 +144,7 @@ def render_news_card(
         # Truncate cleanly at word boundary
         desc = description[:200]
         if len(description) > 200:
-            desc = desc[:desc.rfind(" ")] + "..."
+            desc = desc[: desc.rfind(" ")] + "..."
         desc_html = f"<div class='news-desc'>{desc}</div>"
 
     st.markdown(

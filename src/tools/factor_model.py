@@ -27,20 +27,18 @@ _TRADING_DAYS = 252
 
 # Factor proxy ETFs (Fama-French factors approximated by ETFs)
 _FACTOR_PROXIES = {
-    "market": "SPY",      # Market excess return
-    "size": "IWM",        # Small cap (Russell 2000) — SMB proxy
-    "value": "IWD",       # Value (Russell 1000 Value) — HML proxy
-    "momentum": "MTUM",   # Momentum factor
-    "quality": "QUAL",    # Quality factor (profitability proxy)
-    "low_vol": "USMV",    # Low volatility factor
+    "market": "SPY",  # Market excess return
+    "size": "IWM",  # Small cap (Russell 2000) — SMB proxy
+    "value": "IWD",  # Value (Russell 1000 Value) — HML proxy
+    "momentum": "MTUM",  # Momentum factor
+    "quality": "QUAL",  # Quality factor (profitability proxy)
+    "low_vol": "USMV",  # Low volatility factor
 }
 
 _RISK_FREE_PROXY = "SHV"  # Short-term treasury ETF as risk-free proxy
 
 
-def _fetch_aligned_returns(
-    symbol: str, period: str = "2y"
-) -> Optional[pd.DataFrame]:
+def _fetch_aligned_returns(symbol: str, period: str = "2y") -> Optional[pd.DataFrame]:
     """Fetch and align returns for symbol and factor proxies."""
     try:
         provider = get_provider()
@@ -144,18 +142,22 @@ def analyze_factor_exposure(symbol: str) -> Dict[str, Any]:
                 "interpretation": (
                     f"Positive alpha of {annual_alpha*100:.2f}% — stock generates excess returns beyond factor exposure"
                     if annual_alpha > 0.01
-                    else f"Negative alpha of {annual_alpha*100:.2f}% — stock underperforms its factor exposure"
-                    if annual_alpha < -0.01
-                    else "Near-zero alpha — returns are well-explained by factor exposure"
+                    else (
+                        f"Negative alpha of {annual_alpha*100:.2f}% — stock underperforms its factor exposure"
+                        if annual_alpha < -0.01
+                        else "Near-zero alpha — returns are well-explained by factor exposure"
+                    )
                 ),
             },
             "r_squared": round(r_squared, 3),
             "r_squared_interpretation": (
                 "High explanatory power — factors explain most of the return variation"
                 if r_squared > 0.7
-                else "Moderate — factors explain some variation but stock-specific risk is significant"
-                if r_squared > 0.4
-                else "Low — stock has high idiosyncratic risk not captured by factors"
+                else (
+                    "Moderate — factors explain some variation but stock-specific risk is significant"
+                    if r_squared > 0.4
+                    else "Low — stock has high idiosyncratic risk not captured by factors"
+                )
             ),
             "factor_exposures": exposures,
             "dominant_factor": dominant,

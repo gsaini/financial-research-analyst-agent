@@ -156,7 +156,12 @@ class MarketDataProvider(ABC):
         ...
 
     @abstractmethod
-    def get_financials(self, symbol: str, statement_type: str = "income_statement", freq: str = "yearly") -> pd.DataFrame:
+    def get_financials(
+        self,
+        symbol: str,
+        statement_type: str = "income_statement",
+        freq: str = "yearly",
+    ) -> pd.DataFrame:
         """Helper to get right statement from provider"""
         ...
 
@@ -245,6 +250,7 @@ class YFinanceProvider(MarketDataProvider):
 
     def __init__(self) -> None:
         import yfinance  # fail-fast if not installed
+
         self._yf = yfinance
         logger.info("YFinanceProvider initialized")
 
@@ -314,8 +320,13 @@ class YFinanceProvider(MarketDataProvider):
         except Exception as e:
             logger.error(f"YFinanceProvider.get_quarterly_income_statement({symbol}): {e}")
             return self._empty_df()
-            
-    def get_financials(self, symbol: str, statement_type: str = "income_statement", freq: str = "yearly") -> pd.DataFrame:
+
+    def get_financials(
+        self,
+        symbol: str,
+        statement_type: str = "income_statement",
+        freq: str = "yearly",
+    ) -> pd.DataFrame:
         if freq == "yearly":
             if statement_type == "income_statement":
                 return self.get_income_statement(symbol)
@@ -325,8 +336,8 @@ class YFinanceProvider(MarketDataProvider):
                 return self.get_cash_flow(symbol)
         elif freq == "quarterly":
             if statement_type == "income_statement":
-                 return self.get_quarterly_income_statement(symbol)
-                 
+                return self.get_quarterly_income_statement(symbol)
+
         return self._empty_df()
 
     # Category 4 ──────────────────────────────────────────────────────
@@ -450,8 +461,7 @@ class MultiProvider(MarketDataProvider):
         self._primary_name = type(primary).__name__
         self._fallback_name = type(fallback).__name__ if fallback else "None"
         logger.info(
-            f"MultiProvider: primary={self._primary_name}, "
-            f"fallback={self._fallback_name}"
+            f"MultiProvider: primary={self._primary_name}, " f"fallback={self._fallback_name}"
         )
 
     def _call(self, method_name: str, *args, **kwargs) -> Any:
@@ -468,8 +478,7 @@ class MultiProvider(MarketDataProvider):
                 return self._empty_for(method_name)
 
             logger.info(
-                f"{self._primary_name}.{method_name} failed ({e}), "
-                f"trying {self._fallback_name}"
+                f"{self._primary_name}.{method_name} failed ({e}), " f"trying {self._fallback_name}"
             )
             fallback_method = getattr(self._fallback, method_name)
             try:
@@ -493,11 +502,18 @@ class MultiProvider(MarketDataProvider):
     @staticmethod
     def _empty_for(method_name: str) -> Any:
         df_methods = {
-            "get_history", "get_income_statement", "get_balance_sheet",
-            "get_cash_flow", "get_quarterly_income_statement", "get_financials",
-            "get_earnings_history", "get_insider_transactions",
-            "get_insider_purchases", "get_institutional_holders",
-            "get_mutualfund_holders", "get_major_holders",
+            "get_history",
+            "get_income_statement",
+            "get_balance_sheet",
+            "get_cash_flow",
+            "get_quarterly_income_statement",
+            "get_financials",
+            "get_earnings_history",
+            "get_insider_transactions",
+            "get_insider_purchases",
+            "get_institutional_holders",
+            "get_mutualfund_holders",
+            "get_major_holders",
         }
         if method_name in df_methods:
             return pd.DataFrame()
@@ -532,7 +548,12 @@ class MultiProvider(MarketDataProvider):
     def get_quarterly_income_statement(self, symbol: str) -> pd.DataFrame:
         return self._call("get_quarterly_income_statement", symbol)
 
-    def get_financials(self, symbol: str, statement_type: str = "income_statement", freq: str = "yearly") -> pd.DataFrame:
+    def get_financials(
+        self,
+        symbol: str,
+        statement_type: str = "income_statement",
+        freq: str = "yearly",
+    ) -> pd.DataFrame:
         return self._call("get_financials", symbol, statement_type=statement_type, freq=freq)
 
     def get_earnings_history(self, symbol: str) -> pd.DataFrame:
@@ -580,8 +601,9 @@ def _create_provider(name: str) -> MarketDataProvider:
     if name == "yfinance":
         return YFinanceProvider()
     elif name == "fmp":
-        from src.data.fmp_provider import FMPProvider
         from src.config import get_settings
+        from src.data.fmp_provider import FMPProvider
+
         api_key = get_settings().data_api.fmp_api_key
         if not api_key:
             raise ValueError(
@@ -590,8 +612,9 @@ def _create_provider(name: str) -> MarketDataProvider:
             )
         return FMPProvider(api_key=api_key)
     elif name == "alphavantage":
-        from src.data.alphavantage_provider import AlphaVantageProvider
         from src.config import get_settings
+        from src.data.alphavantage_provider import AlphaVantageProvider
+
         api_key = get_settings().data_api.alpha_vantage_api_key
         if not api_key:
             raise ValueError(
@@ -632,6 +655,7 @@ def get_provider(provider_name: str | None = None) -> MarketDataProvider:
             return _provider_instance
 
         import os
+
         name = (provider_name or os.getenv("DATA_PROVIDER", "yfinance")).lower()
         fallback_name = os.getenv("DATA_FALLBACK_PROVIDER", "").lower().strip()
 

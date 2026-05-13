@@ -3,13 +3,14 @@ Macro Economy Dashboard - FRED macroeconomic data, treasury yields,
 rate environment analysis, and sector impact assessment.
 """
 
-import streamlit as st
 import pandas as pd
-from utils.theme import inject_css, COLORS
-from utils.session import init_session_state
-from utils.formatters import format_percent
+import streamlit as st
 from components.header import render_header
 from components.plotly_charts import create_gauge_chart, create_horizontal_bar
+
+from utils.formatters import format_percent
+from utils.session import init_session_state
+from utils.theme import COLORS, inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
 st.set_page_config(
@@ -31,24 +32,28 @@ st.caption("Key economic indicators, treasury yields, and rate environment analy
 @st.cache_data(ttl=1800, show_spinner=False)
 def _get_macro_summary():
     from src.tools.macro_data import get_macro_summary
+
     return get_macro_summary()
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def _get_treasury_yields():
     from src.tools.macro_data import get_treasury_yields
+
     return get_treasury_yields()
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def _get_rate_env():
     from src.tools.macro_data import get_rate_environment
+
     return get_rate_environment()
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def _get_macro_context(symbol: str):
     from src.tools.macro_data import get_macro_context_for_stock
+
     return get_macro_context_for_stock(symbol)
 
 
@@ -89,10 +94,17 @@ for i, (label, key, suffix) in enumerate(indicator_display):
         direction = data.get("direction", "")
         arrow = "▲" if direction == "rising" else "▼" if direction == "falling" else "→"
         color = (
-            COLORS.get("accent_red", "#ff4444") if direction == "rising" and key in ("cpi_yoy", "unemployment")
-            else COLORS.get("accent_green", "#00cc66") if direction == "falling" and key in ("cpi_yoy", "unemployment")
-            else COLORS.get("accent_green", "#00cc66") if direction == "rising" and key == "gdp_growth"
-            else COLORS.get("text_secondary", "#888")
+            COLORS.get("accent_red", "#ff4444")
+            if direction == "rising" and key in ("cpi_yoy", "unemployment")
+            else (
+                COLORS.get("accent_green", "#00cc66")
+                if direction == "falling" and key in ("cpi_yoy", "unemployment")
+                else (
+                    COLORS.get("accent_green", "#00cc66")
+                    if direction == "rising" and key == "gdp_growth"
+                    else COLORS.get("text_secondary", "#888")
+                )
+            )
         )
         if isinstance(current, (int, float)):
             display_val = f"{current:.2f}{suffix}"
@@ -129,11 +141,13 @@ ycol1, ycol2 = st.columns([2, 1])
 with ycol1:
     yield_data = yields.get("yields", {})
     if yield_data:
-        yield_df = pd.DataFrame([
-            {"Maturity": "2-Year", "Yield (%)": yield_data.get("2y", 0)},
-            {"Maturity": "10-Year", "Yield (%)": yield_data.get("10y", 0)},
-            {"Maturity": "30-Year", "Yield (%)": yield_data.get("30y", 0)},
-        ])
+        yield_df = pd.DataFrame(
+            [
+                {"Maturity": "2-Year", "Yield (%)": yield_data.get("2y", 0)},
+                {"Maturity": "10-Year", "Yield (%)": yield_data.get("10y", 0)},
+                {"Maturity": "30-Year", "Yield (%)": yield_data.get("30y", 0)},
+            ]
+        )
         st.bar_chart(yield_df.set_index("Maturity"), color=COLORS.get("accent_blue", "#4488ff"))
 
 with ycol2:
@@ -141,16 +155,23 @@ with ycol2:
     curve_status = yields.get("curve_status", "unknown")
 
     status_color = (
-        COLORS.get("accent_green", "#00cc66") if curve_status == "normal"
-        else COLORS.get("accent_red", "#ff4444") if curve_status == "inverted"
-        else COLORS.get("accent_yellow", "#ffaa00")
+        COLORS.get("accent_green", "#00cc66")
+        if curve_status == "normal"
+        else (
+            COLORS.get("accent_red", "#ff4444")
+            if curve_status == "inverted"
+            else COLORS.get("accent_yellow", "#ffaa00")
+        )
     )
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     **2Y-10Y Spread**: `{spread:.2f}%`
 
     **Curve Status**: <span style="color:{status_color};font-weight:bold">{curve_status.upper()}</span>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     if curve_status == "inverted":
         st.error("Yield curve is inverted — historically a leading recession indicator.")
@@ -192,12 +213,16 @@ st.markdown("---")
 st.markdown("### Stock-Specific Macro Context")
 st.caption("See how the current macro environment affects a specific stock's sector")
 
-symbol = st.text_input(
-    "Stock Symbol",
-    value=st.session_state.get("selected_symbol", "AAPL"),
-    placeholder="Enter ticker (e.g., AAPL)",
-    key="macro_symbol",
-).strip().upper()
+symbol = (
+    st.text_input(
+        "Stock Symbol",
+        value=st.session_state.get("selected_symbol", "AAPL"),
+        placeholder="Enter ticker (e.g., AAPL)",
+        key="macro_symbol",
+    )
+    .strip()
+    .upper()
+)
 
 if symbol:
     with st.spinner(f"Analyzing macro context for {symbol}..."):

@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Tests for Feature 1: Thematic Investing Analysis.
 
@@ -12,10 +13,11 @@ Tests cover:
 - API endpoint integration
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 
 # ─────────────────────────────────────────────────────────────
 # Theme Mapper Tool Tests
@@ -272,9 +274,7 @@ class TestThemeSchemas:
         """ThemeCompareRequest should accept a list of IDs."""
         from src.api.schemas import ThemeCompareRequest
 
-        req = ThemeCompareRequest(
-            theme_ids=["ai_machine_learning", "cybersecurity"]
-        )
+        req = ThemeCompareRequest(theme_ids=["ai_machine_learning", "cybersecurity"])
         assert len(req.theme_ids) == 2
 
     def test_theme_analysis_response(self):

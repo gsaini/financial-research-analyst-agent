@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Tests for Feature 4: Quarterly Earnings Analysis.
 
@@ -12,11 +13,11 @@ Tests cover:
 - API endpoint integration
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
-import numpy as np
+from unittest.mock import MagicMock, patch
 
+import numpy as np
+import pytest
 
 # ─────────────────────────────────────────────────────────────
 # Earnings Data Tool Tests
@@ -103,10 +104,30 @@ class TestQuarterlyTrends:
         from src.tools.earnings_data import calculate_quarterly_trends
 
         quarters = [
-            {"quarter": "Q1 2025", "revenue": 150_000_000_000, "net_income": 30_000_000_000, "gross_profit": 60_000_000_000},
-            {"quarter": "Q4 2024", "revenue": 130_000_000_000, "net_income": 26_000_000_000, "gross_profit": 52_000_000_000},
-            {"quarter": "Q3 2024", "revenue": 115_000_000_000, "net_income": 23_000_000_000, "gross_profit": 46_000_000_000},
-            {"quarter": "Q2 2024", "revenue": 105_000_000_000, "net_income": 21_000_000_000, "gross_profit": 42_000_000_000},
+            {
+                "quarter": "Q1 2025",
+                "revenue": 150_000_000_000,
+                "net_income": 30_000_000_000,
+                "gross_profit": 60_000_000_000,
+            },
+            {
+                "quarter": "Q4 2024",
+                "revenue": 130_000_000_000,
+                "net_income": 26_000_000_000,
+                "gross_profit": 52_000_000_000,
+            },
+            {
+                "quarter": "Q3 2024",
+                "revenue": 115_000_000_000,
+                "net_income": 23_000_000_000,
+                "gross_profit": 46_000_000_000,
+            },
+            {
+                "quarter": "Q2 2024",
+                "revenue": 105_000_000_000,
+                "net_income": 21_000_000_000,
+                "gross_profit": 42_000_000_000,
+            },
         ]
 
         result = calculate_quarterly_trends(quarters)
@@ -131,10 +152,30 @@ class TestQuarterlyTrends:
         from src.tools.earnings_data import calculate_quarterly_trends
 
         quarters = [
-            {"quarter": "Q1 2025", "revenue": 100_000_000_000, "net_income": 20_000_000_000, "gross_profit": 40_000_000_000},
-            {"quarter": "Q4 2024", "revenue": 100_000_000_000, "net_income": 20_000_000_000, "gross_profit": 40_000_000_000},
-            {"quarter": "Q3 2024", "revenue": 100_000_000_000, "net_income": 20_000_000_000, "gross_profit": 40_000_000_000},
-            {"quarter": "Q2 2024", "revenue": 100_000_000_000, "net_income": 20_000_000_000, "gross_profit": 40_000_000_000},
+            {
+                "quarter": "Q1 2025",
+                "revenue": 100_000_000_000,
+                "net_income": 20_000_000_000,
+                "gross_profit": 40_000_000_000,
+            },
+            {
+                "quarter": "Q4 2024",
+                "revenue": 100_000_000_000,
+                "net_income": 20_000_000_000,
+                "gross_profit": 40_000_000_000,
+            },
+            {
+                "quarter": "Q3 2024",
+                "revenue": 100_000_000_000,
+                "net_income": 20_000_000_000,
+                "gross_profit": 40_000_000_000,
+            },
+            {
+                "quarter": "Q2 2024",
+                "revenue": 100_000_000_000,
+                "net_income": 20_000_000_000,
+                "gross_profit": 40_000_000_000,
+            },
         ]
 
         result = calculate_quarterly_trends(quarters)
@@ -150,11 +191,31 @@ class TestYoYComparison:
         from src.tools.earnings_data import calculate_yoy_comparison
 
         quarters = [
-            {"quarter": "Q1 2025", "revenue": 120_000_000_000, "net_income": 25_000_000_000},
-            {"quarter": "Q4 2024", "revenue": 115_000_000_000, "net_income": 23_000_000_000},
-            {"quarter": "Q3 2024", "revenue": 110_000_000_000, "net_income": 22_000_000_000},
-            {"quarter": "Q2 2024", "revenue": 105_000_000_000, "net_income": 21_000_000_000},
-            {"quarter": "Q1 2024", "revenue": 100_000_000_000, "net_income": 20_000_000_000},
+            {
+                "quarter": "Q1 2025",
+                "revenue": 120_000_000_000,
+                "net_income": 25_000_000_000,
+            },
+            {
+                "quarter": "Q4 2024",
+                "revenue": 115_000_000_000,
+                "net_income": 23_000_000_000,
+            },
+            {
+                "quarter": "Q3 2024",
+                "revenue": 110_000_000_000,
+                "net_income": 22_000_000_000,
+            },
+            {
+                "quarter": "Q2 2024",
+                "revenue": 105_000_000_000,
+                "net_income": 21_000_000_000,
+            },
+            {
+                "quarter": "Q1 2024",
+                "revenue": 100_000_000_000,
+                "net_income": 20_000_000_000,
+            },
         ]
 
         result = calculate_yoy_comparison(quarters)
@@ -187,10 +248,30 @@ class TestEarningsQuality:
 
         # Consistent revenue, stable margins, operational income alignment
         quarters = [
-            {"revenue": 100_000_000_000, "gross_profit": 40_000_000_000, "operating_income": 20_000_000_000, "net_income": 18_000_000_000},
-            {"revenue": 98_000_000_000, "gross_profit": 39_200_000_000, "operating_income": 19_600_000_000, "net_income": 17_600_000_000},
-            {"revenue": 97_000_000_000, "gross_profit": 38_800_000_000, "operating_income": 19_400_000_000, "net_income": 17_400_000_000},
-            {"revenue": 96_000_000_000, "gross_profit": 38_400_000_000, "operating_income": 19_200_000_000, "net_income": 17_200_000_000},
+            {
+                "revenue": 100_000_000_000,
+                "gross_profit": 40_000_000_000,
+                "operating_income": 20_000_000_000,
+                "net_income": 18_000_000_000,
+            },
+            {
+                "revenue": 98_000_000_000,
+                "gross_profit": 39_200_000_000,
+                "operating_income": 19_600_000_000,
+                "net_income": 17_600_000_000,
+            },
+            {
+                "revenue": 97_000_000_000,
+                "gross_profit": 38_800_000_000,
+                "operating_income": 19_400_000_000,
+                "net_income": 17_400_000_000,
+            },
+            {
+                "revenue": 96_000_000_000,
+                "gross_profit": 38_400_000_000,
+                "operating_income": 19_200_000_000,
+                "net_income": 17_200_000_000,
+            },
         ]
 
         result = assess_earnings_quality(quarters)
@@ -206,10 +287,30 @@ class TestEarningsQuality:
 
         # Highly volatile revenue, inconsistent margins
         quarters = [
-            {"revenue": 100_000_000_000, "gross_profit": 40_000_000_000, "operating_income": 10_000_000_000, "net_income": 25_000_000_000},
-            {"revenue": 50_000_000_000, "gross_profit": 10_000_000_000, "operating_income": 5_000_000_000, "net_income": 2_000_000_000},
-            {"revenue": 120_000_000_000, "gross_profit": 24_000_000_000, "operating_income": 12_000_000_000, "net_income": 10_000_000_000},
-            {"revenue": 60_000_000_000, "gross_profit": 30_000_000_000, "operating_income": 6_000_000_000, "net_income": 5_000_000_000},
+            {
+                "revenue": 100_000_000_000,
+                "gross_profit": 40_000_000_000,
+                "operating_income": 10_000_000_000,
+                "net_income": 25_000_000_000,
+            },
+            {
+                "revenue": 50_000_000_000,
+                "gross_profit": 10_000_000_000,
+                "operating_income": 5_000_000_000,
+                "net_income": 2_000_000_000,
+            },
+            {
+                "revenue": 120_000_000_000,
+                "gross_profit": 24_000_000_000,
+                "operating_income": 12_000_000_000,
+                "net_income": 10_000_000_000,
+            },
+            {
+                "revenue": 60_000_000_000,
+                "gross_profit": 30_000_000_000,
+                "operating_income": 6_000_000_000,
+                "net_income": 5_000_000_000,
+            },
         ]
 
         result = assess_earnings_quality(quarters)
@@ -234,10 +335,10 @@ class TestFullEarningsAnalysis:
     def test_analyze_earnings_structure(self):
         """Full analysis should produce all expected keys when mocked."""
         from src.tools.earnings_data import (
-            calculate_surprise_pattern,
-            calculate_quarterly_trends,
-            calculate_yoy_comparison,
             assess_earnings_quality,
+            calculate_quarterly_trends,
+            calculate_surprise_pattern,
+            calculate_yoy_comparison,
         )
 
         # Simulate the analysis flow with mock data
@@ -248,11 +349,41 @@ class TestFullEarningsAnalysis:
             {"verdict": "BEAT", "eps_surprise_pct": 8.0},
         ]
         quarters = [
-            {"quarter": "Q1 2025", "revenue": 120_000_000_000, "net_income": 25_000_000_000, "gross_profit": 50_000_000_000, "operating_income": 30_000_000_000},
-            {"quarter": "Q4 2024", "revenue": 110_000_000_000, "net_income": 23_000_000_000, "gross_profit": 45_000_000_000, "operating_income": 27_000_000_000},
-            {"quarter": "Q3 2024", "revenue": 105_000_000_000, "net_income": 21_000_000_000, "gross_profit": 42_000_000_000, "operating_income": 25_000_000_000},
-            {"quarter": "Q2 2024", "revenue": 100_000_000_000, "net_income": 20_000_000_000, "gross_profit": 40_000_000_000, "operating_income": 24_000_000_000},
-            {"quarter": "Q1 2024", "revenue": 95_000_000_000, "net_income": 19_000_000_000, "gross_profit": 38_000_000_000, "operating_income": 22_000_000_000},
+            {
+                "quarter": "Q1 2025",
+                "revenue": 120_000_000_000,
+                "net_income": 25_000_000_000,
+                "gross_profit": 50_000_000_000,
+                "operating_income": 30_000_000_000,
+            },
+            {
+                "quarter": "Q4 2024",
+                "revenue": 110_000_000_000,
+                "net_income": 23_000_000_000,
+                "gross_profit": 45_000_000_000,
+                "operating_income": 27_000_000_000,
+            },
+            {
+                "quarter": "Q3 2024",
+                "revenue": 105_000_000_000,
+                "net_income": 21_000_000_000,
+                "gross_profit": 42_000_000_000,
+                "operating_income": 25_000_000_000,
+            },
+            {
+                "quarter": "Q2 2024",
+                "revenue": 100_000_000_000,
+                "net_income": 20_000_000_000,
+                "gross_profit": 40_000_000_000,
+                "operating_income": 24_000_000_000,
+            },
+            {
+                "quarter": "Q1 2024",
+                "revenue": 95_000_000_000,
+                "net_income": 19_000_000_000,
+                "gross_profit": 38_000_000_000,
+                "operating_income": 22_000_000_000,
+            },
         ]
 
         surprise_pattern = calculate_surprise_pattern(earnings_records)
@@ -553,6 +684,7 @@ class TestEarningsAPIEndpoints:
     def test_earnings_endpoint_structure(self):
         """Endpoint should return properly structured response."""
         from fastapi.testclient import TestClient
+
         from src.api.routes import app
 
         client = TestClient(app)
@@ -569,6 +701,7 @@ class TestEarningsAPIEndpoints:
     def test_earnings_analyze_endpoint(self):
         """Analyze endpoint should accept request body."""
         from fastapi.testclient import TestClient
+
         from src.api.routes import app
 
         client = TestClient(app)
@@ -587,6 +720,7 @@ class TestEarningsAPIEndpoints:
     def test_earnings_compare_endpoint(self):
         """Compare endpoint should accept list of symbols."""
         from fastapi.testclient import TestClient
+
         from src.api.routes import app
 
         client = TestClient(app)
@@ -606,6 +740,7 @@ class TestEarningsAPIEndpoints:
     def test_earnings_compare_validation(self):
         """Should reject comparison with less than 2 symbols."""
         from fastapi.testclient import TestClient
+
         from src.api.routes import app
 
         client = TestClient(app)

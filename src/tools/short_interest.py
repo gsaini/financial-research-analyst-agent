@@ -25,22 +25,22 @@ logger = get_logger(__name__)
 
 # Short % of float scoring: higher = more squeeze potential
 _SHORT_PCT_THRESHOLDS = [
-    (40, 100),   # >= 40% -> score 100
-    (25, 85),    # >= 25% -> 85
-    (15, 65),    # >= 15% -> 65
-    (10, 45),    # >= 10% -> 45
-    (5, 25),     # >= 5%  -> 25
-    (0, 10),     # < 5%   -> 10
+    (40, 100),  # >= 40% -> score 100
+    (25, 85),  # >= 25% -> 85
+    (15, 65),  # >= 15% -> 65
+    (10, 45),  # >= 10% -> 45
+    (5, 25),  # >= 5%  -> 25
+    (0, 10),  # < 5%   -> 10
 ]
 
 # Days to cover scoring: higher = harder for shorts to exit
 _DTC_THRESHOLDS = [
-    (10, 100),   # >= 10 days -> 100
-    (7, 85),     # >= 7 days  -> 85
-    (5, 65),     # >= 5 days  -> 65
-    (3, 45),     # >= 3 days  -> 45
-    (1, 25),     # >= 1 day   -> 25
-    (0, 10),     # < 1 day    -> 10
+    (10, 100),  # >= 10 days -> 100
+    (7, 85),  # >= 7 days  -> 85
+    (5, 65),  # >= 5 days  -> 65
+    (3, 45),  # >= 3 days  -> 45
+    (1, 25),  # >= 1 day   -> 25
+    (0, 10),  # < 1 day    -> 10
 ]
 
 
@@ -92,8 +92,7 @@ def analyze_short_interest(symbol: str) -> Dict[str, Any]:
 
         # Calculate short % of shares outstanding
         short_pct_outstanding = (
-            (shares_short / shares_outstanding * 100)
-            if shares_outstanding > 0 else 0
+            (shares_short / shares_outstanding * 100) if shares_outstanding > 0 else 0
         )
 
         # Month-over-month change
@@ -147,10 +146,7 @@ def analyze_short_interest(symbol: str) -> Dict[str, Any]:
 
         # Weighted squeeze score
         squeeze_score = int(
-            pct_score * 0.35 +
-            dtc_score * 0.30 +
-            increase_score * 0.15 +
-            borrow_score * 0.20
+            pct_score * 0.35 + dtc_score * 0.30 + increase_score * 0.15 + borrow_score * 0.20
         )
         squeeze_score = min(100, max(0, squeeze_score))
 
@@ -174,7 +170,11 @@ def analyze_short_interest(symbol: str) -> Dict[str, Any]:
                 "borrow_cost_score": borrow_score,
             },
             "assessment": _generate_squeeze_assessment(
-                squeeze_score, squeeze_risk, short_pct_float, short_ratio, short_change_dir
+                squeeze_score,
+                squeeze_risk,
+                short_pct_float,
+                short_ratio,
+                short_change_dir,
             ),
         }
 
@@ -201,12 +201,21 @@ def analyze_short_interest(symbol: str) -> Dict[str, Any]:
             "current_short_pct": round(short_pct_float, 2),
             "market_percentile": percentile,
             "percentile_label": (
-                "Extremely high (top 1%)" if percentile >= 99
-                else "Very high (top 5%)" if percentile >= 95
-                else "High (top 10%)" if percentile >= 90
-                else "Above average" if percentile >= 60
-                else "Average" if percentile >= 40
-                else "Below average"
+                "Extremely high (top 1%)"
+                if percentile >= 99
+                else (
+                    "Very high (top 5%)"
+                    if percentile >= 95
+                    else (
+                        "High (top 10%)"
+                        if percentile >= 90
+                        else (
+                            "Above average"
+                            if percentile >= 60
+                            else "Average" if percentile >= 40 else "Below average"
+                        )
+                    )
+                )
             ),
             "trend": short_change_dir,
         }
@@ -218,10 +227,13 @@ def analyze_short_interest(symbol: str) -> Dict[str, Any]:
         borrow_data = {
             "estimated_borrow_rate_pct": estimated_borrow_rate,
             "borrow_assessment": (
-                "Very hard to borrow — elevated cost" if estimated_borrow_rate > 10
-                else "Hard to borrow" if estimated_borrow_rate > 5
-                else "Moderate borrow cost" if estimated_borrow_rate > 2
-                else "Easy to borrow"
+                "Very hard to borrow — elevated cost"
+                if estimated_borrow_rate > 10
+                else (
+                    "Hard to borrow"
+                    if estimated_borrow_rate > 5
+                    else ("Moderate borrow cost" if estimated_borrow_rate > 2 else "Easy to borrow")
+                )
             ),
             "note": "Borrow rate is estimated — actual rates vary by broker.",
         }
@@ -311,9 +323,26 @@ def get_short_squeeze_watchlist(
     if symbols is None:
         # Common high-short-interest stocks to scan
         symbols = [
-            "GME", "AMC", "BBBY", "CVNA", "UPST", "BYND", "SPCE",
-            "RIVN", "LCID", "NKLA", "PLUG", "SKLZ", "WISH", "CLOV",
-            "SOFI", "PLTR", "NIO", "FUBO", "OPEN", "ASTS",
+            "GME",
+            "AMC",
+            "BBBY",
+            "CVNA",
+            "UPST",
+            "BYND",
+            "SPCE",
+            "RIVN",
+            "LCID",
+            "NKLA",
+            "PLUG",
+            "SKLZ",
+            "WISH",
+            "CLOV",
+            "SOFI",
+            "PLTR",
+            "NIO",
+            "FUBO",
+            "OPEN",
+            "ASTS",
         ]
 
     candidates = []
@@ -323,16 +352,22 @@ def get_short_squeeze_watchlist(
             continue
         score = result.get("squeeze_analysis", {}).get("squeeze_score", 0)
         if score >= min_squeeze_score:
-            candidates.append({
-                "symbol": sym,
-                "company": result.get("company_name", sym),
-                "price": result.get("current_price", 0),
-                "squeeze_score": score,
-                "risk_level": result.get("squeeze_analysis", {}).get("risk_level", ""),
-                "short_pct_float": result.get("short_interest", {}).get("short_percent_of_float", 0),
-                "days_to_cover": result.get("short_interest", {}).get("short_ratio_days_to_cover", 0),
-                "trend": result.get("historical_context", {}).get("trend", ""),
-            })
+            candidates.append(
+                {
+                    "symbol": sym,
+                    "company": result.get("company_name", sym),
+                    "price": result.get("current_price", 0),
+                    "squeeze_score": score,
+                    "risk_level": result.get("squeeze_analysis", {}).get("risk_level", ""),
+                    "short_pct_float": result.get("short_interest", {}).get(
+                        "short_percent_of_float", 0
+                    ),
+                    "days_to_cover": result.get("short_interest", {}).get(
+                        "short_ratio_days_to_cover", 0
+                    ),
+                    "trend": result.get("historical_context", {}).get("trend", ""),
+                }
+            )
 
     candidates.sort(key=lambda x: x["squeeze_score"], reverse=True)
 
@@ -464,8 +499,6 @@ def _generate_risk_assessment(
         "for_shorts": short_assessment,
         "catalyst_watch": catalysts,
         "overall_risk": (
-            "High" if squeeze_score >= 70
-            else "Moderate" if squeeze_score >= 40
-            else "Low"
+            "High" if squeeze_score >= 70 else "Moderate" if squeeze_score >= 40 else "Low"
         ),
     }

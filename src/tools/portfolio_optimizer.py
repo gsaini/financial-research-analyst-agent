@@ -203,7 +203,10 @@ def calculate_efficient_frontier(
 
     for target in target_returns:
         constraints = constraints_base + [
-            {"type": "eq", "fun": lambda w, t=target: _portfolio_return(w, mean_returns.values) - t}
+            {
+                "type": "eq",
+                "fun": lambda w, t=target: _portfolio_return(w, mean_returns.values) - t,
+            }
         ]
         result = optimize.minimize(
             _portfolio_volatility,
@@ -216,12 +219,14 @@ def calculate_efficient_frontier(
         if result.success:
             vol = _portfolio_volatility(result.x, cov_matrix.values)
             sharpe = (target - _RISK_FREE_RATE) / vol if vol > 0 else 0
-            frontier.append({
-                "return_pct": round(target * 100, 2),
-                "volatility_pct": round(vol * 100, 2),
-                "sharpe": round(sharpe, 3),
-                "weights": {sym: round(float(w), 4) for sym, w in zip(valid_symbols, result.x)},
-            })
+            frontier.append(
+                {
+                    "return_pct": round(target * 100, 2),
+                    "volatility_pct": round(vol * 100, 2),
+                    "sharpe": round(sharpe, 3),
+                    "weights": {sym: round(float(w), 4) for sym, w in zip(valid_symbols, result.x)},
+                }
+            )
 
     # Mark special portfolios
     if frontier:
@@ -290,7 +295,9 @@ def risk_parity_allocation(symbols: List[str]) -> Dict[str, Any]:
             "weight": round(float(weights[i]), 4),
             "weight_pct": round(float(weights[i]) * 100, 2),
             "risk_contribution": round(float(risk_contribs[i]), 4),
-            "risk_contribution_pct": round(float(risk_contribs[i]) / port_vol * 100, 2) if port_vol > 0 else 0,
+            "risk_contribution_pct": (
+                round(float(risk_contribs[i]) / port_vol * 100, 2) if port_vol > 0 else 0
+            ),
         }
 
     return {
@@ -331,13 +338,15 @@ def rebalance_suggestions(
         target = optimal["allocation"].get(sym, {}).get("weight", 0)
         diff = target - curr
         if abs(diff) > 0.01:  # >1% difference
-            trades.append({
-                "symbol": sym,
-                "current_weight_pct": round(curr * 100, 2),
-                "target_weight_pct": round(target * 100, 2),
-                "action": "buy" if diff > 0 else "sell",
-                "change_pct": round(diff * 100, 2),
-            })
+            trades.append(
+                {
+                    "symbol": sym,
+                    "current_weight_pct": round(curr * 100, 2),
+                    "target_weight_pct": round(target * 100, 2),
+                    "action": "buy" if diff > 0 else "sell",
+                    "change_pct": round(diff * 100, 2),
+                }
+            )
 
     return {
         "method": target_method,
@@ -369,15 +378,21 @@ def correlation_analysis(symbols: List[str]) -> Dict[str, Any]:
     for i in range(len(valid)):
         for j in range(i + 1, len(valid)):
             c = float(corr_matrix.iloc[i, j])
-            pairs.append({
-                "pair": f"{valid[i]}-{valid[j]}",
-                "correlation": round(c, 3),
-                "relationship": (
-                    "Very high" if c > 0.8 else "High" if c > 0.6
-                    else "Moderate" if c > 0.3 else "Low" if c > 0
-                    else "Negative"
-                ),
-            })
+            pairs.append(
+                {
+                    "pair": f"{valid[i]}-{valid[j]}",
+                    "correlation": round(c, 3),
+                    "relationship": (
+                        "Very high"
+                        if c > 0.8
+                        else (
+                            "High"
+                            if c > 0.6
+                            else ("Moderate" if c > 0.3 else "Low" if c > 0 else "Negative")
+                        )
+                    ),
+                }
+            )
 
     pairs.sort(key=lambda p: abs(p["correlation"]), reverse=True)
 
@@ -430,8 +445,7 @@ def correlation_analysis(symbols: List[str]) -> Dict[str, Any]:
     return {
         "symbols": valid,
         "correlation_matrix": {
-            sym: {s: round(float(corr_matrix.loc[sym, s]), 3) for s in valid}
-            for sym in valid
+            sym: {s: round(float(corr_matrix.loc[sym, s]), 3) for s in valid} for sym in valid
         },
         "pairwise": pairs,
         "average_correlation": avg_corr,

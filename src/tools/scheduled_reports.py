@@ -128,8 +128,7 @@ def generate_digest(
         for item in digest_items:
             arrow = "▲" if item["change_pct"] > 0 else "▼" if item["change_pct"] < 0 else "→"
             text_parts.append(
-                f"{item['symbol']}: ${item['price']:.2f} "
-                f"{arrow} {item['change_pct']:+.2f}%"
+                f"{item['symbol']}: ${item['price']:.2f} " f"{arrow} {item['change_pct']:+.2f}%"
             )
             for headline in item["headlines"][:2]:
                 text_parts.append(f"  • {headline[:80]}")
@@ -145,7 +144,11 @@ def generate_digest(
             "<hr>",
         ]
         for item in digest_items:
-            color = "#00cc66" if item["change_pct"] > 0 else "#ff4444" if item["change_pct"] < 0 else "#888"
+            color = (
+                "#00cc66"
+                if item["change_pct"] > 0
+                else "#ff4444" if item["change_pct"] < 0 else "#888"
+            )
             html_parts.append(
                 f"<div style='margin: 15px 0; padding: 10px; border-left: 3px solid {color};'>"
                 f"<strong>{item['symbol']}</strong> — "
@@ -239,6 +242,7 @@ def _save_digest_to_disk(digest: Dict, to_email: str) -> Dict[str, Any]:
     """Fallback: save digest to disk when email is not configured."""
     try:
         from src.config import settings
+
         output_dir = settings.data_dir / "digests"
         output_dir.mkdir(parents=True, exist_ok=True)
 

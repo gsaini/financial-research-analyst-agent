@@ -3,9 +3,9 @@ Performance tracking tool - multi-horizon returns, benchmark comparison,
 risk-adjusted metrics, rolling returns, and drawdown analysis.
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime, timedelta
 import math
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from src.data import get_provider
 from src.utils.logger import get_logger
@@ -95,7 +95,9 @@ def _compute_drawdowns(prices) -> Dict[str, Any]:
 
     max_dd = float(np.min(drawdowns))
     max_dd_idx = int(np.argmin(drawdowns))
-    max_dd_date = prices.index[max_dd_idx].strftime("%Y-%m-%d") if max_dd_idx < len(prices.index) else "N/A"
+    max_dd_date = (
+        prices.index[max_dd_idx].strftime("%Y-%m-%d") if max_dd_idx < len(prices.index) else "N/A"
+    )
 
     # Recovery: how many days from max_dd to next new high
     recovery_days = None
@@ -132,12 +134,18 @@ def _compute_risk_metrics(prices, benchmark_prices=None) -> Dict[str, Any]:
 
     # Sharpe ratio
     excess = returns - daily_rf
-    sharpe = round(float(np.mean(excess) / np.std(excess)) * math.sqrt(252), 2) if np.std(excess) > 0 else 0
+    sharpe = (
+        round(float(np.mean(excess) / np.std(excess)) * math.sqrt(252), 2)
+        if np.std(excess) > 0
+        else 0
+    )
 
     # Sortino ratio (only penalizes downside volatility)
     downside = returns[returns < daily_rf] - daily_rf
     downside_std = float(np.std(downside)) if len(downside) > 0 else 0
-    sortino = round(float(np.mean(excess) / downside_std) * math.sqrt(252), 2) if downside_std > 0 else 0
+    sortino = (
+        round(float(np.mean(excess) / downside_std) * math.sqrt(252), 2) if downside_std > 0 else 0
+    )
 
     result = {
         "daily_volatility": round(daily_vol * 100, 2),
@@ -157,9 +165,13 @@ def _compute_risk_metrics(prices, benchmark_prices=None) -> Dict[str, Any]:
             beta = round(float(cov[0, 1] / cov[1, 1]), 2)
             result["beta"] = beta
             if beta > 1:
-                result["beta_interpretation"] = f"{int((beta - 1) * 100)}% more volatile than benchmark"
+                result["beta_interpretation"] = (
+                    f"{int((beta - 1) * 100)}% more volatile than benchmark"
+                )
             elif beta < 1:
-                result["beta_interpretation"] = f"{int((1 - beta) * 100)}% less volatile than benchmark"
+                result["beta_interpretation"] = (
+                    f"{int((1 - beta) * 100)}% less volatile than benchmark"
+                )
             else:
                 result["beta_interpretation"] = "Moves in line with benchmark"
 
@@ -242,12 +254,21 @@ def track_performance(symbol: str) -> Dict[str, Any]:
     for bench_label, bench_prices, bench_sym in [
         ("vs_spy", spy_prices, "S&P 500"),
         ("vs_qqq", qqq_prices, "Nasdaq 100"),
-        ("vs_sector", sector_prices, f"{sector} ({sector_etf})" if sector_etf else None),
+        (
+            "vs_sector",
+            sector_prices,
+            f"{sector} ({sector_etf})" if sector_etf else None,
+        ),
     ]:
         if bench_prices is None:
             continue
         bench_entry = {"benchmark": bench_sym}
-        for horizon_label, days in [("1_month", 21), ("3_month", 63), ("1_year", 252), ("3_year", 756)]:
+        for horizon_label, days in [
+            ("1_month", 21),
+            ("3_month", 63),
+            ("1_year", 252),
+            ("3_year", 756),
+        ]:
             stock_ret = _compute_return(prices, days=days)
             bench_ret = _compute_return(bench_prices, days=days)
             if stock_ret is not None and bench_ret is not None:
@@ -274,7 +295,7 @@ def track_performance(symbol: str) -> Dict[str, Any]:
 
     rolling_returns = {
         "window": 30,
-        "values": rolling_30[-252:] if len(rolling_30) > 252 else rolling_30,  # last 1 year
+        "values": (rolling_30[-252:] if len(rolling_30) > 252 else rolling_30),  # last 1 year
         "dates": rolling_dates[-252:] if len(rolling_dates) > 252 else rolling_dates,
     }
 
@@ -313,7 +334,9 @@ def track_performance(symbol: str) -> Dict[str, Any]:
             "median_daily": round(float(np.median(daily_returns)), 3),
             "best_day": round(float(np.max(daily_returns)), 2),
             "worst_day": round(float(np.min(daily_returns)), 2),
-            "positive_days_pct": round(float(np.sum(daily_returns > 0) / len(daily_returns) * 100), 1),
+            "positive_days_pct": round(
+                float(np.sum(daily_returns > 0) / len(daily_returns) * 100), 1
+            ),
             "std_daily": round(float(np.std(daily_returns)), 3),
         }
 

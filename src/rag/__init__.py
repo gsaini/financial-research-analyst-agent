@@ -26,7 +26,7 @@ Architecture::
     └────────────┘
 """
 
-from src.rag.retriever import RAGRetriever
 from src.rag.ingester import SECIngester
+from src.rag.retriever import RAGRetriever
 
 __all__ = ["RAGRetriever", "SECIngester"]

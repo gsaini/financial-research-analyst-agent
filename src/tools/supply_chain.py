@@ -57,13 +57,89 @@ def _get_sector_peers(symbol: str, sector: str) -> List[str]:
     """Get peer companies from the same sector."""
     # Common large-caps by sector
     sector_peers = {
-        "Technology": ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "AVGO", "CRM", "ORCL", "AMD", "INTC"],
-        "Healthcare": ["UNH", "JNJ", "LLY", "PFE", "ABBV", "MRK", "TMO", "ABT", "DHR", "BMY"],
-        "Financial Services": ["JPM", "V", "MA", "BAC", "WFC", "GS", "MS", "BLK", "SCHW", "AXP"],
-        "Consumer Cyclical": ["AMZN", "TSLA", "HD", "MCD", "NKE", "SBUX", "TJX", "LOW", "BKNG", "CMG"],
-        "Energy": ["XOM", "CVX", "COP", "SLB", "EOG", "MPC", "PSX", "VLO", "OXY", "HAL"],
-        "Communication Services": ["GOOGL", "META", "DIS", "NFLX", "CMCSA", "TMUS", "VZ", "T", "CHTR"],
-        "Industrials": ["GE", "CAT", "RTX", "HON", "UPS", "BA", "DE", "LMT", "MMM", "GD"],
+        "Technology": [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "NVDA",
+            "META",
+            "AVGO",
+            "CRM",
+            "ORCL",
+            "AMD",
+            "INTC",
+        ],
+        "Healthcare": [
+            "UNH",
+            "JNJ",
+            "LLY",
+            "PFE",
+            "ABBV",
+            "MRK",
+            "TMO",
+            "ABT",
+            "DHR",
+            "BMY",
+        ],
+        "Financial Services": [
+            "JPM",
+            "V",
+            "MA",
+            "BAC",
+            "WFC",
+            "GS",
+            "MS",
+            "BLK",
+            "SCHW",
+            "AXP",
+        ],
+        "Consumer Cyclical": [
+            "AMZN",
+            "TSLA",
+            "HD",
+            "MCD",
+            "NKE",
+            "SBUX",
+            "TJX",
+            "LOW",
+            "BKNG",
+            "CMG",
+        ],
+        "Energy": [
+            "XOM",
+            "CVX",
+            "COP",
+            "SLB",
+            "EOG",
+            "MPC",
+            "PSX",
+            "VLO",
+            "OXY",
+            "HAL",
+        ],
+        "Communication Services": [
+            "GOOGL",
+            "META",
+            "DIS",
+            "NFLX",
+            "CMCSA",
+            "TMUS",
+            "VZ",
+            "T",
+            "CHTR",
+        ],
+        "Industrials": [
+            "GE",
+            "CAT",
+            "RTX",
+            "HON",
+            "UPS",
+            "BA",
+            "DE",
+            "LMT",
+            "MMM",
+            "GD",
+        ],
     }
     peers = sector_peers.get(sector, [])
     return [p for p in peers if p != symbol][:8]
@@ -109,35 +185,39 @@ def analyze_supply_chain(symbol: str) -> Dict[str, Any]:
 
         # Concentration risk
         if len(suppliers) <= 2:
-            risk_factors.append({
-                "type": "supplier_concentration",
-                "severity": "high",
-                "description": "Few identified suppliers — high concentration risk if key supplier disrupted.",
-            })
+            risk_factors.append(
+                {
+                    "type": "supplier_concentration",
+                    "severity": "high",
+                    "description": "Few identified suppliers — high concentration risk if key supplier disrupted.",
+                }
+            )
 
         # Correlation risk (high correlation with suppliers = co-movement risk)
         high_corr_suppliers = [
-            s for s in suppliers
-            if correlations.get(s, {}).get("correlation", 0) > 0.7
+            s for s in suppliers if correlations.get(s, {}).get("correlation", 0) > 0.7
         ]
         if high_corr_suppliers:
-            risk_factors.append({
-                "type": "correlated_supply_chain",
-                "severity": "medium",
-                "description": f"Highly correlated with suppliers {high_corr_suppliers} — shared risk factors.",
-            })
+            risk_factors.append(
+                {
+                    "type": "correlated_supply_chain",
+                    "severity": "medium",
+                    "description": f"Highly correlated with suppliers {high_corr_suppliers} — shared risk factors.",
+                }
+            )
 
         # Competitive pressure
         stronger_competitors = [
-            c for c in competitors
-            if correlations.get(c, {}).get("correlation", 0) > 0.5
+            c for c in competitors if correlations.get(c, {}).get("correlation", 0) > 0.5
         ]
         if len(stronger_competitors) > 3:
-            risk_factors.append({
-                "type": "competitive_intensity",
-                "severity": "medium",
-                "description": "Many correlated competitors suggest high competitive intensity in the sector.",
-            })
+            risk_factors.append(
+                {
+                    "type": "competitive_intensity",
+                    "severity": "medium",
+                    "description": "Many correlated competitors suggest high competitive intensity in the sector.",
+                }
+            )
 
         # Overall risk score
         risk_score = min(100, len(risk_factors) * 25 + (5 - min(5, len(suppliers))) * 10)
@@ -149,15 +229,24 @@ def analyze_supply_chain(symbol: str) -> Dict[str, Any]:
             "industry": industry,
             "supply_chain": {
                 "suppliers": [
-                    {"symbol": s, "correlation": correlations.get(s, {}).get("correlation", None)}
+                    {
+                        "symbol": s,
+                        "correlation": correlations.get(s, {}).get("correlation", None),
+                    }
                     for s in suppliers
                 ],
                 "customers": [
-                    {"symbol": c, "correlation": correlations.get(c, {}).get("correlation", None)}
+                    {
+                        "symbol": c,
+                        "correlation": correlations.get(c, {}).get("correlation", None),
+                    }
                     for c in customers
                 ],
                 "competitors": [
-                    {"symbol": c, "correlation": correlations.get(c, {}).get("correlation", None)}
+                    {
+                        "symbol": c,
+                        "correlation": correlations.get(c, {}).get("correlation", None),
+                    }
                     for c in competitors
                 ],
             },
@@ -178,9 +267,7 @@ def analyze_supply_chain(symbol: str) -> Dict[str, Any]:
         return {"symbol": symbol, "error": str(e)}
 
 
-def _compute_correlations(
-    symbol: str, related: List[str]
-) -> Dict[str, Dict[str, Any]]:
+def _compute_correlations(symbol: str, related: List[str]) -> Dict[str, Dict[str, Any]]:
     """Compute return correlations between symbol and related stocks."""
     try:
         provider = get_provider()
@@ -207,11 +294,17 @@ def _compute_correlations(
                 correlations[sym] = {
                     "correlation": round(corr, 3),
                     "relationship": (
-                        "strongly positive" if corr > 0.7
-                        else "moderately positive" if corr > 0.4
-                        else "weakly positive" if corr > 0.1
-                        else "uncorrelated" if corr > -0.1
-                        else "negatively correlated"
+                        "strongly positive"
+                        if corr > 0.7
+                        else (
+                            "moderately positive"
+                            if corr > 0.4
+                            else (
+                                "weakly positive"
+                                if corr > 0.1
+                                else ("uncorrelated" if corr > -0.1 else "negatively correlated")
+                            )
+                        )
                     ),
                 }
 

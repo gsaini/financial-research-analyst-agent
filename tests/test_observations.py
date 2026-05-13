@@ -14,25 +14,24 @@ Tests cover:
 import pytest
 
 from src.tools.insight_engine import (
-    generate_observations,
-    _detect_technical_signals,
-    _detect_valuation_signals,
-    _detect_earnings_signals,
-    _detect_performance_signals,
-    _detect_confluences,
-    _detect_anomalies,
-    _rank_observations,
-    _obs,
-    CATEGORY_BULLISH,
     CATEGORY_BEARISH,
-    CATEGORY_RISK,
+    CATEGORY_BULLISH,
     CATEGORY_OPPORTUNITY,
+    CATEGORY_RISK,
     CATEGORY_WATCH,
     SEVERITY_HIGH,
-    SEVERITY_MEDIUM,
     SEVERITY_LOW,
+    SEVERITY_MEDIUM,
+    _detect_anomalies,
+    _detect_confluences,
+    _detect_earnings_signals,
+    _detect_performance_signals,
+    _detect_technical_signals,
+    _detect_valuation_signals,
+    _obs,
+    _rank_observations,
+    generate_observations,
 )
-
 
 # ─────────────────────────────────────────────────────────────
 # Helpers: sample analysis dicts
@@ -61,7 +60,12 @@ def _peers_discount():
     return {
         "target": "AAPL",
         "comparison_table": {
-            "pe_ratio": {"AAPL": 18.0, "MSFT": 35.0, "GOOGL": 25.0, "peer_median": 25.0},
+            "pe_ratio": {
+                "AAPL": 18.0,
+                "MSFT": 35.0,
+                "GOOGL": 25.0,
+                "peer_median": 25.0,
+            },
         },
     }
 
@@ -78,8 +82,11 @@ def _peers_premium():
 def _earnings_beater():
     return {
         "earnings_surprise_history": {
-            "beats": 7, "misses": 0, "inline": 1,
-            "average_surprise": "+3.2%", "pattern": "Consistent beater",
+            "beats": 7,
+            "misses": 0,
+            "inline": 1,
+            "average_surprise": "+3.2%",
+            "pattern": "Consistent beater",
         },
         "quarterly_trends": {
             "revenue_trend": "Accelerating",
@@ -92,8 +99,11 @@ def _earnings_beater():
 def _earnings_weak():
     return {
         "earnings_surprise_history": {
-            "beats": 1, "misses": 5, "inline": 2,
-            "average_surprise": "-2.1%", "pattern": "Frequent misser",
+            "beats": 1,
+            "misses": 5,
+            "inline": 2,
+            "average_surprise": "-2.1%",
+            "pattern": "Frequent misser",
         },
         "quarterly_trends": {
             "revenue_trend": "Decelerating",
@@ -118,8 +128,11 @@ def _performance_weak():
         "benchmark_comparison": {
             "vs_spy": {"1_year_alpha": "-12.5%", "assessment": "Underperforming"},
         },
-        "drawdown_analysis": {"max_drawdown": "-32%", "max_drawdown_date": "2025-06-15",
-                              "recovery_days": 55},
+        "drawdown_analysis": {
+            "max_drawdown": "-32%",
+            "max_drawdown_date": "2025-06-15",
+            "recovery_days": 55,
+        },
         "risk_adjusted_metrics": {"sharpe_ratio": {"value": -0.3}},
     }
 
@@ -154,11 +167,15 @@ class TestTechnicalDetector:
         assert any("MACD Bearish" in o["title"] for o in obs)
 
     def test_bollinger_below_lower(self):
-        obs = _detect_technical_signals({"bollinger_bands": {"position": "below_lower", "lower_band": 100}})
+        obs = _detect_technical_signals(
+            {"bollinger_bands": {"position": "below_lower", "lower_band": 100}}
+        )
         assert any("Below Lower Bollinger" in o["title"] for o in obs)
 
     def test_bollinger_above_upper(self):
-        obs = _detect_technical_signals({"bollinger_bands": {"position": "above_upper", "upper_band": 200}})
+        obs = _detect_technical_signals(
+            {"bollinger_bands": {"position": "above_upper", "upper_band": 200}}
+        )
         assert any("Above Upper Bollinger" in o["title"] for o in obs)
 
     def test_empty_returns_nothing(self):
@@ -166,7 +183,9 @@ class TestTechnicalDetector:
         assert _detect_technical_signals(None) == []
 
     def test_moving_average_bullish_trend(self):
-        obs = _detect_technical_signals({"moving_averages": {"trend": "bullish", "sma_50": 160, "sma_200": 150}})
+        obs = _detect_technical_signals(
+            {"moving_averages": {"trend": "bullish", "sma_50": 160, "sma_200": 150}}
+        )
         assert any("Bullish Moving Average" in o["title"] for o in obs)
 
 
@@ -299,8 +318,10 @@ class TestConfluence:
         assert _detect_confluences(obs) == []
 
     def test_strength_labels(self):
-        obs = [_obs(CATEGORY_BULLISH, SEVERITY_LOW, f"S{i}", "", [], direction="bullish")
-               for i in range(5)]
+        obs = [
+            _obs(CATEGORY_BULLISH, SEVERITY_LOW, f"S{i}", "", [], direction="bullish")
+            for i in range(5)
+        ]
         conf = _detect_confluences(obs)
         assert conf[0]["combined_strength"] == "Very Strong"
 

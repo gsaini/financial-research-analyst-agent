@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Event-Driven Performance Analysis Tool (Feature 7).
 
@@ -13,13 +14,14 @@ Key capabilities:
 - Correlate EPS surprise magnitude with price reaction
 """
 
-from typing import Any, Dict, List, Optional, Tuple
-from datetime import datetime, timedelta
 import math
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from src.data import get_provider
+import pandas as pd
 
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -59,29 +61,43 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
             earnings_hist = provider.get_earnings_history(symbol)
             if earnings_hist is not None and not earnings_hist.empty:
                 for idx, row in earnings_hist.iterrows():
-                    date_str = idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
-                    earnings_events.append({
-                        "date": date_str,
-                        "eps_actual": float(row.get("epsActual", 0) or 0),
-                        "eps_estimate": float(row.get("epsEstimate", 0) or 0),
-                    })
+                    date_str = (
+                        idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
+                    )
+                    earnings_events.append(
+                        {
+                            "date": date_str,
+                            "eps_actual": float(row.get("epsActual", 0) or 0),
+                            "eps_estimate": float(row.get("epsEstimate", 0) or 0),
+                        }
+                    )
         except Exception as e:
             logger.debug(f"Could not fetch earnings history for {symbol}: {e}")
 
         # Try earnings_dates as fallback / supplement
         try:
-            earnings_dates = provider.get_calendar(symbol) # mapped to calendar essentially although yfinance might have multiple forms. For simplicity, just use what calendar returns. Note: Calendar from yfinance might not be a dataframe with the same structure depending on the yfinance version. Let's just catch exceptions.
-            if earnings_dates is not None and getattr(earnings_dates, 'empty', False) == False and isinstance(earnings_dates, pd.DataFrame):
+            earnings_dates = provider.get_calendar(
+                symbol
+            )  # mapped to calendar essentially although yfinance might have multiple forms. For simplicity, just use what calendar returns. Note: Calendar from yfinance might not be a dataframe with the same structure depending on the yfinance version. Let's just catch exceptions.
+            if (
+                earnings_dates is not None
+                and getattr(earnings_dates, "empty", False) == False
+                and isinstance(earnings_dates, pd.DataFrame)
+            ):
                 existing = {e["date"] for e in earnings_events}
                 for idx in earnings_dates.index:
-                    date_str = idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
+                    date_str = (
+                        idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
+                    )
                     if date_str not in existing:
                         row = earnings_dates.loc[idx]
-                        earnings_events.append({
-                            "date": date_str,
-                            "eps_actual": float(row.get("Reported EPS", 0) or 0),
-                            "eps_estimate": float(row.get("EPS Estimate", 0) or 0),
-                        })
+                        earnings_events.append(
+                            {
+                                "date": date_str,
+                                "eps_actual": float(row.get("Reported EPS", 0) or 0),
+                                "eps_estimate": float(row.get("EPS Estimate", 0) or 0),
+                            }
+                        )
         except Exception as e:
             logger.debug(f"Could not fetch earnings_dates for {symbol}: {e}")
 
@@ -93,10 +109,12 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
             dividends = provider.get_dividends(symbol)
             if dividends is not None and len(dividends) > 0:
                 for dt, amount in dividends.items():
-                    dividend_events.append({
-                        "date": dt.strftime("%Y-%m-%d"),
-                        "amount": round(float(amount), 4),
-                    })
+                    dividend_events.append(
+                        {
+                            "date": dt.strftime("%Y-%m-%d"),
+                            "amount": round(float(amount), 4),
+                        }
+                    )
         except Exception as e:
             logger.debug(f"Could not fetch dividends for {symbol}: {e}")
 
@@ -105,17 +123,25 @@ def get_event_calendar(symbol: str) -> Dict[str, Any]:
         # ── Stock splits ────────────────────────────────
         split_events: List[Dict[str, Any]] = []
         try:
-            splits = provider.get_info(symbol).get("splits", {}) # Not exposed in provider directly right now. It might need to be added to provider or fallback if not available.
+            splits = provider.get_info(symbol).get(
+                "splits", {}
+            )  # Not exposed in provider directly right now. It might need to be added to provider or fallback if not available.
             # actually we don't have splits in provider. let's just make it empty for now, or use 'info' dict if it has something similar, but yfinance Ticker.splits is a series.
             # For the sake of fixing the AttributeError, let's gracefully handle it.
-            splits = None 
+            splits = None
             if splits is not None and len(splits) > 0:
                 for dt, ratio in splits.items():
                     if float(ratio) != 0:
-                        split_events.append({
-                            "date": dt.strftime("%Y-%m-%d"),
-                            "ratio": f"{int(ratio)}:1" if ratio == int(ratio) else str(round(float(ratio), 2)),
-                        })
+                        split_events.append(
+                            {
+                                "date": dt.strftime("%Y-%m-%d"),
+                                "ratio": (
+                                    f"{int(ratio)}:1"
+                                    if ratio == int(ratio)
+                                    else str(round(float(ratio), 2))
+                                ),
+                            }
+                        )
         except Exception as e:
             logger.debug(f"Could not fetch splits for {symbol}: {e}")
 
@@ -140,18 +166,20 @@ def _fetch_prices(symbol: str, start: str, end: str) -> Optional[Any]:
     """Fetch adjusted close prices between two dates."""
     try:
         provider = get_provider()
-        hist = provider.get_history(symbol, period="max") # Fetch all data and filter later, as provider interface is simple horizon based for now or if start/end needed, provider abstraction might need extension. For now let's map history wrapper params.
-    
+        hist = provider.get_history(
+            symbol, period="max"
+        )  # Fetch all data and filter later, as provider interface is simple horizon based for now or if start/end needed, provider abstraction might need extension. For now let's map history wrapper params.
+
         if hist.empty:
             return None
-        
+
         # Filter by date if return df has date index
         if start and end:
-             hist = hist.loc[start:end]
-             
+            hist = hist.loc[start:end]
+
         if hist.empty:
             return None
-            
+
         return hist["Close"]
     except Exception as e:
         logger.error(f"Error fetching prices for {symbol}: {e}")
@@ -246,11 +274,13 @@ def calculate_event_window(
             f"{days_after}d_after": round(price_after, 2),
         },
         "returns": {
-            f"pre_event_{days_before}d": f"{pre_event}%" if pre_event is not None else "N/A",
+            f"pre_event_{days_before}d": (f"{pre_event}%" if pre_event is not None else "N/A"),
             "event_day": f"{event_day}%" if event_day is not None else "N/A",
-            "post_event_1d": f"{post_event_1d}%" if post_event_1d is not None else "N/A",
-            f"post_event_{days_after}d": f"{post_event}%" if post_event is not None else "N/A",
-            f"full_window_{days_before + days_after}d": f"{full_window}%" if full_window is not None else "N/A",
+            "post_event_1d": (f"{post_event_1d}%" if post_event_1d is not None else "N/A"),
+            f"post_event_{days_after}d": (f"{post_event}%" if post_event is not None else "N/A"),
+            f"full_window_{days_before + days_after}d": (
+                f"{full_window}%" if full_window is not None else "N/A"
+            ),
         },
         "_returns_raw": {
             "pre_event": pre_event,
@@ -280,10 +310,22 @@ def _aggregate_patterns(
     if not valid:
         return {"events_analyzed": 0, "error": "No valid event windows"}
 
-    pre_returns = [w["_returns_raw"]["pre_event"] for w in valid if w["_returns_raw"]["pre_event"] is not None]
-    event_returns = [w["_returns_raw"]["event_day"] for w in valid if w["_returns_raw"]["event_day"] is not None]
-    post_1d_returns = [w["_returns_raw"]["post_event_1d"] for w in valid if w["_returns_raw"]["post_event_1d"] is not None]
-    post_returns = [w["_returns_raw"]["post_event"] for w in valid if w["_returns_raw"]["post_event"] is not None]
+    pre_returns = [
+        w["_returns_raw"]["pre_event"] for w in valid if w["_returns_raw"]["pre_event"] is not None
+    ]
+    event_returns = [
+        w["_returns_raw"]["event_day"] for w in valid if w["_returns_raw"]["event_day"] is not None
+    ]
+    post_1d_returns = [
+        w["_returns_raw"]["post_event_1d"]
+        for w in valid
+        if w["_returns_raw"]["post_event_1d"] is not None
+    ]
+    post_returns = [
+        w["_returns_raw"]["post_event"]
+        for w in valid
+        if w["_returns_raw"]["post_event"] is not None
+    ]
 
     def _stats(values: List[float], label: str) -> Dict[str, Any]:
         if not values:
@@ -365,7 +407,11 @@ def _surprise_correlation(
     pairs: List[Tuple[float, float]] = []
 
     # Build lookup from event date → window
-    window_map = {w.get("event_date") or w.get("actual_trading_date"): w for w in windows if "_returns_raw" in w}
+    window_map = {
+        w.get("event_date") or w.get("actual_trading_date"): w
+        for w in windows
+        if "_returns_raw" in w
+    }
 
     for event in earnings_events:
         eps_actual = event.get("eps_actual", 0)
@@ -480,17 +526,19 @@ def analyze_events(
     # Step 2: Compute price windows
     event_windows: List[Dict[str, Any]] = []
     for event in past_events:
-        window = calculate_event_window(
-            symbol, event["date"], days_before, days_after
-        )
+        window = calculate_event_window(symbol, event["date"], days_before, days_after)
         if "error" not in window:
             # Merge event metadata into window
             merged = {**event, **window}
             # Calculate EPS surprise if available
             if event.get("eps_estimate", 0) != 0:
-                surprise = ((event["eps_actual"] - event["eps_estimate"]) / abs(event["eps_estimate"])) * 100
+                surprise = (
+                    (event["eps_actual"] - event["eps_estimate"]) / abs(event["eps_estimate"])
+                ) * 100
                 merged["eps_surprise_pct"] = round(surprise, 2)
-                merged["verdict"] = "BEAT" if surprise > 1 else "MISS" if surprise < -1 else "INLINE"
+                merged["verdict"] = (
+                    "BEAT" if surprise > 1 else "MISS" if surprise < -1 else "INLINE"
+                )
             event_windows.append(merged)
 
     if not event_windows:

@@ -2,29 +2,54 @@
 Stock Analysis - Comprehensive technical, fundamental, sentiment, and risk analysis.
 """
 
-import streamlit as st
-import pandas as pd
 import numpy as np
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import (
-    format_currency, format_percent, format_large_number,
-    format_number, format_date, format_ratio,
-)
-from utils.data_service import (
-    get_stock_price, get_historical_data, get_company_info,
-    get_financial_statements, get_technical_analysis,
-    get_financial_health, get_valuation_ratios, get_profitability_ratios,
-    get_company_news, analyze_news_sentiment,
-)
-from components.header import render_header
+import pandas as pd
+import streamlit as st
 from components.charts import render_candlestick_chart
-from components.plotly_charts import create_gauge_chart, create_radar_chart, create_grouped_bar, create_donut_chart
-from components.metrics_cards import render_company_header, render_news_card, render_score_badge
-from components.data_tables import render_styled_dataframe, render_metrics_table
+from components.data_tables import render_metrics_table, render_styled_dataframe
+from components.header import render_header
+from components.metrics_cards import (
+    render_company_header,
+    render_news_card,
+    render_score_badge,
+)
+from components.plotly_charts import (
+    create_donut_chart,
+    create_gauge_chart,
+    create_grouped_bar,
+    create_radar_chart,
+)
+
+from utils.data_service import (
+    analyze_news_sentiment,
+    get_company_info,
+    get_company_news,
+    get_financial_health,
+    get_financial_statements,
+    get_historical_data,
+    get_profitability_ratios,
+    get_stock_price,
+    get_technical_analysis,
+    get_valuation_ratios,
+)
+from utils.formatters import (
+    format_currency,
+    format_date,
+    format_large_number,
+    format_number,
+    format_percent,
+    format_ratio,
+)
+from utils.session import init_session_state
+from utils.theme import inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Stock Analysis | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Stock Analysis | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -34,15 +59,26 @@ st.markdown("## Stock Analysis")
 # ─── Symbol Input ────────────────────────────────────────────
 col1, col2, col3 = st.columns([2, 1, 1])
 with col1:
-    symbol = st.text_input(
-        "Stock Symbol",
-        value=st.session_state.get("selected_symbol", "AAPL"),
-        placeholder="e.g. AAPL",
-        key="stock_analysis_symbol",
-    ).upper().strip()
+    symbol = (
+        st.text_input(
+            "Stock Symbol",
+            value=st.session_state.get("selected_symbol", "AAPL"),
+            placeholder="e.g. AAPL",
+            key="stock_analysis_symbol",
+        )
+        .upper()
+        .strip()
+    )
 
 with col2:
-    period_map = {"1 Week": "5d", "1 Month": "1mo", "3 Months": "3mo", "6 Months": "6mo", "1 Year": "1y", "5 Years": "5y"}
+    period_map = {
+        "1 Week": "5d",
+        "1 Month": "1mo",
+        "3 Months": "3mo",
+        "6 Months": "6mo",
+        "1 Year": "1y",
+        "5 Years": "5y",
+    }
     period_label = st.selectbox("Period", list(period_map.keys()), index=4, key="stock_period")
     period = period_map[period_label]
 
@@ -83,7 +119,10 @@ key_metrics = [
     {"label": "Day Low", "value": format_currency(price_data.get("day_low"))},
     {"label": "52W High", "value": format_currency(price_data.get("52_week_high"))},
     {"label": "52W Low", "value": format_currency(price_data.get("52_week_low"))},
-    {"label": "Volume", "value": f"{price_data.get('volume', 0):,.0f}" if price_data.get("volume") else "--"},
+    {
+        "label": "Volume",
+        "value": f"{price_data.get('volume', 0):,.0f}" if price_data.get("volume") else "--",
+    },
 ]
 
 cols = st.columns(6)
@@ -154,8 +193,15 @@ with tab_tech:
                 )
                 st.plotly_chart(fig, use_container_width=True)
                 signal = rsi.get("signal", "NEUTRAL")
-                badge = "bullish" if "OVERSOLD" in str(signal).upper() else "bearish" if "OVERBOUGHT" in str(signal).upper() else "neutral"
-                st.markdown(f'<div style="text-align:center;"><span class="score-badge {badge}">{signal}</span></div>', unsafe_allow_html=True)
+                badge = (
+                    "bullish"
+                    if "OVERSOLD" in str(signal).upper()
+                    else "bearish" if "OVERBOUGHT" in str(signal).upper() else "neutral"
+                )
+                st.markdown(
+                    f'<div style="text-align:center;"><span class="score-badge {badge}">{signal}</span></div>',
+                    unsafe_allow_html=True,
+                )
 
         # MACD
         with c2:
@@ -172,8 +218,15 @@ with tab_tech:
                 st.markdown(f"**{label}:** `{val}`")
 
             trend = macd.get("trend", "neutral")
-            badge = "bullish" if "bullish" in str(trend).lower() else "bearish" if "bearish" in str(trend).lower() else "neutral"
-            st.markdown(f'<div style="text-align:center; margin-top: 0.5rem;"><span class="score-badge {badge}">{str(trend).upper()}</span></div>', unsafe_allow_html=True)
+            badge = (
+                "bullish"
+                if "bullish" in str(trend).lower()
+                else "bearish" if "bearish" in str(trend).lower() else "neutral"
+            )
+            st.markdown(
+                f'<div style="text-align:center; margin-top: 0.5rem;"><span class="score-badge {badge}">{str(trend).upper()}</span></div>',
+                unsafe_allow_html=True,
+            )
 
         # Moving Averages
         with c3:
@@ -192,11 +245,21 @@ with tab_tech:
                 if val is not None:
                     color = "#10b981" if current > val else "#ef4444"
                     pos = "Above" if current > val else "Below"
-                    st.markdown(f"**{label}:** `{format_currency(val)}` <span style='color:{color}; font-size:0.8rem;'>({pos})</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"**{label}:** `{format_currency(val)}` <span style='color:{color}; font-size:0.8rem;'>({pos})</span>",
+                        unsafe_allow_html=True,
+                    )
 
             trend = ma.get("trend", "neutral")
-            badge = "bullish" if "bullish" in str(trend).lower() else "bearish" if "bearish" in str(trend).lower() else "neutral"
-            st.markdown(f'<div style="text-align:center; margin-top: 0.5rem;"><span class="score-badge {badge}">{str(trend).upper()} TREND</span></div>', unsafe_allow_html=True)
+            badge = (
+                "bullish"
+                if "bullish" in str(trend).lower()
+                else "bearish" if "bearish" in str(trend).lower() else "neutral"
+            )
+            st.markdown(
+                f'<div style="text-align:center; margin-top: 0.5rem;"><span class="score-badge {badge}">{str(trend).upper()} TREND</span></div>',
+                unsafe_allow_html=True,
+            )
 
         st.markdown("---")
 
@@ -226,10 +289,14 @@ with tab_tech:
                 for p in detected:
                     conf = p.get("confidence", 0)
                     impl = p.get("implication", "neutral")
-                    badge = "bullish" if "bullish" in str(impl).lower() else "bearish" if "bearish" in str(impl).lower() else "neutral"
+                    badge = (
+                        "bullish"
+                        if "bullish" in str(impl).lower()
+                        else "bearish" if "bearish" in str(impl).lower() else "neutral"
+                    )
                     st.markdown(
                         f'<span class="score-badge {badge}">{p.get("name", "Unknown")} '
-                        f'({conf*100:.0f}% confidence)</span>',
+                        f"({conf*100:.0f}% confidence)</span>",
                         unsafe_allow_html=True,
                     )
             else:
@@ -244,11 +311,17 @@ with tab_tech:
             with c1:
                 st.markdown("**Support Levels**")
                 for level in sr.get("support_levels", [])[:5]:
-                    st.markdown(f"<span style='color: #10b981; font-family: JetBrains Mono;'>{format_currency(level)}</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color: #10b981; font-family: JetBrains Mono;'>{format_currency(level)}</span>",
+                        unsafe_allow_html=True,
+                    )
             with c2:
                 st.markdown("**Resistance Levels**")
                 for level in sr.get("resistance_levels", [])[:5]:
-                    st.markdown(f"<span style='color: #ef4444; font-family: JetBrains Mono;'>{format_currency(level)}</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color: #ef4444; font-family: JetBrains Mono;'>{format_currency(level)}</span>",
+                        unsafe_allow_html=True,
+                    )
 
 # ═══ FUNDAMENTAL TAB ═════════════════════════════════════════
 with tab_fund:
@@ -305,8 +378,15 @@ with tab_fund:
             st.plotly_chart(fig, use_container_width=True)
             assessment = health.get("overall_assessment", "")
             if assessment:
-                badge = "bullish" if "strong" in assessment.lower() else "bearish" if "weak" in assessment.lower() else "neutral"
-                st.markdown(f'<div style="text-align:center;"><span class="score-badge {badge}">{assessment}</span></div>', unsafe_allow_html=True)
+                badge = (
+                    "bullish"
+                    if "strong" in assessment.lower()
+                    else "bearish" if "weak" in assessment.lower() else "neutral"
+                )
+                st.markdown(
+                    f'<div style="text-align:center;"><span class="score-badge {badge}">{assessment}</span></div>',
+                    unsafe_allow_html=True,
+                )
 
             # Strengths/Weaknesses
             strengths = health.get("strengths", [])
@@ -333,7 +413,9 @@ with tab_fund:
                 profitability.get("roe"),
                 profitability.get("roa"),
             ]
-            values = [round(v * 100, 1) if v and abs(v) < 1 else round(v, 1) if v else 0 for v in raw_vals]
+            values = [
+                round(v * 100, 1) if v and abs(v) < 1 else round(v, 1) if v else 0 for v in raw_vals
+            ]
 
             fig = create_radar_chart(categories, values, title="Profitability Profile", height=320)
             st.plotly_chart(fig, use_container_width=True)
@@ -355,37 +437,47 @@ with tab_fund:
         with fs_tabs[0]:
             income = financials.get("income_statement")
             if income:
-                render_metrics_table({
-                    "Total Revenue": format_large_number(income.get("total_revenue")),
-                    "Gross Profit": format_large_number(income.get("gross_profit")),
-                    "Operating Income": format_large_number(income.get("operating_income")),
-                    "Net Income": format_large_number(income.get("net_income")),
-                    "EBITDA": format_large_number(income.get("ebitda")),
-                })
+                render_metrics_table(
+                    {
+                        "Total Revenue": format_large_number(income.get("total_revenue")),
+                        "Gross Profit": format_large_number(income.get("gross_profit")),
+                        "Operating Income": format_large_number(income.get("operating_income")),
+                        "Net Income": format_large_number(income.get("net_income")),
+                        "EBITDA": format_large_number(income.get("ebitda")),
+                    }
+                )
             else:
                 st.caption("Income statement data unavailable.")
 
         with fs_tabs[1]:
             balance = financials.get("balance_sheet")
             if balance:
-                render_metrics_table({
-                    "Total Assets": format_large_number(balance.get("total_assets")),
-                    "Total Liabilities": format_large_number(balance.get("total_liabilities")),
-                    "Total Equity": format_large_number(balance.get("total_equity")),
-                    "Cash": format_large_number(balance.get("cash")),
-                    "Total Debt": format_large_number(balance.get("total_debt")),
-                })
+                render_metrics_table(
+                    {
+                        "Total Assets": format_large_number(balance.get("total_assets")),
+                        "Total Liabilities": format_large_number(balance.get("total_liabilities")),
+                        "Total Equity": format_large_number(balance.get("total_equity")),
+                        "Cash": format_large_number(balance.get("cash")),
+                        "Total Debt": format_large_number(balance.get("total_debt")),
+                    }
+                )
             else:
                 st.caption("Balance sheet data unavailable.")
 
         with fs_tabs[2]:
             cashflow = financials.get("cash_flow")
             if cashflow:
-                render_metrics_table({
-                    "Operating Cash Flow": format_large_number(cashflow.get("operating_cash_flow")),
-                    "Capital Expenditure": format_large_number(cashflow.get("capital_expenditure")),
-                    "Free Cash Flow": format_large_number(cashflow.get("free_cash_flow")),
-                })
+                render_metrics_table(
+                    {
+                        "Operating Cash Flow": format_large_number(
+                            cashflow.get("operating_cash_flow")
+                        ),
+                        "Capital Expenditure": format_large_number(
+                            cashflow.get("capital_expenditure")
+                        ),
+                        "Free Cash Flow": format_large_number(cashflow.get("free_cash_flow")),
+                    }
+                )
             else:
                 st.caption("Cash flow data unavailable.")
     else:
@@ -408,7 +500,8 @@ with tab_sent:
             fig = create_gauge_chart(
                 value=round(gauge_val, 1),
                 title="Sentiment Score",
-                min_val=0, max_val=100,
+                min_val=0,
+                max_val=100,
                 ranges=[
                     {"range": [0, 30], "color": "rgba(239, 68, 68, 0.3)"},
                     {"range": [30, 45], "color": "rgba(245, 158, 11, 0.3)"},
@@ -419,13 +512,19 @@ with tab_sent:
                 height=200,
             )
             st.plotly_chart(fig, use_container_width=True)
-            st.caption(f"**{agg_sent.get('label', 'Neutral')}** · {sent_data.get('articles_analyzed', 0)} articles")
+            st.caption(
+                f"**{agg_sent.get('label', 'Neutral')}** · {sent_data.get('articles_analyzed', 0)} articles"
+            )
 
         with sc2:
             if sent_dist:
                 fig = create_donut_chart(
                     labels=["Positive", "Neutral", "Negative"],
-                    values=[sent_dist.get("positive", 0), sent_dist.get("neutral", 0), sent_dist.get("negative", 0)],
+                    values=[
+                        sent_dist.get("positive", 0),
+                        sent_dist.get("neutral", 0),
+                        sent_dist.get("negative", 0),
+                    ],
                     title="Distribution",
                     colors=["#22c55e", "#71717a", "#ef4444"],
                     height=200,

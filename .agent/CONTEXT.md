@@ -2,10 +2,10 @@
 
 ## Quick Reference
 
-**Repository**: https://github.com/gsaini/financial-research-analyst-agent  
-**Author**: Gopal Saini  
-**Created by**: Antigravity AI (Google DeepMind)  
-**Python Version**: 3.14+  
+**Repository**: https://github.com/gsaini/financial-research-analyst-agent
+**Author**: Gopal Saini
+**Created by**: Antigravity AI (Google DeepMind)
+**Python Version**: 3.14+
 **Last Updated**: 2026-01-05
 
 ---

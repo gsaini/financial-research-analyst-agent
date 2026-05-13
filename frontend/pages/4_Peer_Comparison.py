@@ -2,19 +2,34 @@
 Peer Comparison - Side-by-side stock comparison against industry peers.
 """
 
-import streamlit as st
 import pandas as pd
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_currency, format_percent, format_large_number, format_number
-from utils.data_service import compare_peers
-from components.header import render_header
-from components.plotly_charts import create_radar_chart, create_horizontal_bar, create_grouped_bar
-from components.metrics_cards import render_company_header, render_strength_weakness
+import streamlit as st
 from components.data_tables import render_comparison_table
+from components.header import render_header
+from components.metrics_cards import render_company_header, render_strength_weakness
+from components.plotly_charts import (
+    create_grouped_bar,
+    create_horizontal_bar,
+    create_radar_chart,
+)
+
+from utils.data_service import compare_peers
+from utils.formatters import (
+    format_currency,
+    format_large_number,
+    format_number,
+    format_percent,
+)
+from utils.session import init_session_state
+from utils.theme import inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Peer Comparison | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Peer Comparison | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -25,12 +40,16 @@ st.caption("Compare a stock against its industry peers")
 # ─── Input ───────────────────────────────────────────────────
 c1, c2 = st.columns([1, 2])
 with c1:
-    symbol = st.text_input(
-        "Target Symbol",
-        value=st.session_state.get("selected_symbol", "AAPL"),
-        placeholder="e.g. AAPL",
-        key="peer_symbol",
-    ).upper().strip()
+    symbol = (
+        st.text_input(
+            "Target Symbol",
+            value=st.session_state.get("selected_symbol", "AAPL"),
+            placeholder="e.g. AAPL",
+            key="peer_symbol",
+        )
+        .upper()
+        .strip()
+    )
 
 with c2:
     custom_peers = st.text_input(
@@ -59,7 +78,9 @@ if compare_btn or symbol:
 
     # ─── Header ──────────────────────────────────────────────
     peer_group = result.get("peer_group", [])
-    st.markdown(f"**Target:** `{result.get('target', symbol)}` | **Peers:** {', '.join([f'`{p}`' for p in peer_group])}")
+    st.markdown(
+        f"**Target:** `{result.get('target', symbol)}` | **Peers:** {', '.join([f'`{p}`' for p in peer_group])}"
+    )
 
     # ─── Strengths & Weaknesses ──────────────────────────────
     render_strength_weakness(
@@ -76,21 +97,31 @@ if compare_btn or symbol:
     if metrics:
         rows = []
         for sym, data in metrics.items():
-            rows.append({
-                "Symbol": sym,
-                "Price": format_currency(data.get("price")),
-                "Market Cap": format_large_number(data.get("market_cap")),
-                "P/E": format_number(data.get("pe_ratio")),
-                "Forward P/E": format_number(data.get("forward_pe")),
-                "PEG": format_number(data.get("peg_ratio")),
-                "P/B": format_number(data.get("pb_ratio")),
-                "Profit Margin": format_percent(data.get("profit_margin", 0) * 100 if data.get("profit_margin") else None),
-                "Op Margin": format_percent(data.get("operating_margin", 0) * 100 if data.get("operating_margin") else None),
-                "ROE": format_percent(data.get("roe", 0) * 100 if data.get("roe") else None),
-                "Rev Growth": format_percent(data.get("revenue_growth", 0) * 100 if data.get("revenue_growth") else None),
-                "Beta": format_number(data.get("beta")),
-                "Sector": data.get("sector", ""),
-            })
+            rows.append(
+                {
+                    "Symbol": sym,
+                    "Price": format_currency(data.get("price")),
+                    "Market Cap": format_large_number(data.get("market_cap")),
+                    "P/E": format_number(data.get("pe_ratio")),
+                    "Forward P/E": format_number(data.get("forward_pe")),
+                    "PEG": format_number(data.get("peg_ratio")),
+                    "P/B": format_number(data.get("pb_ratio")),
+                    "Profit Margin": format_percent(
+                        data.get("profit_margin", 0) * 100 if data.get("profit_margin") else None
+                    ),
+                    "Op Margin": format_percent(
+                        data.get("operating_margin", 0) * 100
+                        if data.get("operating_margin")
+                        else None
+                    ),
+                    "ROE": format_percent(data.get("roe", 0) * 100 if data.get("roe") else None),
+                    "Rev Growth": format_percent(
+                        data.get("revenue_growth", 0) * 100 if data.get("revenue_growth") else None
+                    ),
+                    "Beta": format_number(data.get("beta")),
+                    "Sector": data.get("sector", ""),
+                }
+            )
 
         df = pd.DataFrame(rows)
         render_comparison_table(rows, highlight_symbol=symbol)
@@ -144,8 +175,13 @@ if compare_btn or symbol:
                 (aggregates.get("roa", {}).get("median") or 0) * 100,
                 (aggregates.get("revenue_growth", {}).get("median") or 0) * 100,
             ]
-            fig = create_radar_chart(categories, target_vals, title=f"{symbol} vs Peer Median",
-                                     comparison_values=peer_vals, comparison_label="Peer Median")
+            fig = create_radar_chart(
+                categories,
+                target_vals,
+                title=f"{symbol} vs Peer Median",
+                comparison_values=peer_vals,
+                comparison_label="Peer Median",
+            )
         else:
             fig = create_radar_chart(categories, target_vals, title=f"{symbol} Profile")
 
@@ -165,7 +201,11 @@ if compare_btn or symbol:
         st.markdown("---")
         st.markdown("### Relative Valuation")
         for metric, desc in rel_val.items():
-            color = "#10b981" if "discount" in str(desc).lower() else "#ef4444" if "premium" in str(desc).lower() else "#9ca3af"
+            color = (
+                "#10b981"
+                if "discount" in str(desc).lower()
+                else "#ef4444" if "premium" in str(desc).lower() else "#9ca3af"
+            )
             st.markdown(
                 f"- **{metric.replace('_', ' ').title()}**: <span style='color:{color};'>{desc}</span>",
                 unsafe_allow_html=True,

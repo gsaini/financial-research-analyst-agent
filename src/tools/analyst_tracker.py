@@ -30,6 +30,7 @@ def _get_ticker(symbol: str):
     """Get a yfinance Ticker object directly for attributes not in provider."""
     try:
         import yfinance as yf
+
         return yf.Ticker(symbol.upper().strip())
     except ImportError:
         logger.error("yfinance not installed")
@@ -153,7 +154,11 @@ def _get_rating_distribution(ticker, info: Dict) -> Dict[str, Any]:
     try:
         # Try recommendations_summary first
         rec_summary = getattr(ticker, "recommendations_summary", None)
-        if rec_summary is not None and isinstance(rec_summary, pd.DataFrame) and not rec_summary.empty:
+        if (
+            rec_summary is not None
+            and isinstance(rec_summary, pd.DataFrame)
+            and not rec_summary.empty
+        ):
             # Latest row
             latest = rec_summary.iloc[0] if len(rec_summary) > 0 else {}
             strong_buy = int(latest.get("strongBuy", 0))
@@ -173,7 +178,7 @@ def _get_rating_distribution(ticker, info: Dict) -> Dict[str, Any]:
 
         if total > 0:
             # Weighted score: 5=Strong Buy, 4=Buy, 3=Hold, 2=Sell, 1=Strong Sell
-            weighted = (strong_buy * 5 + buy * 4 + hold * 3 + sell * 2 + strong_sell * 1)
+            weighted = strong_buy * 5 + buy * 4 + hold * 3 + sell * 2 + strong_sell * 1
             score = round(weighted / total, 2)
             bullish_pct = round((strong_buy + buy) / total * 100, 1)
         else:
@@ -243,7 +248,11 @@ def _get_price_targets(ticker, info: Dict, current_price: float) -> Dict[str, An
             count = info.get("numberOfAnalystOpinions", 0)
 
         consensus = mean or median or 0
-        upside = round((consensus / current_price - 1) * 100, 1) if current_price > 0 and consensus > 0 else 0
+        upside = (
+            round((consensus / current_price - 1) * 100, 1)
+            if current_price > 0 and consensus > 0
+            else 0
+        )
 
         return {
             "consensus": round(consensus, 2) if consensus else None,
@@ -253,16 +262,23 @@ def _get_price_targets(ticker, info: Dict, current_price: float) -> Dict[str, An
             "upside_to_consensus_pct": upside,
             "number_of_analysts": int(count) if count else 0,
             "assessment": (
-                f"Consensus target ${consensus:.2f} implies {upside:+.1f}% "
-                + ("upside" if upside > 0 else "downside")
-            ) if consensus else "No price target data available",
+                (
+                    f"Consensus target ${consensus:.2f} implies {upside:+.1f}% "
+                    + ("upside" if upside > 0 else "downside")
+                )
+                if consensus
+                else "No price target data available"
+            ),
         }
 
     except Exception as e:
         logger.debug(f"Price targets failed: {e}")
         return {
-            "consensus": None, "high": None, "low": None,
-            "upside_to_consensus_pct": 0, "number_of_analysts": 0,
+            "consensus": None,
+            "high": None,
+            "low": None,
+            "upside_to_consensus_pct": 0,
+            "number_of_analysts": 0,
             "assessment": "Price target data unavailable",
         }
 
@@ -284,17 +300,31 @@ def _get_recent_changes(ticker, days: int = 90) -> Dict[str, Any]:
             except Exception:
                 pass
 
-        recent = recs_df[recs_df.index >= cutoff] if hasattr(recs_df.index, '__ge__') else recs_df.tail(20)
+        recent = (
+            recs_df[recs_df.index >= cutoff]
+            if hasattr(recs_df.index, "__ge__")
+            else recs_df.tail(20)
+        )
 
         changes = []
         upgrades_30d = 0
         downgrades_30d = 0
         cutoff_30d = datetime.now() - timedelta(days=30)
 
-        grade_rank = {"Strong Buy": 5, "Buy": 4, "Outperform": 4, "Overweight": 4,
-                      "Hold": 3, "Neutral": 3, "Equal-Weight": 3, "Market Perform": 3,
-                      "Sell": 2, "Underperform": 2, "Underweight": 2,
-                      "Strong Sell": 1}
+        grade_rank = {
+            "Strong Buy": 5,
+            "Buy": 4,
+            "Outperform": 4,
+            "Overweight": 4,
+            "Hold": 3,
+            "Neutral": 3,
+            "Equal-Weight": 3,
+            "Market Perform": 3,
+            "Sell": 2,
+            "Underperform": 2,
+            "Underweight": 2,
+            "Strong Sell": 1,
+        }
 
         for date, row in recent.iterrows():
             firm = row.get("Firm", row.get("firm", ""))
@@ -316,13 +346,15 @@ def _get_recent_changes(ticker, days: int = 90) -> Dict[str, Any]:
 
             date_str = str(date.date()) if hasattr(date, "date") else str(date)
 
-            changes.append({
-                "date": date_str,
-                "firm": firm,
-                "action": action,
-                "from_rating": from_grade,
-                "to_rating": to_grade,
-            })
+            changes.append(
+                {
+                    "date": date_str,
+                    "firm": firm,
+                    "action": action,
+                    "from_rating": from_grade,
+                    "to_rating": to_grade,
+                }
+            )
 
             # Count 30-day upgrades/downgrades
             try:
@@ -347,15 +379,20 @@ def _get_recent_changes(ticker, days: int = 90) -> Dict[str, Any]:
             "downgrades_30d": downgrades_30d,
             "net_sentiment_30d": upgrades_30d - downgrades_30d,
             "momentum": (
-                "Positive" if upgrades_30d > downgrades_30d
-                else "Negative" if downgrades_30d > upgrades_30d
-                else "Neutral"
+                "Positive"
+                if upgrades_30d > downgrades_30d
+                else "Negative" if downgrades_30d > upgrades_30d else "Neutral"
             ),
         }
 
     except Exception as e:
         logger.debug(f"Recent changes failed: {e}")
-        return {"changes": [], "upgrades_30d": 0, "downgrades_30d": 0, "momentum": "N/A"}
+        return {
+            "changes": [],
+            "upgrades_30d": 0,
+            "downgrades_30d": 0,
+            "momentum": "N/A",
+        }
 
 
 def _get_estimate_revisions(ticker) -> Dict[str, Any]:
@@ -364,7 +401,11 @@ def _get_estimate_revisions(ticker) -> Dict[str, Any]:
         # Earnings estimates
         eps_estimates = {}
         earnings_est = getattr(ticker, "earnings_estimate", None)
-        if earnings_est is not None and isinstance(earnings_est, pd.DataFrame) and not earnings_est.empty:
+        if (
+            earnings_est is not None
+            and isinstance(earnings_est, pd.DataFrame)
+            and not earnings_est.empty
+        ):
             for col in earnings_est.columns:
                 period = str(col)
                 row_data = earnings_est[col]
@@ -379,13 +420,17 @@ def _get_estimate_revisions(ticker) -> Dict[str, Any]:
                     "low": round(float(low), 2) if low is not None else None,
                     "high": round(float(high), 2) if high is not None else None,
                     "num_analysts": int(num) if num is not None else None,
-                    "growth": round(float(growth) * 100, 1) if growth is not None else None,
+                    "growth": (round(float(growth) * 100, 1) if growth is not None else None),
                 }
 
         # Revenue estimates
         rev_estimates = {}
         revenue_est = getattr(ticker, "revenue_estimate", None)
-        if revenue_est is not None and isinstance(revenue_est, pd.DataFrame) and not revenue_est.empty:
+        if (
+            revenue_est is not None
+            and isinstance(revenue_est, pd.DataFrame)
+            and not revenue_est.empty
+        ):
             for col in revenue_est.columns:
                 period = str(col)
                 row_data = revenue_est[col]
@@ -400,13 +445,17 @@ def _get_estimate_revisions(ticker) -> Dict[str, Any]:
                     "low": round(float(low)) if low is not None else None,
                     "high": round(float(high)) if high is not None else None,
                     "num_analysts": int(num) if num is not None else None,
-                    "growth_pct": round(float(growth) * 100, 1) if growth is not None else None,
+                    "growth_pct": (round(float(growth) * 100, 1) if growth is not None else None),
                 }
 
         # EPS trend (estimate revisions over time)
         eps_trend = {}
         eps_trend_data = getattr(ticker, "eps_trend", None)
-        if eps_trend_data is not None and isinstance(eps_trend_data, pd.DataFrame) and not eps_trend_data.empty:
+        if (
+            eps_trend_data is not None
+            and isinstance(eps_trend_data, pd.DataFrame)
+            and not eps_trend_data.empty
+        ):
             for col in eps_trend_data.columns:
                 period = str(col)
                 row_data = eps_trend_data[col]
@@ -418,20 +467,26 @@ def _get_estimate_revisions(ticker) -> Dict[str, Any]:
 
                 revision_30d = None
                 if current is not None and d30_ago is not None and d30_ago != 0:
-                    revision_30d = round((float(current) - float(d30_ago)) / abs(float(d30_ago)) * 100, 2)
+                    revision_30d = round(
+                        (float(current) - float(d30_ago)) / abs(float(d30_ago)) * 100, 2
+                    )
 
                 eps_trend[period] = {
-                    "current": round(float(current), 2) if current is not None else None,
-                    "7_days_ago": round(float(d7_ago), 2) if d7_ago is not None else None,
-                    "30_days_ago": round(float(d30_ago), 2) if d30_ago is not None else None,
-                    "60_days_ago": round(float(d60_ago), 2) if d60_ago is not None else None,
-                    "90_days_ago": round(float(d90_ago), 2) if d90_ago is not None else None,
+                    "current": (round(float(current), 2) if current is not None else None),
+                    "7_days_ago": (round(float(d7_ago), 2) if d7_ago is not None else None),
+                    "30_days_ago": (round(float(d30_ago), 2) if d30_ago is not None else None),
+                    "60_days_ago": (round(float(d60_ago), 2) if d60_ago is not None else None),
+                    "90_days_ago": (round(float(d90_ago), 2) if d90_ago is not None else None),
                     "revision_30d_pct": revision_30d,
                     "revision_trend": (
-                        "Positive" if revision_30d and revision_30d > 1
-                        else "Negative" if revision_30d and revision_30d < -1
-                        else "Stable"
-                    ) if revision_30d is not None else "N/A",
+                        (
+                            "Positive"
+                            if revision_30d and revision_30d > 1
+                            else ("Negative" if revision_30d and revision_30d < -1 else "Stable")
+                        )
+                        if revision_30d is not None
+                        else "N/A"
+                    ),
                 }
 
         return {
@@ -443,7 +498,12 @@ def _get_estimate_revisions(ticker) -> Dict[str, Any]:
 
     except Exception as e:
         logger.debug(f"Estimate revisions failed: {e}")
-        return {"eps_estimates": {}, "revenue_estimates": {}, "eps_trend": {}, "has_data": False}
+        return {
+            "eps_estimates": {},
+            "revenue_estimates": {},
+            "eps_trend": {},
+            "has_data": False,
+        }
 
 
 def _calculate_analyst_signal(

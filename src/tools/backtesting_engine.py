@@ -16,8 +16,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from src.data import get_provider
+import yfinance as yf
 
+from src.data import get_provider
 from src.tools.strategy_definitions import STRATEGIES, get_strategy
 from src.utils.logger import get_logger
 
@@ -109,15 +110,17 @@ def _simulate(
             commission = proceeds * (commission_pct / 100.0)
             cash = proceeds - commission
             trade_return = (exec_price - entry_price) / entry_price * 100.0
-            trade_log.append({
-                "trade_number": len(trade_log) + 1,
-                "entry_idx": int(entry_idx),
-                "exit_idx": int(i),
-                "entry_price": round(entry_price, 2),
-                "exit_price": round(exec_price, 2),
-                "return_pct": round(trade_return, 2),
-                "holding_bars": int(i - entry_idx),
-            })
+            trade_log.append(
+                {
+                    "trade_number": len(trade_log) + 1,
+                    "entry_idx": int(entry_idx),
+                    "exit_idx": int(i),
+                    "entry_price": round(entry_price, 2),
+                    "exit_price": round(exec_price, 2),
+                    "return_pct": round(trade_return, 2),
+                    "holding_bars": int(i - entry_idx),
+                }
+            )
             shares = 0.0
 
         # Track equity (cash + market value of position)
@@ -127,16 +130,18 @@ def _simulate(
     if shares > 0:
         final_value = shares * float(prices[-1])
         trade_return = (float(prices[-1]) - entry_price) / entry_price * 100.0
-        trade_log.append({
-            "trade_number": len(trade_log) + 1,
-            "entry_idx": int(entry_idx),
-            "exit_idx": int(len(prices) - 1),
-            "entry_price": round(entry_price, 2),
-            "exit_price": round(float(prices[-1]), 2),
-            "return_pct": round(trade_return, 2),
-            "holding_bars": int(len(prices) - 1 - entry_idx),
-            "status": "open",
-        })
+        trade_log.append(
+            {
+                "trade_number": len(trade_log) + 1,
+                "entry_idx": int(entry_idx),
+                "exit_idx": int(len(prices) - 1),
+                "entry_price": round(entry_price, 2),
+                "exit_price": round(float(prices[-1]), 2),
+                "return_pct": round(trade_return, 2),
+                "holding_bars": int(len(prices) - 1 - entry_idx),
+                "status": "open",
+            }
+        )
 
     return trade_log, equity
 
@@ -171,7 +176,11 @@ def _compute_metrics(
     win_rate = (len(wins) / total_trades * 100.0) if total_trades else 0.0
     avg_win = float(np.mean(wins)) if wins else 0.0
     avg_loss = float(np.mean(losses)) if losses else 0.0
-    profit_factor = (sum(wins) / abs(sum(losses))) if losses and sum(losses) != 0 else float("inf") if wins else 0.0
+    profit_factor = (
+        (sum(wins) / abs(sum(losses)))
+        if losses and sum(losses) != 0
+        else float("inf") if wins else 0.0
+    )
 
     # Max drawdown from equity curve
     peak = np.maximum.accumulate(equity)
@@ -225,7 +234,7 @@ def _compute_metrics(
         "win_rate": f"{win_rate:.1f}%",
         "average_win": f"{avg_win:+.1f}%",
         "average_loss": f"{avg_loss:+.1f}%" if avg_loss != 0 else "0.0%",
-        "profit_factor": round(profit_factor, 2) if profit_factor != float("inf") else "∞",
+        "profit_factor": (round(profit_factor, 2) if profit_factor != float("inf") else "∞"),
         "max_drawdown": f"{max_drawdown:.1f}%",
         "longest_drawdown_bars": longest_dd_bars,
         "max_consecutive_losses": max_consec_loss,
@@ -291,7 +300,8 @@ def run_backtest(
 
     # ── Simulate ────
     trade_log, equity = _simulate(
-        prices, signal_fn,
+        prices,
+        signal_fn,
         initial_capital=initial_capital,
         commission_pct=commission_pct,
         slippage_pct=slippage_pct,
@@ -303,7 +313,11 @@ def run_backtest(
 
     # ── Metrics ────
     performance = _compute_metrics(
-        trade_log, equity, initial_capital, buy_hold_return, num_years,
+        trade_log,
+        equity,
+        initial_capital,
+        buy_hold_return,
+        num_years,
     )
 
     # ── Verdict ────
@@ -317,7 +331,9 @@ def run_backtest(
     elif excess > -15:
         verdict = "Strategy underperforms buy-and-hold. Better suited for range-bound markets."
     else:
-        verdict = "Strategy significantly underperforms buy-and-hold. Not recommended for this ticker."
+        verdict = (
+            "Strategy significantly underperforms buy-and-hold. Not recommended for this ticker."
+        )
 
     execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
@@ -380,7 +396,8 @@ def walk_forward_analysis(
             continue
 
         trade_log, equity = _simulate(
-            fold_prices, strat_info["fn"],
+            fold_prices,
+            strat_info["fn"],
             initial_capital=initial_capital,
             commission_pct=commission_pct,
         )
@@ -389,18 +406,25 @@ def walk_forward_analysis(
         num_years = len(fold_prices) / 252.0
         perf = _compute_metrics(trade_log, equity, initial_capital, buy_hold, num_years)
 
-        folds.append({
-            "fold": i + 1,
-            "bars": len(fold_prices),
-            "total_return": perf.get("total_return", "0%"),
-            "sharpe_ratio": perf.get("sharpe_ratio", 0),
-            "max_drawdown": perf.get("max_drawdown", "0%"),
-            "trades": perf.get("total_trades", 0),
-            "beat_buy_hold": float(perf.get("excess_return", "0").replace("%", "").replace("+", "")) > 0,
-        })
+        folds.append(
+            {
+                "fold": i + 1,
+                "bars": len(fold_prices),
+                "total_return": perf.get("total_return", "0%"),
+                "sharpe_ratio": perf.get("sharpe_ratio", 0),
+                "max_drawdown": perf.get("max_drawdown", "0%"),
+                "trades": perf.get("total_trades", 0),
+                "beat_buy_hold": float(
+                    perf.get("excess_return", "0").replace("%", "").replace("+", "")
+                )
+                > 0,
+            }
+        )
 
     # Consistency metrics
-    profitable_folds = sum(1 for f in folds if float(f["total_return"].replace("%", "").replace("+", "")) > 0)
+    profitable_folds = sum(
+        1 for f in folds if float(f["total_return"].replace("%", "").replace("+", "")) > 0
+    )
     beat_count = sum(1 for f in folds if f.get("beat_buy_hold"))
 
     return {
@@ -410,16 +434,18 @@ def walk_forward_analysis(
         "folds": folds,
         "consistency": {
             "profitable_folds": profitable_folds,
-            "profitable_pct": round(profitable_folds / len(folds) * 100, 1) if folds else 0,
+            "profitable_pct": (round(profitable_folds / len(folds) * 100, 1) if folds else 0),
             "beat_buy_hold_folds": beat_count,
-            "beat_buy_hold_pct": round(beat_count / len(folds) * 100, 1) if folds else 0,
+            "beat_buy_hold_pct": (round(beat_count / len(folds) * 100, 1) if folds else 0),
         },
         "verdict": (
             "Highly consistent — profitable in most time periods"
             if profitable_folds >= len(folds) * 0.8
-            else "Moderately consistent — works in some market regimes"
-            if profitable_folds >= len(folds) * 0.5
-            else "Inconsistent — strategy is regime-dependent"
+            else (
+                "Moderately consistent — works in some market regimes"
+                if profitable_folds >= len(folds) * 0.5
+                else "Inconsistent — strategy is regime-dependent"
+            )
         ),
         "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }

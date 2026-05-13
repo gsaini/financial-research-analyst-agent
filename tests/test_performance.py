@@ -11,14 +11,13 @@ Tests cover:
 - Risk Agent tool availability
 """
 
-import pytest
 import math
-from unittest.mock import patch, MagicMock, PropertyMock
 from datetime import datetime
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import numpy as np
 import pandas as pd
-
+import pytest
 
 # ─────────────────────────────────────────────────────────────
 # Helpers
@@ -229,9 +228,7 @@ class TestTrackPerformance:
         prices = _make_price_series(100, 150, 500)
 
         def mock_provider_get_history(symbol, period="max"):
-            return pd.DataFrame(
-                {"Close": prices.values}, index=prices.index
-            )
+            return pd.DataFrame({"Close": prices.values}, index=prices.index)
 
         mock_provider = MagicMock()
         mock_provider_func.return_value = mock_provider
@@ -269,7 +266,11 @@ class TestPerformanceSchema:
             end_date="2026-02-28",
             current_price=185.50,
             absolute_returns={"1_month": 5.2, "1_year": 22.3},
-            risk_adjusted_metrics={"sharpe_ratio": 1.5, "sortino_ratio": 1.8, "beta": 1.1},
+            risk_adjusted_metrics={
+                "sharpe_ratio": 1.5,
+                "sortino_ratio": 1.8,
+                "beta": 1.1,
+            },
             drawdown_analysis={"max_drawdown": -12.5, "current_drawdown": -3.2},
         )
 

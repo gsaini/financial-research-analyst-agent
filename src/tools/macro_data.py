@@ -35,18 +35,42 @@ _SERIES = {
 
 # Sector rate sensitivity mapping
 _SECTOR_RATE_SENSITIVITY = {
-    "Real Estate": ("high_negative", "Rising rates increase mortgage costs and reduce property valuations."),
-    "Utilities": ("high_negative", "Higher rates make utility dividend yields less attractive vs bonds."),
-    "Consumer Defensive": ("moderate_negative", "Higher borrowing costs reduce consumer spending power."),
-    "Financial Services": ("positive", "Banks benefit from wider net interest margins in rising rate environments."),
+    "Real Estate": (
+        "high_negative",
+        "Rising rates increase mortgage costs and reduce property valuations.",
+    ),
+    "Utilities": (
+        "high_negative",
+        "Higher rates make utility dividend yields less attractive vs bonds.",
+    ),
+    "Consumer Defensive": (
+        "moderate_negative",
+        "Higher borrowing costs reduce consumer spending power.",
+    ),
+    "Financial Services": (
+        "positive",
+        "Banks benefit from wider net interest margins in rising rate environments.",
+    ),
     "Financials": ("positive", "Banks benefit from wider net interest margins."),
-    "Technology": ("moderate_negative", "Higher discount rates compress growth stock valuations."),
+    "Technology": (
+        "moderate_negative",
+        "Higher discount rates compress growth stock valuations.",
+    ),
     "Healthcare": ("low_impact", "Demand is relatively inelastic to interest rates."),
     "Energy": ("low_impact", "Driven more by commodity prices than interest rates."),
     "Industrials": ("moderate_negative", "Higher rates slow capital investment."),
-    "Consumer Cyclical": ("moderate_negative", "Consumers defer big purchases when borrowing costs rise."),
-    "Communication Services": ("low_impact", "Mixed — some growth compression but stable demand."),
-    "Basic Materials": ("low_impact", "Commodity-driven, limited direct rate sensitivity."),
+    "Consumer Cyclical": (
+        "moderate_negative",
+        "Consumers defer big purchases when borrowing costs rise.",
+    ),
+    "Communication Services": (
+        "low_impact",
+        "Mixed — some growth compression but stable demand.",
+    ),
+    "Basic Materials": (
+        "low_impact",
+        "Commodity-driven, limited direct rate sensitivity.",
+    ),
 }
 
 
@@ -54,10 +78,12 @@ def _get_fred():
     """Create a FRED client. Returns None if unavailable."""
     try:
         from src.config import settings
+
         api_key = settings.data_api.fred_api_key
         if not api_key or api_key in ("", "your_fred_api_key"):
             return None
         from fredapi import Fred
+
         return Fred(api_key=api_key)
     except ImportError:
         logger.warning("fredapi not installed — run: pip install fredapi")
@@ -132,7 +158,8 @@ def get_macro_summary() -> Dict[str, Any]:
     # Federal Funds Rate
     curr, prev = _get_latest(fred, _SERIES["federal_funds_rate"])
     indicators["federal_funds_rate"] = {
-        "current": curr, "previous": prev,
+        "current": curr,
+        "previous": prev,
         "direction": _direction(curr, prev),
         "unit": "%",
     }
@@ -142,7 +169,9 @@ def get_macro_summary() -> Dict[str, Any]:
     cpi_curr, cpi_prev_month = _get_latest(fred, _SERIES["cpi"])
     indicators["cpi_yoy"] = {
         "current": cpi_yoy,
-        "direction": _direction(cpi_yoy, 3.0) if cpi_yoy else "unknown",  # 3% as neutral benchmark
+        "direction": (
+            _direction(cpi_yoy, 3.0) if cpi_yoy else "unknown"
+        ),  # 3% as neutral benchmark
         "unit": "% YoY",
     }
 
@@ -160,7 +189,8 @@ def get_macro_summary() -> Dict[str, Any]:
     # Unemployment
     curr, prev = _get_latest(fred, _SERIES["unemployment"])
     indicators["unemployment"] = {
-        "current": curr, "previous": prev,
+        "current": curr,
+        "previous": prev,
         "direction": _direction(curr, prev),
         "unit": "%",
     }
@@ -168,14 +198,16 @@ def get_macro_summary() -> Dict[str, Any]:
     # Consumer Confidence
     curr, prev = _get_latest(fred, _SERIES["consumer_confidence"])
     indicators["consumer_confidence"] = {
-        "current": curr, "previous": prev,
+        "current": curr,
+        "previous": prev,
         "direction": _direction(curr, prev),
     }
 
     # PMI
     curr, prev = _get_latest(fred, _SERIES["pmi"])
     indicators["pmi"] = {
-        "current": curr, "previous": prev,
+        "current": curr,
+        "previous": prev,
         "direction": _direction(curr, prev),
         "expansion": curr > 50 if curr else None,
     }
@@ -183,7 +215,8 @@ def get_macro_summary() -> Dict[str, Any]:
     # Housing Starts
     curr, prev = _get_latest(fred, _SERIES["housing_starts"])
     indicators["housing_starts"] = {
-        "current": curr, "previous": prev,
+        "current": curr,
+        "previous": prev,
         "direction": _direction(curr, prev),
         "unit": "thousands",
     }
@@ -329,6 +362,7 @@ def get_macro_context_for_stock(symbol: str) -> Dict[str, Any]:
     # Get stock sector
     try:
         from src.data import get_provider
+
         provider = get_provider()
         info = provider.get_info(symbol)
         sector = info.get("sector", "Unknown")
@@ -340,7 +374,9 @@ def get_macro_context_for_stock(symbol: str) -> Dict[str, Any]:
     fed_stance = rate_env.get("fed_stance", "unknown")
 
     # Find sector sensitivity
-    sensitivity_info = _SECTOR_RATE_SENSITIVITY.get(sector, ("low_impact", "No specific rate sensitivity data."))
+    sensitivity_info = _SECTOR_RATE_SENSITIVITY.get(
+        sector, ("low_impact", "No specific rate sensitivity data.")
+    )
     sensitivity, explanation = sensitivity_info
 
     # Determine impact

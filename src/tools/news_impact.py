@@ -3,9 +3,9 @@ News impact analysis - volume tracking, sentiment trends, source diversity,
 and news-price correlation for a given stock symbol.
 """
 
-from typing import Any, Dict, List
-from datetime import datetime, timedelta
 from collections import Counter
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
 from src.utils.logger import get_logger
 
@@ -23,6 +23,7 @@ def analyze_news_impact(symbol: str) -> Dict[str, Any]:
 
     # 1. Fetch news articles
     from src.tools.news_fetcher import fetch_company_news
+
     articles = fetch_company_news(symbol)
 
     if not articles:
@@ -30,6 +31,7 @@ def analyze_news_impact(symbol: str) -> Dict[str, Any]:
 
     # 2. Run sentiment analysis on all articles
     from src.tools.sentiment_engine import analyze_articles
+
     sentiment_result = analyze_articles(articles)
 
     # 3. Compute news volume metrics
@@ -68,16 +70,18 @@ def _slim_articles(articles: List[Dict]) -> List[Dict]:
     """Return articles with only essential fields for frontend display."""
     slim = []
     for a in articles:
-        slim.append({
-            "title": a.get("title", ""),
-            "source": a.get("source", ""),
-            "published_at": a.get("published_at", ""),
-            "url": a.get("url", ""),
-            "type": a.get("type", "STORY"),
-            "thumbnail": a.get("thumbnail", ""),
-            "description": a.get("description", ""),
-            "sentiment": a.get("sentiment", {}),
-        })
+        slim.append(
+            {
+                "title": a.get("title", ""),
+                "source": a.get("source", ""),
+                "published_at": a.get("published_at", ""),
+                "url": a.get("url", ""),
+                "type": a.get("type", "STORY"),
+                "thumbnail": a.get("thumbnail", ""),
+                "description": a.get("description", ""),
+                "sentiment": a.get("sentiment", {}),
+            }
+        )
     return slim
 
 
@@ -92,9 +96,7 @@ def _compute_volume_metrics(articles: List[Dict]) -> Dict[str, Any]:
         pub_str = article.get("published_at", "")
         try:
             if isinstance(pub_str, str) and pub_str:
-                pub = datetime.fromisoformat(
-                    pub_str.replace("Z", "+00:00").replace("+00:00", "")
-                )
+                pub = datetime.fromisoformat(pub_str.replace("Z", "+00:00").replace("+00:00", ""))
             else:
                 pub = now - timedelta(days=3)
         except (ValueError, TypeError):
@@ -165,9 +167,7 @@ def _compute_sentiment_trend(scored_articles: List[Dict]) -> Dict[str, Any]:
         pub_str = article.get("published_at", "")
         try:
             if isinstance(pub_str, str) and pub_str:
-                pub = datetime.fromisoformat(
-                    pub_str.replace("Z", "+00:00").replace("+00:00", "")
-                )
+                pub = datetime.fromisoformat(pub_str.replace("Z", "+00:00").replace("+00:00", ""))
             else:
                 continue
         except (ValueError, TypeError):
@@ -218,12 +218,33 @@ def _extract_topics(articles: List[Dict]) -> List[Dict[str, Any]]:
     # Financial topic keywords to look for
     topic_keywords = {
         "earnings": ["earnings", "eps", "revenue", "profit", "quarter", "quarterly"],
-        "analyst": ["analyst", "upgrade", "downgrade", "target", "rating", "price target"],
+        "analyst": [
+            "analyst",
+            "upgrade",
+            "downgrade",
+            "target",
+            "rating",
+            "price target",
+        ],
         "product": ["product", "launch", "innovation", "announce", "release", "unveil"],
         "management": ["ceo", "cfo", "executive", "leadership", "resign", "appoint"],
         "market": ["market", "rally", "selloff", "correction", "bull", "bear"],
-        "regulation": ["regulation", "sec", "antitrust", "lawsuit", "fine", "compliance"],
-        "acquisition": ["acquisition", "merger", "acquire", "deal", "buyout", "takeover"],
+        "regulation": [
+            "regulation",
+            "sec",
+            "antitrust",
+            "lawsuit",
+            "fine",
+            "compliance",
+        ],
+        "acquisition": [
+            "acquisition",
+            "merger",
+            "acquire",
+            "deal",
+            "buyout",
+            "takeover",
+        ],
         "dividend": ["dividend", "buyback", "repurchase", "payout", "yield"],
         "growth": ["growth", "expand", "expansion", "scale", "opportunity"],
         "risk": ["risk", "concern", "warning", "threat", "challenge", "headwind"],
@@ -247,6 +268,7 @@ def _compute_price_correlation(symbol: str) -> Dict[str, Any]:
     """Basic news-price correlation using recent price moves."""
     try:
         from src.tools.market_data import get_stock_price
+
         price_data = get_stock_price(symbol)
 
         if "error" in price_data:

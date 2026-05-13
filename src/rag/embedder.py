@@ -41,6 +41,7 @@ class Embedder:
         persist_dir: Optional[str] = None,
     ) -> None:
         from src.config import get_settings
+
         settings = get_settings()
 
         self._persist_dir = persist_dir or settings.vector_store.chroma_persist_dir
@@ -84,6 +85,7 @@ class Embedder:
 
         if provider == "sentence-transformers":
             from chromadb.utils import embedding_functions
+
             model = settings.vector_store.sentence_transformer_model
             logger.info(f"Using Sentence Transformers embeddings: {model}")
             return embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -91,6 +93,7 @@ class Embedder:
             )
         elif provider == "openai":
             from chromadb.utils import embedding_functions
+
             logger.info("Using OpenAI embeddings")
             return embedding_functions.OpenAIEmbeddingFunction(
                 api_key=settings.llm.openai_api_key,
@@ -99,6 +102,7 @@ class Embedder:
         else:
             # Default to sentence-transformers
             from chromadb.utils import embedding_functions
+
             model = settings.vector_store.sentence_transformer_model
             logger.info(f"Defaulting to Sentence Transformers: {model}")
             return embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -126,10 +130,8 @@ class Embedder:
 
         if ids is None:
             import hashlib
-            ids = [
-                hashlib.md5(f"{i}:{t[:50]}".encode()).hexdigest()
-                for i, t in enumerate(texts)
-            ]
+
+            ids = [hashlib.md5(f"{i}:{t[:50]}".encode()).hexdigest() for i, t in enumerate(texts)]
 
         # ChromaDB has a batch limit; chunk into batches of 500
         batch_size = 500

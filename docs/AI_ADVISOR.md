@@ -1,7 +1,7 @@
 # AI Financial Advisor — Technical Documentation
 
-> **Feature**: AI Advisor (Page 13)  
-> **Version**: 2.0 — Enhanced with context injection, parallel execution, and 9 analysis tools  
+> **Feature**: AI Advisor (Page 13)
+> **Version**: 2.0 — Enhanced with context injection, parallel execution, and 9 analysis tools
 > **Files**: [13_AI_Advisor.py](file:///Users/gopalsaini/Documents/Source/ai-agents-playgrounds/financial-research-analyst-agent/frontend/pages/13_AI_Advisor.py), [data_service.py](file:///Users/gopalsaini/Documents/Source/ai-agents-playgrounds/financial-research-analyst-agent/frontend/utils/data_service.py)
 
 ---
@@ -51,7 +51,7 @@ graph TB
 
     subgraph Orchestrator ["Orchestration Layer (data_service.py)"]
         ASK["ask_advisor()<br/>Main Entry Point"]
-        
+
         subgraph PreProcess ["Pre-Processing"]
             TICK["_extract_tickers()<br/>Regex Ticker Detection"]
             PROF["_extract_user_profile()<br/>Keyword Profile Extraction"]
@@ -141,35 +141,35 @@ sequenceDiagram
 
     U->>UI: Types question or clicks FAQ
     UI->>O: ask_advisor(question, chat_history, on_progress)
-    
+
     O->>PP: Step 1: _extract_user_profile()
     PP-->>O: {risk_tolerance, budget, holdings, ...}
-    
+
     O->>PP: Step 2: _extract_tickers()
     PP-->>O: ["AAPL", "QQQ"]
-    
+
     O->>T: Parallel _fetch_ticker_snapshot() for each ticker
     T-->>O: JSON snapshots (price, returns, PE, ...)
-    
+
     O->>PP: Step 3: _summarize_chat_history()
     PP-->>O: Condensed message list
-    
+
     O->>O: Step 4: Build system prompt + profile + snapshots
-    
+
     O->>LLM: invoke(messages + bound tools)
-    
+
     loop Tool-Calling Loop (max 4 rounds)
         LLM-->>O: tool_calls: [{name, args, id}]
         O->>T: Execute tools IN PARALLEL (ThreadPoolExecutor)
         T-->>O: Tool results (JSON)
         O->>LLM: Re-invoke with ToolMessages
     end
-    
+
     LLM-->>O: Final response content
-    
+
     O->>V: Step 5: _validate_advisor_response()
     V-->>O: Validated response (+ disclaimer if needed)
-    
+
     O-->>UI: Response text
     UI-->>U: Display in chat bubble
 ```
@@ -282,23 +282,23 @@ The system prompt instructs the LLM to combine tools based on question type:
 ```mermaid
 graph LR
     Q1["Quick check<br/>'What's AAPL price?'"] --> T1["lookup_ticker"]
-    
+
     Q2["Buy/Sell decision<br/>'Should I buy AAPL?'"] --> T1b["lookup_ticker"]
     Q2 --> T2["run_technical"]
     Q2 --> T3["run_fundamentals"]
-    
+
     Q3["Timing question<br/>'When to buy NVDA?'"] --> T2b["run_technical"]
     Q3 --> T8["run_options"]
-    
+
     Q4["Income investing<br/>'Best dividend ETF?'"] --> T1c["lookup_ticker"]
     Q4 --> T4["run_dividends"]
     Q4 --> T3b["run_fundamentals"]
-    
+
     Q5["Due diligence<br/>'Research MSFT for me'"] --> T1d["lookup_ticker"]
     Q5 --> T3c["run_fundamentals"]
     Q5 --> T5["run_earnings"]
     Q5 --> T9["run_insider"]
-    
+
     Q6["Full analysis<br/>'Complete analysis of TSLA'"] --> T1e["lookup_ticker"]
     Q6 --> T2c["run_technical"]
     Q6 --> T3d["run_fundamentals"]
@@ -357,7 +357,7 @@ The advisor supports **6 LLM providers** via LangChain's chat model abstraction.
 ```mermaid
 graph TB
     CONFIG["src.config.settings<br/>settings.llm.provider"] --> FACTORY["_get_llm()"]
-    
+
     FACTORY -->|"ollama"| OL["ChatOllama<br/>Local / Self-hosted"]
     FACTORY -->|"lmstudio"| LS["ChatOpenAI<br/>Local (OpenAI-compatible)"]
     FACTORY -->|"vllm"| VL["ChatOpenAI<br/>Self-hosted GPU"]
@@ -405,7 +405,7 @@ graph TD
     SP --> T["ANALYSIS TOOLS<br/>9 Tool Descriptions"]
     SP --> S["TOOL USAGE STRATEGY<br/>Combo Recommendations"]
     SP --> R["RESPONSE GUIDELINES<br/>Formatting & Content Rules"]
-    
+
     SP -.->|"Dynamic"| UP["USER PREFERENCES<br/>(if extracted)"]
     SP -.->|"Dynamic"| PF["PRE-FETCHED DATA<br/>(if tickers detected)"]
 

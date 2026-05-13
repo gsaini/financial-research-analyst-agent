@@ -3,8 +3,8 @@ Theme utilities - CSS injection, dark/light mode toggle, and design constants.
 """
 
 import os
-import streamlit as st
 
+import streamlit as st
 
 # ── Color Palettes ───────────────────────────────────────────
 
@@ -146,6 +146,7 @@ def get_plotly_layout(**overrides):
     so overrides extend the defaults rather than replacing them.
     """
     import copy
+
     layout = copy.deepcopy(PLOTLY_LAYOUT)
     for key, value in overrides.items():
         if key in layout and isinstance(layout[key], dict) and isinstance(value, dict):

@@ -7,11 +7,12 @@ Supports multiple sources with automatic fallback:
 3. Sample data — last resort fallback for demo/dev
 """
 
-from typing import Any, Dict, List
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
 import requests
+
 from src.config import settings
 from src.utils.logger import get_logger
 
@@ -121,14 +122,16 @@ def _fetch_from_newsapi(query: str, days_back: int = 7) -> List[Dict[str, Any]]:
 
         articles = []
         for article in data.get("articles", []):
-            articles.append({
-                "title": article.get("title", ""),
-                "description": article.get("description", ""),
-                "source": article.get("source", {}).get("name", ""),
-                "url": article.get("url", ""),
-                "published_at": article.get("publishedAt", ""),
-                "author": article.get("author", ""),
-            })
+            articles.append(
+                {
+                    "title": article.get("title", ""),
+                    "description": article.get("description", ""),
+                    "source": article.get("source", {}).get("name", ""),
+                    "url": article.get("url", ""),
+                    "published_at": article.get("publishedAt", ""),
+                    "author": article.get("author", ""),
+                }
+            )
 
         if articles:
             logger.info(f"NewsAPI: fetched {len(articles)} articles for '{query}'")
@@ -158,27 +161,19 @@ def _fetch_from_provider(symbol: str) -> List[Dict[str, Any]]:
             # Newer yfinance wraps data under a "content" key
             content = item.get("content", item)
 
-            title = (
-                content.get("title")
-                or item.get("title")
-                or ""
-            )
+            title = content.get("title") or item.get("title") or ""
             summary = (
-                content.get("summary")
-                or content.get("description")
-                or item.get("title")
-                or ""
+                content.get("summary") or content.get("description") or item.get("title") or ""
             )
             # Strip any residual HTML tags from description
             if "<" in summary:
                 import re
+
                 summary = re.sub(r"<[^>]+>", "", summary)
 
             prov = content.get("provider") or {}
             source = (
-                prov.get("displayName")
-                if isinstance(prov, dict)
-                else item.get("publisher", "")
+                prov.get("displayName") if isinstance(prov, dict) else item.get("publisher", "")
             )
 
             # URL: try canonical, then clickThrough, then legacy "link"
@@ -197,9 +192,7 @@ def _fetch_from_provider(symbol: str) -> List[Dict[str, Any]]:
             # Published date
             pub_date = content.get("pubDate") or content.get("displayTime") or ""
             if not pub_date and item.get("providerPublishTime"):
-                pub_date = datetime.fromtimestamp(
-                    item["providerPublishTime"]
-                ).isoformat()
+                pub_date = datetime.fromtimestamp(item["providerPublishTime"]).isoformat()
 
             # Thumbnail
             thumbnail = ""
@@ -213,15 +206,17 @@ def _fetch_from_provider(symbol: str) -> List[Dict[str, Any]]:
 
             content_type = content.get("contentType", item.get("type", "STORY"))
 
-            articles.append({
-                "title": title,
-                "description": summary,
-                "source": source,
-                "url": url,
-                "published_at": pub_date,
-                "type": content_type,
-                "thumbnail": thumbnail,
-            })
+            articles.append(
+                {
+                    "title": title,
+                    "description": summary,
+                    "source": source,
+                    "url": url,
+                    "published_at": pub_date,
+                    "type": content_type,
+                    "thumbnail": thumbnail,
+                }
+            )
 
         if articles:
             logger.info(f"Provider: fetched {len(articles)} news items for {symbol}")

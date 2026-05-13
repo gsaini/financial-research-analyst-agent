@@ -4,11 +4,12 @@ Chat with AI about stocks, ETFs, and investing with real-time data.
 """
 
 import streamlit as st
-from utils.theme import inject_css
-from utils.session import init_session_state
+from components.header import render_header
+
 from utils.data_service import ask_advisor, get_stock_price
 from utils.formatters import format_currency, format_percent
-from components.header import render_header
+from utils.session import init_session_state
+from utils.theme import inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
 st.set_page_config(
@@ -183,9 +184,7 @@ if prompt:
         status.update(label="Analysis complete", state="complete", expanded=False)
         st.markdown(response)
 
-    st.session_state.advisor_chat_history.append(
-        {"role": "assistant", "content": response}
-    )
+    st.session_state.advisor_chat_history.append({"role": "assistant", "content": response})
 
 # ─── Fixed Footer ────────────────────────────────────────────
 st.markdown(

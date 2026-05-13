@@ -2,18 +2,34 @@
 Quarterly Earnings Analysis - EPS tracking, beat/miss patterns, quality scoring.
 """
 
-import streamlit as st
 import pandas as pd
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_currency, format_large_number, format_number, format_date, format_percent
-from utils.data_service import analyze_earnings, compare_earnings
+import streamlit as st
 from components.header import render_header
-from components.plotly_charts import create_gauge_chart, create_earnings_surprise_chart, create_horizontal_bar
 from components.metrics_cards import render_score_badge
+from components.plotly_charts import (
+    create_earnings_surprise_chart,
+    create_gauge_chart,
+    create_horizontal_bar,
+)
+
+from utils.data_service import analyze_earnings, compare_earnings
+from utils.formatters import (
+    format_currency,
+    format_date,
+    format_large_number,
+    format_number,
+    format_percent,
+)
+from utils.session import init_session_state
+from utils.theme import inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Quarterly Earnings | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Quarterly Earnings | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -22,18 +38,24 @@ st.markdown("## Quarterly Earnings Analysis")
 st.caption("Track EPS beats/misses, trends, and earnings quality")
 
 # ─── Mode Toggle ─────────────────────────────────────────────
-mode = st.radio("Mode", ["Single Company", "Compare Companies"], horizontal=True, label_visibility="collapsed")
+mode = st.radio(
+    "Mode", ["Single Company", "Compare Companies"], horizontal=True, label_visibility="collapsed"
+)
 
 if mode == "Single Company":
     # ─── Single Analysis ─────────────────────────────────────
     c1, c2 = st.columns([2, 1])
     with c1:
-        symbol = st.text_input(
-            "Stock Symbol",
-            value=st.session_state.get("selected_symbol", "AAPL"),
-            placeholder="e.g. AAPL",
-            key="earnings_symbol",
-        ).upper().strip()
+        symbol = (
+            st.text_input(
+                "Stock Symbol",
+                value=st.session_state.get("selected_symbol", "AAPL"),
+                placeholder="e.g. AAPL",
+                key="earnings_symbol",
+            )
+            .upper()
+            .strip()
+        )
     with c2:
         st.markdown("<br>", unsafe_allow_html=True)
         analyze = st.button("Analyze Earnings", use_container_width=True)
@@ -94,16 +116,24 @@ if mode == "Single Company":
                 surprise = q.get("eps_surprise_pct", 0) or 0
                 q_label = q.get("quarter", "")
 
-                rows.append({
-                    "Quarter": q_label,
-                    "Date": format_date(q.get("date")),
-                    "Revenue": format_large_number(q.get("revenue_actual")),
-                    "Net Income": format_large_number(q.get("net_income")),
-                    "EPS Actual": format_currency(q.get("eps_actual"), 2) if q.get("eps_actual") else "--",
-                    "EPS Estimate": format_currency(q.get("eps_estimate"), 2) if q.get("eps_estimate") else "--",
-                    "Surprise %": format_percent(surprise),
-                    "Verdict": verdict,
-                })
+                rows.append(
+                    {
+                        "Quarter": q_label,
+                        "Date": format_date(q.get("date")),
+                        "Revenue": format_large_number(q.get("revenue_actual")),
+                        "Net Income": format_large_number(q.get("net_income")),
+                        "EPS Actual": (
+                            format_currency(q.get("eps_actual"), 2) if q.get("eps_actual") else "--"
+                        ),
+                        "EPS Estimate": (
+                            format_currency(q.get("eps_estimate"), 2)
+                            if q.get("eps_estimate")
+                            else "--"
+                        ),
+                        "Surprise %": format_percent(surprise),
+                        "Verdict": verdict,
+                    }
+                )
 
                 q_labels.append(q_label)
                 surprises.append(float(surprise) if isinstance(surprise, (int, float)) else 0)
@@ -134,8 +164,13 @@ if mode == "Single Company":
         if rev_qoq:
             st.markdown("**Revenue QoQ Growth**")
             for i, val in enumerate(rev_qoq):
-                color = "#10b981" if "+" in str(val) else "#ef4444" if "-" in str(val) else "#9ca3af"
-                st.markdown(f"Q{i+1}: <span style='color:{color}; font-family: JetBrains Mono;'>{val}</span>", unsafe_allow_html=True)
+                color = (
+                    "#10b981" if "+" in str(val) else "#ef4444" if "-" in str(val) else "#9ca3af"
+                )
+                st.markdown(
+                    f"Q{i+1}: <span style='color:{color}; font-family: JetBrains Mono;'>{val}</span>",
+                    unsafe_allow_html=True,
+                )
 
         # Gross margins by quarter
         gm_q = trends.get("gross_margins_by_quarter", [])
@@ -183,8 +218,15 @@ if mode == "Single Company":
         with c2:
             assessment = quality.get("assessment", "")
             if assessment:
-                badge = "bullish" if "high" in assessment.lower() else "bearish" if "low" in assessment.lower() else "neutral"
-                st.markdown(f'<span class="score-badge {badge}" style="font-size: 1rem;">{assessment}</span>', unsafe_allow_html=True)
+                badge = (
+                    "bullish"
+                    if "high" in assessment.lower()
+                    else "bearish" if "low" in assessment.lower() else "neutral"
+                )
+                st.markdown(
+                    f'<span class="score-badge {badge}" style="font-size: 1rem;">{assessment}</span>',
+                    unsafe_allow_html=True,
+                )
 
             factors = quality.get("factors", [])
             if factors:
@@ -199,7 +241,14 @@ if mode == "Single Company":
             c1, c2, c3, c4 = st.columns(4)
             c1.metric("Date", format_date(next_earnings.get("date")))
             c2.metric("Days Until", next_earnings.get("days_until", "N/A"))
-            c3.metric("EPS Estimate", format_currency(next_earnings.get("eps_estimate"), 2) if next_earnings.get("eps_estimate") else "N/A")
+            c3.metric(
+                "EPS Estimate",
+                (
+                    format_currency(next_earnings.get("eps_estimate"), 2)
+                    if next_earnings.get("eps_estimate")
+                    else "N/A"
+                ),
+            )
             c4.metric("Analysts", next_earnings.get("number_of_analysts", "N/A"))
 
 else:
@@ -229,8 +278,17 @@ else:
         comparison = result.get("comparison", [])
         if comparison:
             df = pd.DataFrame(comparison)
-            column_order = ["symbol", "name", "beat_rate", "average_surprise", "pattern",
-                           "revenue_trend", "income_trend", "earnings_quality_score", "next_earnings_date"]
+            column_order = [
+                "symbol",
+                "name",
+                "beat_rate",
+                "average_surprise",
+                "pattern",
+                "revenue_trend",
+                "income_trend",
+                "earnings_quality_score",
+                "next_earnings_date",
+            ]
             existing_cols = [c for c in column_order if c in df.columns]
             df = df[existing_cols]
 
@@ -245,10 +303,18 @@ else:
             sorted_pairs = sorted(zip(labels, scores), key=lambda x: x[1], reverse=True)
             if sorted_pairs:
                 labels, scores = zip(*sorted_pairs)
-                colors = ["#10b981" if s >= 7 else "#3b82f6" if s >= 5 else "#f59e0b" if s >= 3 else "#ef4444" for s in scores]
+                colors = [
+                    (
+                        "#10b981"
+                        if s >= 7
+                        else "#3b82f6" if s >= 5 else "#f59e0b" if s >= 3 else "#ef4444"
+                    )
+                    for s in scores
+                ]
 
                 fig = create_horizontal_bar(
-                    list(labels), list(scores),
+                    list(labels),
+                    list(scores),
                     title="Earnings Quality Score Ranking",
                     colors=list(colors),
                 )

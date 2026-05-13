@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Disruption Metrics Tools for Market Disruption Analysis (Feature 3).
 
@@ -13,8 +14,9 @@ Disruption Classification:
 - At Risk (<20): Declining metrics, low innovation investment
 """
 
-from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
 from src.data import get_provider
@@ -81,7 +83,10 @@ def fetch_company_financials(symbol: str) -> Dict[str, Any]:
             result["net_incomes"] = list(reversed(net_incomes))
 
             # Years available
-            years = [col.year if hasattr(col, "year") else str(col)[:4] for col in income_stmt.columns[:4]]
+            years = [
+                col.year if hasattr(col, "year") else str(col)[:4]
+                for col in income_stmt.columns[:4]
+            ]
             result["years"] = list(reversed(years))
 
         # Extract balance sheet data for assets
@@ -110,23 +115,79 @@ def fetch_industry_benchmarks(industry: str) -> Dict[str, float]:
     """
     # Industry benchmarks based on typical values
     benchmarks = {
-        "Software—Infrastructure": {"rd_intensity": 15.0, "revenue_growth": 20.0, "gross_margin": 70.0},
-        "Software—Application": {"rd_intensity": 18.0, "revenue_growth": 18.0, "gross_margin": 72.0},
-        "Semiconductors": {"rd_intensity": 20.0, "revenue_growth": 12.0, "gross_margin": 55.0},
-        "Internet Content & Information": {"rd_intensity": 12.0, "revenue_growth": 15.0, "gross_margin": 55.0},
-        "Computer Hardware": {"rd_intensity": 8.0, "revenue_growth": 8.0, "gross_margin": 35.0},
-        "Biotechnology": {"rd_intensity": 40.0, "revenue_growth": 25.0, "gross_margin": 65.0},
-        "Drug Manufacturers": {"rd_intensity": 15.0, "revenue_growth": 8.0, "gross_margin": 65.0},
-        "Medical Devices": {"rd_intensity": 10.0, "revenue_growth": 10.0, "gross_margin": 60.0},
-        "Auto Manufacturers": {"rd_intensity": 5.0, "revenue_growth": 5.0, "gross_margin": 15.0},
-        "Electric Vehicles": {"rd_intensity": 8.0, "revenue_growth": 30.0, "gross_margin": 20.0},
-        "Renewable Energy": {"rd_intensity": 5.0, "revenue_growth": 20.0, "gross_margin": 25.0},
-        "Banks—Diversified": {"rd_intensity": 2.0, "revenue_growth": 5.0, "gross_margin": 60.0},
+        "Software—Infrastructure": {
+            "rd_intensity": 15.0,
+            "revenue_growth": 20.0,
+            "gross_margin": 70.0,
+        },
+        "Software—Application": {
+            "rd_intensity": 18.0,
+            "revenue_growth": 18.0,
+            "gross_margin": 72.0,
+        },
+        "Semiconductors": {
+            "rd_intensity": 20.0,
+            "revenue_growth": 12.0,
+            "gross_margin": 55.0,
+        },
+        "Internet Content & Information": {
+            "rd_intensity": 12.0,
+            "revenue_growth": 15.0,
+            "gross_margin": 55.0,
+        },
+        "Computer Hardware": {
+            "rd_intensity": 8.0,
+            "revenue_growth": 8.0,
+            "gross_margin": 35.0,
+        },
+        "Biotechnology": {
+            "rd_intensity": 40.0,
+            "revenue_growth": 25.0,
+            "gross_margin": 65.0,
+        },
+        "Drug Manufacturers": {
+            "rd_intensity": 15.0,
+            "revenue_growth": 8.0,
+            "gross_margin": 65.0,
+        },
+        "Medical Devices": {
+            "rd_intensity": 10.0,
+            "revenue_growth": 10.0,
+            "gross_margin": 60.0,
+        },
+        "Auto Manufacturers": {
+            "rd_intensity": 5.0,
+            "revenue_growth": 5.0,
+            "gross_margin": 15.0,
+        },
+        "Electric Vehicles": {
+            "rd_intensity": 8.0,
+            "revenue_growth": 30.0,
+            "gross_margin": 20.0,
+        },
+        "Renewable Energy": {
+            "rd_intensity": 5.0,
+            "revenue_growth": 20.0,
+            "gross_margin": 25.0,
+        },
+        "Banks—Diversified": {
+            "rd_intensity": 2.0,
+            "revenue_growth": 5.0,
+            "gross_margin": 60.0,
+        },
         "Fintech": {"rd_intensity": 15.0, "revenue_growth": 25.0, "gross_margin": 45.0},
-        "E-Commerce": {"rd_intensity": 10.0, "revenue_growth": 15.0, "gross_margin": 40.0},
+        "E-Commerce": {
+            "rd_intensity": 10.0,
+            "revenue_growth": 15.0,
+            "gross_margin": 40.0,
+        },
         "Retail": {"rd_intensity": 1.0, "revenue_growth": 5.0, "gross_margin": 30.0},
         "Telecom": {"rd_intensity": 3.0, "revenue_growth": 3.0, "gross_margin": 55.0},
-        "Aerospace & Defense": {"rd_intensity": 5.0, "revenue_growth": 5.0, "gross_margin": 20.0},
+        "Aerospace & Defense": {
+            "rd_intensity": 5.0,
+            "revenue_growth": 5.0,
+            "gross_margin": 20.0,
+        },
         "default": {"rd_intensity": 5.0, "revenue_growth": 8.0, "gross_margin": 35.0},
     }
 
@@ -494,9 +555,7 @@ def calculate_disruption_score(
 
     # Calculate weighted total
     total_score = int(
-        rd_score * rd_weight +
-        growth_score * growth_weight +
-        margin_score * margin_weight
+        rd_score * rd_weight + growth_score * growth_weight + margin_score * margin_weight
     )
     total_score = max(0, min(100, total_score))
 
@@ -588,7 +647,11 @@ def identify_risk_factors(
     # Industry-specific risks
     industry = financials.get("industry", "")
     high_disruption_industries = [
-        "Retail", "Media", "Telecom", "Auto Manufacturers", "Banks"
+        "Retail",
+        "Media",
+        "Telecom",
+        "Auto Manufacturers",
+        "Banks",
     ]
     for ind in high_disruption_industries:
         if ind.lower() in industry.lower():
@@ -686,7 +749,11 @@ def analyze_disruption(symbol: str) -> Dict[str, Any]:
 
     # Handle errors in metrics
     if "error" in rd_metrics:
-        rd_metrics = {"rd_to_revenue_ratio": "0%", "trend": "Unknown", "vs_industry_multiple": "1x"}
+        rd_metrics = {
+            "rd_to_revenue_ratio": "0%",
+            "trend": "Unknown",
+            "vs_industry_multiple": "1x",
+        }
     if "error" in growth_metrics:
         growth_metrics = {"yoy_growth": "0%", "trajectory": "Unknown"}
     if "error" in margin_metrics:
@@ -743,16 +810,24 @@ def compare_disruption(symbols: List[str]) -> Dict[str, Any]:
     for symbol in symbols:
         result = analyze_disruption(symbol)
         if "error" not in result:
-            comparison.append({
-                "symbol": result["symbol"],
-                "name": result["name"],
-                "industry": result["industry"],
-                "disruption_score": result["disruption_score"],
-                "classification": result["classification"],
-                "rd_intensity": result["quantitative_signals"]["rd_intensity"].get("rd_to_revenue_ratio", "N/A"),
-                "revenue_growth": result["quantitative_signals"]["revenue_acceleration"].get("yoy_growth", "N/A"),
-                "margin_trend": result["quantitative_signals"]["gross_margin_trajectory"].get("trend", "N/A"),
-            })
+            comparison.append(
+                {
+                    "symbol": result["symbol"],
+                    "name": result["name"],
+                    "industry": result["industry"],
+                    "disruption_score": result["disruption_score"],
+                    "classification": result["classification"],
+                    "rd_intensity": result["quantitative_signals"]["rd_intensity"].get(
+                        "rd_to_revenue_ratio", "N/A"
+                    ),
+                    "revenue_growth": result["quantitative_signals"]["revenue_acceleration"].get(
+                        "yoy_growth", "N/A"
+                    ),
+                    "margin_trend": result["quantitative_signals"]["gross_margin_trajectory"].get(
+                        "trend", "N/A"
+                    ),
+                }
+            )
         else:
             comparison.append({"symbol": symbol, "error": result.get("error")})
 
@@ -762,6 +837,8 @@ def compare_disruption(symbols: List[str]) -> Dict[str, Any]:
     return {
         "companies_compared": len(symbols),
         "comparison": comparison,
-        "most_disruptive": comparison[0]["symbol"] if comparison and "error" not in comparison[0] else None,
+        "most_disruptive": (
+            comparison[0]["symbol"] if comparison and "error" not in comparison[0] else None
+        ),
         "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }

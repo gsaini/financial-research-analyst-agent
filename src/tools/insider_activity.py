@@ -22,8 +22,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from src.data import get_provider
 
+from src.data import get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -114,7 +114,8 @@ def _extract_insider_ownership(major: Optional[pd.DataFrame]) -> Optional[float]
 
 
 def _parse_transactions(
-    df: Optional[pd.DataFrame], days: int,
+    df: Optional[pd.DataFrame],
+    days: int,
 ) -> List[Dict[str, Any]]:
     """Parse insider transactions into a clean list of dicts."""
     if df is None:
@@ -150,14 +151,16 @@ def _parse_transactions(
 
             txn_type = _classify_transaction(txn_text, shares)
 
-            results.append({
-                "name": insider,
-                "title": title,
-                "transaction_type": txn_type,
-                "shares": abs(int(shares)) if shares else 0,
-                "value": round(abs(value), 2) if value else 0.0,
-                "date": txn_date.strftime("%Y-%m-%d"),
-            })
+            results.append(
+                {
+                    "name": insider,
+                    "title": title,
+                    "transaction_type": txn_type,
+                    "shares": abs(int(shares)) if shares else 0,
+                    "value": round(abs(value), 2) if value else 0.0,
+                    "date": txn_date.strftime("%Y-%m-%d"),
+                }
+            )
         except Exception:
             continue
 
@@ -261,8 +264,7 @@ def _detect_cluster_buying(
         anchor_dt = datetime.strptime(anchor, "%Y-%m-%d")
         window_end = anchor_dt + timedelta(days=window_days)
         window_buys = [
-            t for t in buys
-            if anchor_dt <= datetime.strptime(t["date"], "%Y-%m-%d") <= window_end
+            t for t in buys if anchor_dt <= datetime.strptime(t["date"], "%Y-%m-%d") <= window_end
         ]
         unique_buyers = set(t["name"] for t in window_buys)
         if len(unique_buyers) >= min_buyers:
@@ -340,7 +342,9 @@ def _extract_institutional_ownership(major: Optional[pd.DataFrame]) -> Optional[
 
 
 def _parse_holders(
-    df: Optional[pd.DataFrame], label: str = "institutional", max_rows: int = 10,
+    df: Optional[pd.DataFrame],
+    label: str = "institutional",
+    max_rows: int = 10,
 ) -> List[Dict[str, Any]]:
     """Parse holder DataFrame into a list of dicts."""
     if df is None:
@@ -361,13 +365,15 @@ def _parse_holders(
             else:
                 date_reported = str(date_reported) if date_reported else ""
 
-            holders.append({
-                "name": name,
-                "shares": int(shares),
-                "pct_held": round(pct * 100 if pct < 1 else pct, 2),
-                "value": round(value, 2),
-                "date_reported": date_reported,
-            })
+            holders.append(
+                {
+                    "name": name,
+                    "shares": int(shares),
+                    "pct_held": round(pct * 100 if pct < 1 else pct, 2),
+                    "value": round(value, 2),
+                    "date_reported": date_reported,
+                }
+            )
         except Exception:
             continue
 

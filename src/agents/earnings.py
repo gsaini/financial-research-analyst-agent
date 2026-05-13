@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Earnings Analyst Agent for the Financial Research Analyst.
 
@@ -10,24 +11,24 @@ It combines quantitative earnings data with qualitative AI reasoning about
 earnings sustainability and investor implications.
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.tools.earnings_data import (
     analyze_earnings,
-    compare_earnings,
-    fetch_quarterly_financials,
-    fetch_earnings_history,
-    fetch_upcoming_earnings,
-    calculate_surprise_pattern,
-    calculate_quarterly_trends,
-    calculate_yoy_comparison,
     assess_earnings_quality,
+    calculate_quarterly_trends,
+    calculate_surprise_pattern,
+    calculate_yoy_comparison,
+    compare_earnings,
+    fetch_earnings_history,
+    fetch_quarterly_financials,
+    fetch_upcoming_earnings,
 )
 from src.utils.logger import get_logger
 
@@ -249,18 +250,14 @@ Present findings with clear patterns, supporting data, and investment implicatio
 
         try:
             result = analyze_earnings(symbol)
-            result["execution_time_seconds"] = (
-                datetime.now(timezone.utc) - start
-            ).total_seconds()
+            result["execution_time_seconds"] = (datetime.now(timezone.utc) - start).total_seconds()
             return result
         except Exception as e:
             logger.error(f"Earnings analysis failed for '{symbol}': {e}")
             return {
                 "error": str(e),
                 "symbol": symbol,
-                "execution_time_seconds": (
-                    datetime.now(timezone.utc) - start
-                ).total_seconds(),
+                "execution_time_seconds": (datetime.now(timezone.utc) - start).total_seconds(),
             }
 
     async def analyze_with_narrative(self, symbol: str) -> Dict[str, Any]:
@@ -317,9 +314,7 @@ Provide a balanced assessment of earnings reliability and investment implication
 
         return data
 
-    async def compare_companies_direct(
-        self, symbols: List[str]
-    ) -> Dict[str, Any]:
+    async def compare_companies_direct(self, symbols: List[str]) -> Dict[str, Any]:
         """
         Compare earnings profiles across multiple companies.
 
@@ -334,23 +329,17 @@ Provide a balanced assessment of earnings reliability and investment implication
 
         try:
             result = compare_earnings(symbols)
-            result["execution_time_seconds"] = (
-                datetime.now(timezone.utc) - start
-            ).total_seconds()
+            result["execution_time_seconds"] = (datetime.now(timezone.utc) - start).total_seconds()
             return result
         except Exception as e:
             logger.error(f"Earnings comparison failed: {e}")
             return {
                 "error": str(e),
                 "symbols": symbols,
-                "execution_time_seconds": (
-                    datetime.now(timezone.utc) - start
-                ).total_seconds(),
+                "execution_time_seconds": (datetime.now(timezone.utc) - start).total_seconds(),
             }
 
-    async def analyze_with_comparative_narrative(
-        self, symbols: List[str]
-    ) -> Dict[str, Any]:
+    async def analyze_with_comparative_narrative(self, symbols: List[str]) -> Dict[str, Any]:
         """
         Compare companies and generate comparative earnings narrative.
 

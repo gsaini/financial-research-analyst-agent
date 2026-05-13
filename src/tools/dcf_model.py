@@ -80,25 +80,44 @@ def calculate_wacc(symbol: str) -> Dict[str, Any]:
         market_cap = _safe_float(info.get("marketCap"), 0)
 
         # Total debt
-        total_debt = _get_latest_value(balance, [
-            "Total Debt", "Long Term Debt", "Long Term Debt And Capital Lease Obligation",
-        ])
+        total_debt = _get_latest_value(
+            balance,
+            [
+                "Total Debt",
+                "Long Term Debt",
+                "Long Term Debt And Capital Lease Obligation",
+            ],
+        )
 
         # Interest expense
-        interest_expense = abs(_get_latest_value(income, [
-            "Interest Expense", "Interest Expense Non Operating",
-        ]))
+        interest_expense = abs(
+            _get_latest_value(
+                income,
+                [
+                    "Interest Expense",
+                    "Interest Expense Non Operating",
+                ],
+            )
+        )
 
         # Cost of debt
         cost_debt = interest_expense / total_debt if total_debt > 0 else 0.04
 
         # Tax rate
-        pretax_income = _get_latest_value(income, [
-            "Pretax Income", "Income Before Tax",
-        ])
-        tax_provision = _get_latest_value(income, [
-            "Tax Provision", "Income Tax Expense",
-        ])
+        pretax_income = _get_latest_value(
+            income,
+            [
+                "Pretax Income",
+                "Income Before Tax",
+            ],
+        )
+        tax_provision = _get_latest_value(
+            income,
+            [
+                "Tax Provision",
+                "Income Tax Expense",
+            ],
+        )
         tax_rate = tax_provision / pretax_income if pretax_income > 0 else 0.21
 
         # WACC
@@ -163,22 +182,34 @@ def run_dcf_analysis(
         info = provider.get_info(symbol)
         cash_flow = provider.get_cash_flow(symbol)
 
-        current_price = _safe_float(
-            info.get("currentPrice", info.get("regularMarketPrice")), 0
-        )
+        current_price = _safe_float(info.get("currentPrice", info.get("regularMarketPrice")), 0)
         shares = _safe_float(info.get("sharesOutstanding"), 1)
 
         # Get FCF
-        fcf = _get_latest_value(cash_flow, [
-            "Free Cash Flow", "FreeCashFlow",
-        ])
+        fcf = _get_latest_value(
+            cash_flow,
+            [
+                "Free Cash Flow",
+                "FreeCashFlow",
+            ],
+        )
         if fcf == 0:
-            operating_cf = _get_latest_value(cash_flow, [
-                "Operating Cash Flow", "Total Cash From Operating Activities",
-            ])
-            capex = abs(_get_latest_value(cash_flow, [
-                "Capital Expenditure", "Capital Expenditures",
-            ]))
+            operating_cf = _get_latest_value(
+                cash_flow,
+                [
+                    "Operating Cash Flow",
+                    "Total Cash From Operating Activities",
+                ],
+            )
+            capex = abs(
+                _get_latest_value(
+                    cash_flow,
+                    [
+                        "Capital Expenditure",
+                        "Capital Expenditures",
+                    ],
+                )
+            )
             fcf = operating_cf - capex
 
         if fcf <= 0:
@@ -203,7 +234,10 @@ def run_dcf_analysis(
             scenarios = {
                 "bull": {"growth_rate": hist_growth + 0.02, "terminal_growth": 0.03},
                 "base": {"growth_rate": hist_growth, "terminal_growth": 0.025},
-                "bear": {"growth_rate": max(0.01, hist_growth - 0.02), "terminal_growth": 0.02},
+                "bear": {
+                    "growth_rate": max(0.01, hist_growth - 0.02),
+                    "terminal_growth": 0.02,
+                },
             }
 
         results: Dict[str, Any] = {}
@@ -218,7 +252,7 @@ def run_dcf_analysis(
                 # Growth decays linearly toward terminal
                 decay = year / _PROJECTION_YEARS
                 year_growth = growth * (1 - decay) + terminal * decay
-                current_fcf *= (1 + year_growth)
+                current_fcf *= 1 + year_growth
                 projected.append(current_fcf)
 
             # Discount projected FCFs
@@ -244,7 +278,9 @@ def run_dcf_analysis(
                 "enterprise_value": round(enterprise_value),
                 "pv_fcfs": round(pv_fcfs),
                 "pv_terminal": round(pv_terminal),
-                "terminal_pct": round(pv_terminal / enterprise_value * 100, 1) if enterprise_value > 0 else 0,
+                "terminal_pct": (
+                    round(pv_terminal / enterprise_value * 100, 1) if enterprise_value > 0 else 0
+                ),
             }
 
         # Recommendation based on base case
@@ -293,9 +329,7 @@ def sensitivity_analysis(symbol: str) -> Dict[str, Any]:
         info = provider.get_info(symbol)
         cash_flow = provider.get_cash_flow(symbol)
 
-        current_price = _safe_float(
-            info.get("currentPrice", info.get("regularMarketPrice")), 0
-        )
+        current_price = _safe_float(info.get("currentPrice", info.get("regularMarketPrice")), 0)
         shares = _safe_float(info.get("sharesOutstanding"), 1)
 
         fcf = _get_latest_value(cash_flow, ["Free Cash Flow", "FreeCashFlow"])
@@ -305,7 +339,10 @@ def sensitivity_analysis(symbol: str) -> Dict[str, Any]:
             fcf = operating_cf - capex
 
         if fcf <= 0:
-            return {"symbol": symbol, "error": "Negative FCF — sensitivity not applicable"}
+            return {
+                "symbol": symbol,
+                "error": "Negative FCF — sensitivity not applicable",
+            }
 
         wacc_result = calculate_wacc(symbol)
         base_wacc = wacc_result.get("wacc", 0.10)
@@ -314,7 +351,13 @@ def sensitivity_analysis(symbol: str) -> Dict[str, Any]:
         base_growth = max(0.02, min(0.30, revenue_growth))
 
         # Vary WACC: ±2% in 1% steps
-        discount_rates = [base_wacc - 0.02, base_wacc - 0.01, base_wacc, base_wacc + 0.01, base_wacc + 0.02]
+        discount_rates = [
+            base_wacc - 0.02,
+            base_wacc - 0.01,
+            base_wacc,
+            base_wacc + 0.01,
+            base_wacc + 0.02,
+        ]
         # Vary terminal growth: ±1% in 0.5% steps
         terminal_rates = [0.015, 0.02, 0.025, 0.03, 0.035]
 
@@ -331,7 +374,7 @@ def sensitivity_analysis(symbol: str) -> Dict[str, Any]:
                 for yr in range(1, _PROJECTION_YEARS + 1):
                     decay = yr / _PROJECTION_YEARS
                     growth = base_growth * (1 - decay) + tg * decay
-                    cf *= (1 + growth)
+                    cf *= 1 + growth
                     pv += cf / (1 + dr) ** yr
                 tv = cf * (1 + tg) / (dr - tg)
                 pv_tv = tv / (1 + dr) ** _PROJECTION_YEARS
@@ -373,9 +416,7 @@ def get_dcf_summary(symbol: str) -> Dict[str, Any]:
     base = dcf.get("scenarios", {}).get("base", {})
     intrinsic = base.get("intrinsic_value", 0)
     current = dcf.get("current_price", 0)
-    margin_of_safety = round(
-        (intrinsic - current) / intrinsic * 100, 1
-    ) if intrinsic > 0 else 0
+    margin_of_safety = round((intrinsic - current) / intrinsic * 100, 1) if intrinsic > 0 else 0
 
     dcf["sensitivity"] = sens
     dcf["margin_of_safety_pct"] = margin_of_safety

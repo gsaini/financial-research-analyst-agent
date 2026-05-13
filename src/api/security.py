@@ -24,7 +24,7 @@ import time
 from collections import defaultdict
 from typing import Optional
 
-from fastapi import HTTPException, Request, Depends
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import APIKeyHeader
 
 from src.utils.logger import get_logger
@@ -95,9 +95,7 @@ class RateLimiter:
         window_start = now - self._window
 
         # Clean old entries
-        self.requests[client_id] = [
-            t for t in self.requests[client_id] if t > window_start
-        ]
+        self.requests[client_id] = [t for t in self.requests[client_id] if t > window_start]
 
         if len(self.requests[client_id]) >= self._max_requests:
             return False
@@ -136,13 +134,13 @@ async def check_rate_limit(request: Request):
 
 # Patterns to reject
 _DANGEROUS_PATTERNS = [
-    re.compile(r"[;\-]{2}"),           # SQL comment
+    re.compile(r"[;\-]{2}"),  # SQL comment
     re.compile(r"['\"]\s*(OR|AND)\s", re.I),  # SQL injection
-    re.compile(r"<script", re.I),       # XSS
-    re.compile(r"\{\{.*\}\}"),          # Template injection
-    re.compile(r"__import__"),          # Python injection
-    re.compile(r"\bexec\s*\("),         # Code execution
-    re.compile(r"\beval\s*\("),         # Code evaluation
+    re.compile(r"<script", re.I),  # XSS
+    re.compile(r"\{\{.*\}\}"),  # Template injection
+    re.compile(r"__import__"),  # Python injection
+    re.compile(r"\bexec\s*\("),  # Code execution
+    re.compile(r"\beval\s*\("),  # Code evaluation
 ]
 
 

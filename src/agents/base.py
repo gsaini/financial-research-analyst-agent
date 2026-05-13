@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Base Agent class for the Financial Research Analyst Agent.
 
@@ -6,16 +7,16 @@ This module provides the foundational agent class that all specialized
 agents inherit from.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Type
-from datetime import datetime
 import json
+from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Type
 
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain_core.tools import BaseTool
 from langchain.agents import create_agent
-from pydantic import BaseModel, Field, ConfigDict
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.config import settings
 from src.utils.logger import get_logger
@@ -127,6 +128,7 @@ class BaseAgent(ABC):
 
         if provider == "ollama":
             from langchain_ollama import ChatOllama
+
             return ChatOllama(
                 model=settings.llm.ollama_model,
                 base_url=settings.llm.ollama_base_url,
@@ -134,6 +136,7 @@ class BaseAgent(ABC):
             )
         elif provider == "lmstudio":
             from langchain_openai import ChatOpenAI
+
             return ChatOpenAI(
                 model=settings.llm.lmstudio_model,
                 base_url=settings.llm.lmstudio_base_url,
@@ -142,6 +145,7 @@ class BaseAgent(ABC):
             )
         elif provider == "vllm":
             from langchain_openai import ChatOpenAI
+
             return ChatOpenAI(
                 model=settings.llm.vllm_model,
                 base_url=settings.llm.vllm_base_url,
@@ -150,6 +154,7 @@ class BaseAgent(ABC):
             )
         elif provider == "groq":
             from langchain_groq import ChatGroq
+
             return ChatGroq(
                 model=settings.llm.groq_model,
                 api_key=settings.llm.groq_api_key,
@@ -157,6 +162,7 @@ class BaseAgent(ABC):
             )
         elif provider == "anthropic":
             from langchain_anthropic import ChatAnthropic
+
             return ChatAnthropic(
                 model=settings.llm.model,
                 api_key=settings.llm.anthropic_api_key,
@@ -165,6 +171,7 @@ class BaseAgent(ABC):
             )
         elif provider == "openai":
             from langchain_openai import ChatOpenAI
+
             return ChatOpenAI(
                 model=settings.llm.model,
                 temperature=self.temperature,
@@ -173,6 +180,7 @@ class BaseAgent(ABC):
             )
         else:
             from langchain_ollama import ChatOllama
+
             logger.warning(f"Unknown provider '{provider}', defaulting to Ollama")
             return ChatOllama(
                 model=settings.llm.ollama_model,
@@ -301,9 +309,7 @@ class BaseAgent(ABC):
                 agent_name=self.name,
             )
 
-    def _build_react_prompt(
-        self, task: str, context: Optional[Dict[str, Any]] = None
-    ) -> str:
+    def _build_react_prompt(self, task: str, context: Optional[Dict[str, Any]] = None) -> str:
         """
         Build a ReAct-style prompt that encourages multi-step reasoning.
 
@@ -353,11 +359,12 @@ Include a line: **Confidence: X.XX** (where X.XX is your confidence score 0.0-1.
     def _extract_confidence(output: str) -> float:
         """Extract confidence score from agent output text."""
         import re
+
         # Look for patterns like "Confidence: 0.85" or "**Confidence: 0.72**"
         patterns = [
-            r'\*?\*?[Cc]onfidence:?\s*\*?\*?\s*(\d+\.?\d*)',
-            r'confidence[:\s]+(\d+\.?\d*)',
-            r'confidence level[:\s]+(\d+\.?\d*)',
+            r"\*?\*?[Cc]onfidence:?\s*\*?\*?\s*(\d+\.?\d*)",
+            r"confidence[:\s]+(\d+\.?\d*)",
+            r"confidence level[:\s]+(\d+\.?\d*)",
         ]
         for pattern in patterns:
             match = re.search(pattern, output)
@@ -391,6 +398,7 @@ Include a line: **Confidence: X.XX** (where X.XX is your confidence score 0.0-1.
         loop = asyncio.get_event_loop()
         if loop.is_running():
             import nest_asyncio
+
             nest_asyncio.apply()
 
         return loop.run_until_complete(self.execute(task, context, chat_history))

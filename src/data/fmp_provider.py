@@ -141,8 +141,15 @@ class FMPProvider(MarketDataProvider):
 
         # Convert period string to date range
         period_map = {
-            "1d": 1, "5d": 5, "1mo": 30, "3mo": 90,
-            "6mo": 180, "1y": 365, "2y": 730, "5y": 1825, "10y": 3650,
+            "1d": 1,
+            "5d": 5,
+            "1mo": 30,
+            "3mo": 90,
+            "6mo": 180,
+            "1y": 365,
+            "2y": 730,
+            "5y": 1825,
+            "10y": 3650,
             "max": 7300,
         }
         days = period_map.get(period, 365)
@@ -165,8 +172,12 @@ class FMPProvider(MarketDataProvider):
 
         # Rename to match yfinance convention (capitalized)
         rename = {
-            "open": "Open", "high": "High", "low": "Low",
-            "close": "Close", "adjClose": "Adj Close", "volume": "Volume",
+            "open": "Open",
+            "high": "High",
+            "low": "Low",
+            "close": "Close",
+            "adjClose": "Adj Close",
+            "volume": "Volume",
         }
         df = df.rename(columns=rename)
         return df[["Open", "High", "Low", "Close", "Volume"]]
@@ -209,7 +220,8 @@ class FMPProvider(MarketDataProvider):
         return df.T
 
     def get_financials(
-        self, symbol: str,
+        self,
+        symbol: str,
         statement_type: str = "income_statement",
         freq: str = "yearly",
     ) -> pd.DataFrame:
@@ -294,7 +306,11 @@ class FMPProvider(MarketDataProvider):
         df = self.get_insider_transactions(symbol)
         if df.empty:
             return self._empty_df()
-        buys = df[df.get("transactionType", pd.Series(dtype=str)).str.contains("Purchase|Buy", case=False, na=False)]
+        buys = df[
+            df.get("transactionType", pd.Series(dtype=str)).str.contains(
+                "Purchase|Buy", case=False, na=False
+            )
+        ]
         return buys if not buys.empty else self._empty_df()
 
     def get_institutional_holders(self, symbol: str) -> pd.DataFrame:
@@ -317,10 +333,12 @@ class FMPProvider(MarketDataProvider):
         if inst.empty:
             return self._empty_df()
         total_shares = inst["shares"].sum() if "shares" in inst.columns else 0
-        return pd.DataFrame({
-            "Value": [f"{len(inst)} institutions", f"{total_shares:,.0f} shares"],
-            "Metric": ["Institutional Holders", "Institutional Shares"],
-        })
+        return pd.DataFrame(
+            {
+                "Value": [f"{len(inst)} institutions", f"{total_shares:,.0f} shares"],
+                "Metric": ["Institutional Holders", "Institutional Shares"],
+            }
+        )
 
     # ── Category 8: News ─────────────────────────────────────────
 

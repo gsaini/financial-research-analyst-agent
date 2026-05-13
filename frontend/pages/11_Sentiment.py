@@ -4,17 +4,18 @@ news volume tracking, sentiment trends, source diversity, and topic extraction.
 """
 
 import streamlit as st
-from utils.theme import inject_css, COLORS
-from utils.session import init_session_state
-from utils.formatters import format_percent, format_date
-from utils.data_service import analyze_news_sentiment
 from components.header import render_header
 from components.plotly_charts import (
-    create_gauge_chart,
     create_donut_chart,
-    create_line_chart,
+    create_gauge_chart,
     create_horizontal_bar,
+    create_line_chart,
 )
+
+from utils.data_service import analyze_news_sentiment
+from utils.formatters import format_date, format_percent
+from utils.session import init_session_state
+from utils.theme import COLORS, inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
 st.set_page_config(
@@ -33,12 +34,16 @@ st.caption("AI-powered sentiment scoring, news volume tracking, trends & source 
 # ─── Symbol Input ────────────────────────────────────────────
 col1, col2 = st.columns([3, 1])
 with col1:
-    symbol = st.text_input(
-        "Stock Symbol",
-        value=st.session_state.get("selected_symbol", "AAPL"),
-        placeholder="Enter ticker (e.g., AAPL)",
-        key="sent_symbol",
-    ).strip().upper()
+    symbol = (
+        st.text_input(
+            "Stock Symbol",
+            value=st.session_state.get("selected_symbol", "AAPL"),
+            placeholder="Enter ticker (e.g., AAPL)",
+            key="sent_symbol",
+        )
+        .strip()
+        .upper()
+    )
 
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -80,9 +85,14 @@ elif agg_label == "Negative":
 else:
     label_color = COLORS["text_muted"]
 
-engine_label = "FinBERT" if engine == "finbert" else "VADER (Financial-Enhanced)" if engine == "vader" else engine
+engine_label = (
+    "FinBERT"
+    if engine == "finbert"
+    else "VADER (Financial-Enhanced)" if engine == "vader" else engine
+)
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem;
             background: {COLORS['bg_card']}; border-radius: 10px; border: 1px solid {COLORS['border']};
             margin-bottom: 1.5rem;">
@@ -101,12 +111,16 @@ st.markdown(f"""
         <div style="font-size: 0.7rem; color: {COLORS['text_muted']};">Engine: {engine_label}</div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ─── Section helper ──────────────────────────────────────────
 
+
 def section_header(title):
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; margin-top: 0.5rem;">
         <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
         <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: {COLORS['text_primary']}; font-size: 0.9rem; font-weight: 600;">
@@ -114,7 +128,9 @@ def section_header(title):
         </h3>
         <div style="flex: 1; height: 1px; background: linear-gradient(90deg, {COLORS['border']}, transparent);"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 # ─── Aggregate Sentiment ────────────────────────────────────
@@ -198,14 +214,17 @@ if trend.get("values"):
             dir_color = COLORS["danger"]
         else:
             dir_color = COLORS["text_muted"]
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="padding: 1rem; background: {COLORS['bg_card']}; border-radius: 8px; border: 1px solid {COLORS['border']};">
             <div style="font-size: 0.75rem; color: {COLORS['text_muted']};">Direction</div>
             <div style="font-size: 1.1rem; font-weight: 600; color: {dir_color};">{direction}</div>
             <div style="font-size: 0.75rem; color: {COLORS['text_muted']}; margin-top: 0.75rem;">Momentum</div>
             <div style="font-size: 0.85rem; color: {COLORS['text_secondary']};">{momentum}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with tc2:
         fig = create_line_chart(
@@ -267,10 +286,19 @@ if top_pos:
         pub = article.get("published_at", "")
         url = article.get("url", "")
 
-        score_color = COLORS["success"] if score > 0 else COLORS["danger"] if score < 0 else COLORS["text_muted"]
-        link = f'<a href="{url}" target="_blank" style="color: {COLORS["text_primary"]}; text-decoration: none;">{title}</a>' if url else title
+        score_color = (
+            COLORS["success"]
+            if score > 0
+            else COLORS["danger"] if score < 0 else COLORS["text_muted"]
+        )
+        link = (
+            f'<a href="{url}" target="_blank" style="color: {COLORS["text_primary"]}; text-decoration: none;">{title}</a>'
+            if url
+            else title
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="padding: 0.75rem 1rem; background: {COLORS['bg_card']}; border-radius: 8px;
                     border: 1px solid {COLORS['border']}; margin-bottom: 0.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -288,7 +316,9 @@ if top_pos:
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 else:
     st.caption("No positive articles found.")
 
@@ -307,10 +337,19 @@ if top_neg:
         pub = article.get("published_at", "")
         url = article.get("url", "")
 
-        score_color = COLORS["success"] if score > 0 else COLORS["danger"] if score < 0 else COLORS["text_muted"]
-        link = f'<a href="{url}" target="_blank" style="color: {COLORS["text_primary"]}; text-decoration: none;">{title}</a>' if url else title
+        score_color = (
+            COLORS["success"]
+            if score > 0
+            else COLORS["danger"] if score < 0 else COLORS["text_muted"]
+        )
+        link = (
+            f'<a href="{url}" target="_blank" style="color: {COLORS["text_primary"]}; text-decoration: none;">{title}</a>'
+            if url
+            else title
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="padding: 0.75rem 1rem; background: {COLORS['bg_card']}; border-radius: 8px;
                     border: 1px solid {COLORS['border']}; margin-bottom: 0.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -328,7 +367,9 @@ if top_neg:
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -356,9 +397,14 @@ if all_articles:
             badge_bg = "rgba(161, 161, 170, 0.1)"
             badge_color = COLORS["text_muted"]
 
-        link = f'<a href="{url}" target="_blank" style="color: {COLORS["text_primary"]}; text-decoration: none;">{title}</a>' if url else title
+        link = (
+            f'<a href="{url}" target="_blank" style="color: {COLORS["text_primary"]}; text-decoration: none;">{title}</a>'
+            if url
+            else title
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="padding: 0.6rem 1rem; border-bottom: 1px solid {COLORS['border']}; display: flex; align-items: center; gap: 0.75rem;">
             <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600;
                          color: {badge_color}; background: {badge_bg}; padding: 2px 8px; border-radius: 4px; min-width: 55px; text-align: center;">
@@ -369,14 +415,19 @@ if all_articles:
                 <div style="font-size: 0.65rem; color: {COLORS['text_muted']};">{source} · {format_date(pub)}</div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 # ─── Footer ─────────────────────────────────────────────────
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown(f"""
+st.markdown(
+    f"""
 <div style="text-align: center; padding: 1rem; border-top: 1px solid {COLORS['border']};">
     <p style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: {COLORS['text_muted']};">
         Sentiment powered by {engine_label} · News from Yahoo Finance · Sentiment scores range from -1 (bearish) to +1 (bullish)
     </p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)

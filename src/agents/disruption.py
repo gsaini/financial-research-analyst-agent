@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Disruption Analyst Agent for the Financial Research Analyst.
 
@@ -10,22 +11,22 @@ It combines quantitative financial signals (R&D spending, revenue growth,
 margin trajectory) with qualitative AI reasoning about competitive position.
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.tools.disruption_metrics import (
     analyze_disruption,
-    compare_disruption,
-    fetch_company_financials,
+    calculate_disruption_score,
+    calculate_margin_trajectory,
     calculate_rd_intensity,
     calculate_revenue_acceleration,
-    calculate_margin_trajectory,
-    calculate_disruption_score,
+    compare_disruption,
+    fetch_company_financials,
     identify_risk_factors,
     identify_strengths,
 )
@@ -216,18 +217,14 @@ Present findings with clear classification, supporting data, and actionable insi
 
         try:
             result = analyze_disruption(symbol)
-            result["execution_time_seconds"] = (
-                datetime.now(timezone.utc) - start
-            ).total_seconds()
+            result["execution_time_seconds"] = (datetime.now(timezone.utc) - start).total_seconds()
             return result
         except Exception as e:
             logger.error(f"Disruption analysis failed for '{symbol}': {e}")
             return {
                 "error": str(e),
                 "symbol": symbol,
-                "execution_time_seconds": (
-                    datetime.now(timezone.utc) - start
-                ).total_seconds(),
+                "execution_time_seconds": (datetime.now(timezone.utc) - start).total_seconds(),
             }
 
     async def analyze_with_narrative(self, symbol: str) -> Dict[str, Any]:
@@ -289,9 +286,7 @@ Provide a balanced assessment of the company's disruption dynamics and investmen
 
         return data
 
-    async def compare_companies_direct(
-        self, symbols: List[str]
-    ) -> Dict[str, Any]:
+    async def compare_companies_direct(self, symbols: List[str]) -> Dict[str, Any]:
         """
         Compare disruption profiles across multiple companies.
 
@@ -306,23 +301,17 @@ Provide a balanced assessment of the company's disruption dynamics and investmen
 
         try:
             result = compare_disruption(symbols)
-            result["execution_time_seconds"] = (
-                datetime.now(timezone.utc) - start
-            ).total_seconds()
+            result["execution_time_seconds"] = (datetime.now(timezone.utc) - start).total_seconds()
             return result
         except Exception as e:
             logger.error(f"Disruption comparison failed: {e}")
             return {
                 "error": str(e),
                 "symbols": symbols,
-                "execution_time_seconds": (
-                    datetime.now(timezone.utc) - start
-                ).total_seconds(),
+                "execution_time_seconds": (datetime.now(timezone.utc) - start).total_seconds(),
             }
 
-    async def analyze_with_competitive_narrative(
-        self, symbols: List[str]
-    ) -> Dict[str, Any]:
+    async def analyze_with_competitive_narrative(self, symbols: List[str]) -> Dict[str, Any]:
         """
         Compare companies and generate competitive dynamics narrative.
 

@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Tests for Feature 15: Dividend Analysis.
 
@@ -12,11 +13,11 @@ Tests cover:
 - Orchestrator integration
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
-import numpy as np
+from unittest.mock import MagicMock, patch
 
+import numpy as np
+import pytest
 
 # ─────────────────────────────────────────────────────────────
 # Dividend Safety Calculation Tests
@@ -30,8 +31,9 @@ class TestDividendSafetyCalculation:
         """Should calculate high safety score for strong fundamentals."""
         from src.tools.dividend_analyzer import calculate_dividend_safety
 
-        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider, \
-             patch("src.tools.dividend_analyzer.calculate_dividend_growth") as mock_growth:
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider, patch(
+            "src.tools.dividend_analyzer.calculate_dividend_growth"
+        ) as mock_growth:
             mock_provider = MagicMock()
             mock_get_provider.return_value = mock_provider
 
@@ -46,7 +48,9 @@ class TestDividendSafetyCalculation:
 
             # Mock cash flow with strong FCF
             fcf_row = MagicMock()
-            fcf_row.get = lambda key, default=0: 20_000_000_000 if key == "Free Cash Flow" else default
+            fcf_row.get = lambda key, default=0: (
+                20_000_000_000 if key == "Free Cash Flow" else default
+            )
             mock_cashflow = MagicMock()
             mock_cashflow.empty = False
             mock_cashflow.iloc.__getitem__ = MagicMock(return_value=fcf_row)
@@ -65,7 +69,9 @@ class TestDividendSafetyCalculation:
 
             # Mock income statement with stable earnings
             income_col = MagicMock()
-            income_col.get = lambda key, default=0: 18_000_000_000 if key == "Net Income" else default
+            income_col.get = lambda key, default=0: (
+                18_000_000_000 if key == "Net Income" else default
+            )
             mock_income = MagicMock()
             mock_income.empty = False
             mock_income.columns = ["2024", "2023", "2022", "2021"]
@@ -113,8 +119,9 @@ class TestDividendSafetyCalculation:
         """Should identify red flags for risky dividends."""
         from src.tools.dividend_analyzer import calculate_dividend_safety
 
-        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider, \
-             patch("src.tools.dividend_analyzer.calculate_dividend_growth") as mock_growth:
+        with patch("src.tools.dividend_analyzer.get_provider") as mock_get_provider, patch(
+            "src.tools.dividend_analyzer.calculate_dividend_growth"
+        ) as mock_growth:
             mock_provider = MagicMock()
             mock_get_provider.return_value = mock_provider
 
@@ -129,7 +136,9 @@ class TestDividendSafetyCalculation:
 
             # Mock cash flow with weak FCF
             fcf_row = MagicMock()
-            fcf_row.get = lambda key, default=0: 4_000_000_000 if key == "Free Cash Flow" else default
+            fcf_row.get = lambda key, default=0: (
+                4_000_000_000 if key == "Free Cash Flow" else default
+            )
             mock_cashflow = MagicMock()
             mock_cashflow.empty = False
             mock_cashflow.iloc.__getitem__ = MagicMock(return_value=fcf_row)
@@ -178,6 +187,7 @@ class TestDividendGrowthCalculation:
 
             # Create 60+ years of increasing dividends
             import pandas as pd
+
             dates = pd.date_range(start="1960-01-01", end="2025-01-01", freq="QE")
             amounts = [0.10 * (1.03 ** (i // 4)) for i in range(len(dates))]
             mock_dividends = pd.Series(amounts, index=dates)
@@ -199,6 +209,7 @@ class TestDividendGrowthCalculation:
             mock_provider.get_info.return_value = {"longName": "Amazon.com Inc"}
 
             import pandas as pd
+
             mock_provider.get_dividends.return_value = pd.Series([], dtype=float)
 
             result = calculate_dividend_growth("AMZN")
@@ -218,6 +229,7 @@ class TestDividendGrowthCalculation:
 
             # Create 10 years of steady 6% annual dividend growth
             import pandas as pd
+
             dates = pd.date_range(start="2015-01-01", end="2025-01-01", freq="QE")
             base = 1.0
             amounts = [base * (1.06 ** (i // 4)) for i in range(len(dates))]
@@ -294,10 +306,13 @@ class TestAnalyzeDividends:
         """Should return complete dividend analysis."""
         from src.tools.dividend_analyzer import analyze_dividends
 
-        with patch("src.tools.dividend_analyzer.fetch_dividend_info") as mock_info, \
-             patch("src.tools.dividend_analyzer.calculate_dividend_growth") as mock_growth, \
-             patch("src.tools.dividend_analyzer.calculate_dividend_safety") as mock_safety, \
-             patch("src.tools.dividend_analyzer.compare_yields") as mock_yields:
+        with patch("src.tools.dividend_analyzer.fetch_dividend_info") as mock_info, patch(
+            "src.tools.dividend_analyzer.calculate_dividend_growth"
+        ) as mock_growth, patch(
+            "src.tools.dividend_analyzer.calculate_dividend_safety"
+        ) as mock_safety, patch(
+            "src.tools.dividend_analyzer.compare_yields"
+        ) as mock_yields:
 
             mock_info.return_value = {
                 "symbol": "JNJ",

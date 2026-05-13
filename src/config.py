@@ -6,11 +6,11 @@ variables and configuration files.
 """
 
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional
-from functools import lru_cache
 
-from pydantic import Field, ConfigDict
+from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings
 
 
@@ -27,16 +27,22 @@ class LLMSettings(BaseSettings):
     provider: str = Field(default="ollama", validation_alias="LLM_PROVIDER")
 
     # Open source / local LLM settings (default)
-    ollama_base_url: str = Field(default="http://localhost:11434", validation_alias="OLLAMA_BASE_URL")
+    ollama_base_url: str = Field(
+        default="http://localhost:11434", validation_alias="OLLAMA_BASE_URL"
+    )
     ollama_model: str = Field(default="llama4:latest", validation_alias="OLLAMA_MODEL")
 
     # LM Studio settings
-    lmstudio_base_url: str = Field(default="http://localhost:1234/v1", validation_alias="LMSTUDIO_BASE_URL")
+    lmstudio_base_url: str = Field(
+        default="http://localhost:1234/v1", validation_alias="LMSTUDIO_BASE_URL"
+    )
     lmstudio_model: str = Field(default="local-model", validation_alias="LMSTUDIO_MODEL")
 
     # vLLM settings
     vllm_base_url: str = Field(default="http://localhost:8000/v1", validation_alias="VLLM_BASE_URL")
-    vllm_model: str = Field(default="meta-llama/Llama-3.2-8B-Instruct", validation_alias="VLLM_MODEL")
+    vllm_model: str = Field(
+        default="meta-llama/Llama-3.2-8B-Instruct", validation_alias="VLLM_MODEL"
+    )
 
     # Groq settings (free tier available)
     groq_api_key: str = Field(default="", validation_alias="GROQ_API_KEY")
@@ -66,15 +72,12 @@ class DataAPISettings(BaseSettings):
 
 class DatabaseSettings(BaseSettings):
     """Database configuration settings."""
-    
-    database_url: str = Field(
-        default="sqlite:///./data/financial_agent.db",
-        env="DATABASE_URL"
-    )
+
+    database_url: str = Field(default="sqlite:///./data/financial_agent.db", env="DATABASE_URL")
     redis_url: str = Field(default="redis://localhost:6379", env="REDIS_URL")
     redis_password: Optional[str] = Field(default=None, env="REDIS_PASSWORD")
     cache_ttl_seconds: int = Field(default=3600, env="CACHE_TTL_SECONDS")
-    
+
     model_config = ConfigDict(env_prefix="")
 
 
@@ -90,48 +93,37 @@ class VectorStoreSettings(BaseSettings):
 
     # Open source embedding models (default)
     sentence_transformer_model: str = Field(
-        default="all-MiniLM-L6-v2",
-        env="SENTENCE_TRANSFORMER_MODEL"
+        default="all-MiniLM-L6-v2", env="SENTENCE_TRANSFORMER_MODEL"
     )
-    hf_embedding_model: str = Field(
-        default="BAAI/bge-small-en-v1.5",
-        env="HF_EMBEDDING_MODEL"
-    )
-    ollama_embedding_model: str = Field(
-        default="nomic-embed-text",
-        env="OLLAMA_EMBEDDING_MODEL"
-    )
+    hf_embedding_model: str = Field(default="BAAI/bge-small-en-v1.5", env="HF_EMBEDDING_MODEL")
+    ollama_embedding_model: str = Field(default="nomic-embed-text", env="OLLAMA_EMBEDDING_MODEL")
 
     # Commercial embedding (optional)
-    embedding_model: str = Field(
-        default="all-MiniLM-L6-v2",
-        env="EMBEDDING_MODEL"
-    )
+    embedding_model: str = Field(default="all-MiniLM-L6-v2", env="EMBEDDING_MODEL")
 
     model_config = ConfigDict(env_prefix="")
 
 
 class AgentSettings(BaseSettings):
     """Agent behavior configuration settings."""
-    
+
     max_iterations: int = Field(default=10, env="AGENT_MAX_ITERATIONS")
     timeout_seconds: int = Field(default=300, env="AGENT_TIMEOUT_SECONDS")
     enable_memory: bool = Field(default=True, env="ENABLE_MEMORY")
-    
+
     model_config = ConfigDict(env_prefix="")
 
 
 class APISettings(BaseSettings):
     """API server configuration settings."""
-    
+
     host: str = Field(default="0.0.0.0", env="API_HOST")
     port: int = Field(default=8000, env="API_PORT")
     reload: bool = Field(default=True, env="API_RELOAD")
     cors_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8080"],
-        env="CORS_ORIGINS"
+        default=["http://localhost:3000", "http://localhost:8080"], env="CORS_ORIGINS"
     )
-    
+
     model_config = ConfigDict(env_prefix="")
 
 
@@ -139,10 +131,7 @@ class Settings(BaseSettings):
     """Main application settings combining all sub-settings."""
 
     model_config = ConfigDict(
-        extra="ignore",
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False
+        extra="ignore", env_file=".env", env_file_encoding="utf-8", case_sensitive=False
     )
 
     # Application
@@ -162,19 +151,19 @@ class Settings(BaseSettings):
     # Rate limiting
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
     rate_limit_window_seconds: int = Field(default=60, env="RATE_LIMIT_WINDOW_SECONDS")
-    
+
     @property
     def project_root(self) -> Path:
         """Get the project root directory."""
         return Path(__file__).parent.parent
-    
+
     @property
     def data_dir(self) -> Path:
         """Get the data directory path."""
         data_path = self.project_root / "data"
         data_path.mkdir(parents=True, exist_ok=True)
         return data_path
-    
+
     @property
     def logs_dir(self) -> Path:
         """Get the logs directory path."""
@@ -187,7 +176,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """
     Get cached application settings.
-    
+
     Returns:
         Settings: Application settings instance
     """
@@ -198,7 +187,7 @@ def get_settings() -> Settings:
 def reload_settings() -> Settings:
     """
     Reload settings by clearing the cache.
-    
+
     Returns:
         Settings: Fresh application settings instance
     """

@@ -3,13 +3,15 @@ API request/response schemas.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class AnalysisType(str, Enum):
     """Types of analysis available."""
+
     COMPREHENSIVE = "comprehensive"
     TECHNICAL = "technical"
     FUNDAMENTAL = "fundamental"
@@ -23,27 +25,38 @@ class AnalysisType(str, Enum):
 
 class AnalysisRequest(BaseModel):
     """Request for stock analysis."""
+
     symbol: str = Field(..., description="Stock ticker symbol", example="AAPL")
     analysis_type: AnalysisType = Field(
-        default=AnalysisType.COMPREHENSIVE,
-        description="Type of analysis to perform"
+        default=AnalysisType.COMPREHENSIVE, description="Type of analysis to perform"
     )
     include_news: bool = Field(default=True, description="Include news analysis")
-    
-    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'AAPL', 'analysis_type': 'comprehensive', 'include_news': True}}, extra="ignore")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "symbol": "AAPL",
+                "analysis_type": "comprehensive",
+                "include_news": True,
+            }
+        },
+        extra="ignore",
+    )
 
 
 class PortfolioRequest(BaseModel):
     """Request for portfolio analysis."""
+
     symbols: List[str] = Field(..., description="List of stock symbols")
     weights: Optional[List[float]] = Field(
         default=None,
-        description="Portfolio weights (optional, defaults to equal weight)"
+        description="Portfolio weights (optional, defaults to equal weight)",
     )
 
 
 class ReportRequest(BaseModel):
     """Request for report generation."""
+
     symbols: List[str] = Field(..., description="Symbols to include in report")
     format: str = Field(default="json", description="Output format (json, pdf, markdown)")
     include_charts: bool = Field(default=True, description="Include visualizations")
@@ -51,6 +64,7 @@ class ReportRequest(BaseModel):
 
 class IndicatorData(BaseModel):
     """Technical indicator data."""
+
     name: str
     value: float
     signal: str
@@ -59,6 +73,7 @@ class IndicatorData(BaseModel):
 
 class AnalysisResponse(BaseModel):
     """Response containing analysis results."""
+
     symbol: str
     analysis_type: str
     current_price: float
@@ -71,12 +86,13 @@ class AnalysisResponse(BaseModel):
     risk: Optional[Dict[str, Any]] = None
     analyzed_at: datetime
     execution_time_seconds: float
-    
+
     model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class PortfolioResponse(BaseModel):
     """Response containing portfolio analysis."""
+
     symbols: List[str]
     total_value: Optional[float] = None
     individual_analyses: List[Dict[str, Any]]
@@ -89,6 +105,7 @@ class PortfolioResponse(BaseModel):
 
 class ReportResponse(BaseModel):
     """Response containing generated report."""
+
     report_id: str
     symbols: List[str]
     format: str
@@ -99,10 +116,11 @@ class ReportResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """API health check response following industry standards."""
+
     status: str = Field(
         ...,
         description="Overall health status: healthy, degraded, or unhealthy",
-        example="healthy"
+        example="healthy",
     )
     version: str = Field(..., description="API version", example="1.0.0")
     timestamp: datetime = Field(..., description="Health check timestamp")
@@ -113,12 +131,11 @@ class HealthResponse(BaseModel):
         example={
             "market_data": "healthy",
             "agent_engine": "healthy",
-            "data_processing": "healthy"
-        }
+            "data_processing": "healthy",
+        },
     )
     response_time_ms: Optional[float] = Field(
-        None,
-        description="Health check response time in milliseconds"
+        None, description="Health check response time in milliseconds"
     )
 
     model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
@@ -126,6 +143,7 @@ class HealthResponse(BaseModel):
 
 class ThemeAnalysisRequest(BaseModel):
     """Request for thematic investing analysis."""
+
     theme_id: str = Field(
         ...,
         description="Theme identifier (e.g., 'ai_machine_learning', 'electric_vehicles')",
@@ -136,11 +154,17 @@ class ThemeAnalysisRequest(BaseModel):
         description="Include LLM-generated narrative outlook",
     )
 
-    model_config = ConfigDict(json_schema_extra={'example': {'theme_id': 'ai_machine_learning', 'include_narrative': False}}, extra="ignore")
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"theme_id": "ai_machine_learning", "include_narrative": False}
+        },
+        extra="ignore",
+    )
 
 
 class ThemeCompareRequest(BaseModel):
     """Request to compare multiple themes."""
+
     theme_ids: List[str] = Field(
         ...,
         description="List of theme identifiers to compare",
@@ -150,6 +174,7 @@ class ThemeCompareRequest(BaseModel):
 
 class ThemePerformance(BaseModel):
     """Theme performance across time horizons."""
+
     period_1w: Optional[str] = Field(None, alias="1w")
     period_1m: Optional[str] = Field(None, alias="1m")
     period_3m: Optional[str] = Field(None, alias="3m")
@@ -160,6 +185,7 @@ class ThemePerformance(BaseModel):
 
 class ThemeRisk(BaseModel):
     """Theme risk metrics."""
+
     intra_correlation: Optional[float] = None
     diversification_score: str = "N/A"
     diversification_description: str = ""
@@ -167,6 +193,7 @@ class ThemeRisk(BaseModel):
 
 class ThemeAnalysisResponse(BaseModel):
     """Response containing thematic analysis results."""
+
     theme: str
     theme_id: str
     description: str = ""
@@ -193,6 +220,7 @@ class ThemeAnalysisResponse(BaseModel):
 
 class ThemeSummary(BaseModel):
     """Summary information for a single theme."""
+
     theme_id: str
     name: str
     description: str = ""
@@ -206,6 +234,7 @@ class ThemeSummary(BaseModel):
 
 class ThemeListResponse(BaseModel):
     """Response listing all available themes."""
+
     themes: List[ThemeSummary]
     total_themes: int
     timestamp: datetime
@@ -213,6 +242,7 @@ class ThemeListResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response schema."""
+
     error: str
     detail: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
@@ -220,12 +250,16 @@ class ErrorResponse(BaseModel):
 
 class PeerComparisonRequest(BaseModel):
     """Request for peer group analysis."""
+
     symbol: str = Field(..., description="Target stock symbol")
-    peers: Optional[List[str]] = Field(None, description="Optional list of specific peers to compare against")
+    peers: Optional[List[str]] = Field(
+        None, description="Optional list of specific peers to compare against"
+    )
 
 
 class PeerComparisonResponse(BaseModel):
     """Response containing peer comparison analysis."""
+
     target: str
     peer_group: List[str]
     metrics: Dict[str, Dict[str, Any]]
@@ -246,6 +280,7 @@ class PeerComparisonResponse(BaseModel):
 
 class DisruptionAnalysisRequest(BaseModel):
     """Request for market disruption analysis."""
+
     symbol: str = Field(
         ...,
         description="Stock ticker symbol to analyze",
@@ -256,11 +291,15 @@ class DisruptionAnalysisRequest(BaseModel):
         description="Include LLM-generated qualitative assessment",
     )
 
-    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'TSLA', 'include_narrative': False}}, extra="ignore")
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"symbol": "TSLA", "include_narrative": False}},
+        extra="ignore",
+    )
 
 
 class DisruptionCompareRequest(BaseModel):
     """Request to compare disruption profiles across companies."""
+
     symbols: List[str] = Field(
         ...,
         description="List of stock symbols to compare",
@@ -274,6 +313,7 @@ class DisruptionCompareRequest(BaseModel):
 
 class DisruptionAnalysisResponse(BaseModel):
     """Response containing market disruption analysis results."""
+
     symbol: str
     name: str = ""
     sector: str = ""
@@ -304,6 +344,7 @@ class DisruptionAnalysisResponse(BaseModel):
 
 class DisruptionComparisonItem(BaseModel):
     """Single company's disruption profile in comparison."""
+
     symbol: str
     name: Optional[str] = None
     industry: Optional[str] = None
@@ -317,6 +358,7 @@ class DisruptionComparisonItem(BaseModel):
 
 class DisruptionCompareResponse(BaseModel):
     """Response containing disruption comparison results."""
+
     companies_compared: int
     comparison: List[DisruptionComparisonItem]
     most_disruptive: Optional[str] = None
@@ -334,6 +376,7 @@ class DisruptionCompareResponse(BaseModel):
 
 class EarningsAnalysisRequest(BaseModel):
     """Request for quarterly earnings analysis."""
+
     symbol: str = Field(
         ...,
         description="Stock ticker symbol to analyze",
@@ -344,11 +387,15 @@ class EarningsAnalysisRequest(BaseModel):
         description="Include LLM-generated qualitative assessment",
     )
 
-    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'AAPL', 'include_narrative': False}}, extra="ignore")
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"symbol": "AAPL", "include_narrative": False}},
+        extra="ignore",
+    )
 
 
 class EarningsCompareRequest(BaseModel):
     """Request to compare earnings profiles across companies."""
+
     symbols: List[str] = Field(
         ...,
         description="List of stock symbols to compare",
@@ -362,6 +409,7 @@ class EarningsCompareRequest(BaseModel):
 
 class QuarterData(BaseModel):
     """Single quarter earnings data."""
+
     quarter: str
     date: Optional[str] = None
     revenue_actual: Optional[float] = None
@@ -375,6 +423,7 @@ class QuarterData(BaseModel):
 
 class SurprisePattern(BaseModel):
     """Earnings surprise pattern analysis."""
+
     total_quarters: int = 0
     beats: int = 0
     misses: int = 0
@@ -386,6 +435,7 @@ class SurprisePattern(BaseModel):
 
 class QuarterlyTrends(BaseModel):
     """Quarter-over-quarter trend analysis."""
+
     revenue_qoq_growth: List[str] = []
     revenue_trend: str = "N/A"
     net_income_qoq_growth: List[str] = []
@@ -396,6 +446,7 @@ class QuarterlyTrends(BaseModel):
 
 class YoYComparison(BaseModel):
     """Year-over-year comparison data."""
+
     comparison_period: Optional[str] = None
     revenue_growth: Optional[str] = None
     net_income_growth: Optional[str] = None
@@ -403,6 +454,7 @@ class YoYComparison(BaseModel):
 
 class EarningsQuality(BaseModel):
     """Earnings quality assessment."""
+
     score: float = Field(..., ge=1.0, le=10.0, description="Quality score from 1-10")
     assessment: str
     factors: List[str] = []
@@ -410,6 +462,7 @@ class EarningsQuality(BaseModel):
 
 class NextEarnings(BaseModel):
     """Upcoming earnings information."""
+
     date: Optional[str] = None
     days_until: Optional[int] = None
     eps_estimate: Optional[float] = None
@@ -419,6 +472,7 @@ class NextEarnings(BaseModel):
 
 class EarningsAnalysisResponse(BaseModel):
     """Response containing quarterly earnings analysis results."""
+
     symbol: str
     name: str = ""
     currency: str = "USD"
@@ -437,6 +491,7 @@ class EarningsAnalysisResponse(BaseModel):
 
 class EarningsComparisonItem(BaseModel):
     """Single company's earnings profile in comparison."""
+
     symbol: str
     name: Optional[str] = None
     beat_rate: Optional[str] = None
@@ -451,6 +506,7 @@ class EarningsComparisonItem(BaseModel):
 
 class EarningsCompareResponse(BaseModel):
     """Response containing earnings comparison results."""
+
     companies_compared: int
     comparison: List[EarningsComparisonItem]
     best_earnings_quality: Optional[str] = None
@@ -468,6 +524,7 @@ class EarningsCompareResponse(BaseModel):
 
 class PerformanceResponse(BaseModel):
     """Response containing comprehensive stock performance tracking."""
+
     symbol: str
     sector: Optional[str] = None
     sector_etf: Optional[str] = None
@@ -494,6 +551,7 @@ class PerformanceResponse(BaseModel):
 
 class EventAnalysisResponse(BaseModel):
     """Response containing event-driven performance analysis."""
+
     symbol: str
     name: str = ""
     event_type: str = "earnings"
@@ -514,6 +572,7 @@ class EventAnalysisResponse(BaseModel):
 
 class BacktestRequest(BaseModel):
     """Request to run a backtesting simulation."""
+
     symbol: str = Field(..., description="Stock ticker symbol")
     strategy: str = Field(
         default="rsi_reversal",
@@ -524,11 +583,22 @@ class BacktestRequest(BaseModel):
     period: str = Field(default="5y", description="yfinance period if dates omitted")
     initial_capital: float = Field(default=10000.0, description="Starting capital ($)")
 
-    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'AAPL', 'strategy': 'rsi_reversal', 'period': '5y', 'initial_capital': 10000.0}}, extra="ignore")
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "symbol": "AAPL",
+                "strategy": "rsi_reversal",
+                "period": "5y",
+                "initial_capital": 10000.0,
+            }
+        },
+        extra="ignore",
+    )
 
 
 class BacktestResponse(BaseModel):
     """Response containing backtesting results."""
+
     symbol: str
     strategy: str = ""
     strategy_key: str = ""
@@ -552,6 +622,7 @@ class BacktestResponse(BaseModel):
 
 class ObservationsResponse(BaseModel):
     """Response containing synthesised key observations."""
+
     symbol: str
     total_observations: int = 0
     overall_bias: str = "Mixed / Neutral"
@@ -573,6 +644,7 @@ class ObservationsResponse(BaseModel):
 
 class SmartMoneyResponse(BaseModel):
     """Response containing insider & institutional activity analysis."""
+
     symbol: str
     period_days: int = 90
     insider_activity: Dict[str, Any] = {}
@@ -591,6 +663,7 @@ class SmartMoneyResponse(BaseModel):
 
 class OptionsAnalysisResponse(BaseModel):
     """Response containing options flow analysis."""
+
     symbol: str
     current_price: float = 0.0
     options_sentiment: Dict[str, Any] = {}
@@ -612,17 +685,22 @@ class OptionsAnalysisResponse(BaseModel):
 
 class DividendAnalysisRequest(BaseModel):
     """Request for dividend analysis."""
+
     symbol: str = Field(..., description="Stock ticker symbol", example="JNJ")
     include_narrative: bool = Field(
         default=False,
         description="Include LLM-generated qualitative assessment",
     )
 
-    model_config = ConfigDict(json_schema_extra={'example': {'symbol': 'JNJ', 'include_narrative': False}}, extra="ignore")
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"symbol": "JNJ", "include_narrative": False}},
+        extra="ignore",
+    )
 
 
 class DividendCompareRequest(BaseModel):
     """Request to compare dividends across multiple companies."""
+
     symbols: List[str] = Field(
         ...,
         description="List of stock symbols to compare",
@@ -633,11 +711,15 @@ class DividendCompareRequest(BaseModel):
         description="Include LLM-generated comparative narrative",
     )
 
-    model_config = ConfigDict(json_schema_extra={'example': {'symbols': ['JNJ', 'PG', 'KO'], 'include_narrative': False}}, extra="ignore")
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"symbols": ["JNJ", "PG", "KO"], "include_narrative": False}},
+        extra="ignore",
+    )
 
 
 class CurrentDividend(BaseModel):
     """Current dividend payment details."""
+
     annual_dividend: Optional[float] = None
     dividend_yield: Optional[float] = None
     frequency: Optional[str] = None
@@ -648,12 +730,14 @@ class CurrentDividend(BaseModel):
 
 class DividendSafetyFactor(BaseModel):
     """Individual factor in dividend safety assessment."""
+
     value: float
     assessment: str
 
 
 class DividendSafety(BaseModel):
     """Dividend safety assessment."""
+
     safety_score: int = Field(..., ge=0, le=100, description="Safety score 0-100")
     rating: str
     dividend_cut_probability: str
@@ -663,6 +747,7 @@ class DividendSafety(BaseModel):
 
 class DividendGrowth(BaseModel):
     """Dividend growth history and classification."""
+
     consecutive_years_increased: int = 0
     classification: str = "Non-Dividend Payer"
     cagr_3_year: Optional[float] = None
@@ -674,6 +759,7 @@ class DividendGrowth(BaseModel):
 
 class YieldComparison(BaseModel):
     """Yield comparison vs benchmarks."""
+
     stock_yield: Optional[float] = None
     sector: Optional[str] = None
     sector_average: Optional[float] = None
@@ -684,6 +770,7 @@ class YieldComparison(BaseModel):
 
 class DividendAnalysisResponse(BaseModel):
     """Response containing comprehensive dividend analysis."""
+
     symbol: str
     name: str = ""
     pays_dividends: bool = False
@@ -701,6 +788,7 @@ class DividendAnalysisResponse(BaseModel):
 
 class DividendComparisonItem(BaseModel):
     """Single company's dividend profile in comparison."""
+
     symbol: str
     name: Optional[str] = None
     dividend_yield: Optional[float] = None
@@ -716,6 +804,7 @@ class DividendComparisonItem(BaseModel):
 
 class DividendCompareResponse(BaseModel):
     """Response containing dividend comparison results."""
+
     companies_compared: int
     comparison: List[DividendComparisonItem]
     best_for_income: Optional[str] = None

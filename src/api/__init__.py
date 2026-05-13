@@ -2,7 +2,7 @@
 API module for the Financial Research Analyst Agent.
 """
 
-from src.api.routes import router, app
+from src.api.routes import app, router
 from src.api.schemas import (
     AnalysisRequest,
     AnalysisResponse,

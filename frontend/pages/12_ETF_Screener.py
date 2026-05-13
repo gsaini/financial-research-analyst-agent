@@ -2,17 +2,23 @@
 ETF Recommendations - AI-driven ETF picks based on thorough thematic analysis.
 """
 
-import streamlit as st
 import pandas as pd
-from utils.theme import inject_css, COLORS, get_plotly_layout
-from utils.session import init_session_state
-from utils.formatters import format_currency, format_large_number, format_percent
-from utils.data_service import screen_etfs
+import streamlit as st
 from components.header import render_header
-from components.plotly_charts import create_horizontal_bar, create_grouped_bar
+from components.plotly_charts import create_grouped_bar, create_horizontal_bar
+
+from utils.data_service import screen_etfs
+from utils.formatters import format_currency, format_large_number, format_percent
+from utils.session import init_session_state
+from utils.theme import COLORS, get_plotly_layout, inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="ETF Recommendations | FinancialAI", page_icon=":bar_chart:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="ETF Recommendations | FinancialAI",
+    page_icon=":bar_chart:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -50,6 +56,7 @@ k4.metric(
 
 
 # ─── Section header helper ───────────────────────────────────
+
 
 def _section(title: str):
     st.markdown(
@@ -186,17 +193,30 @@ _section("Performance Comparison")
 
 horizon_labels = ["1W", "1M", "3M", "6M", "1Y", "YTD"]
 horizon_keys = ["1w", "1m", "3m", "6m", "1y", "ytd"]
-chart_colors = ["#6366f1", "#8b5cf6", "#22c55e", "#eab308", "#ef4444", "#3b82f6", "#ec4899", "#14b8a6", "#f97316", "#06b6d4"]
+chart_colors = [
+    "#6366f1",
+    "#8b5cf6",
+    "#22c55e",
+    "#eab308",
+    "#ef4444",
+    "#3b82f6",
+    "#ec4899",
+    "#14b8a6",
+    "#f97316",
+    "#06b6d4",
+]
 
 series_data = []
 for i, etf in enumerate(top_recs):
     returns = etf.get("returns", {})
     values = [returns.get(k) or 0 for k in horizon_keys]
-    series_data.append({
-        "name": etf["symbol"],
-        "values": values,
-        "color": chart_colors[i % len(chart_colors)],
-    })
+    series_data.append(
+        {
+            "name": etf["symbol"],
+            "values": values,
+            "color": chart_colors[i % len(chart_colors)],
+        }
+    )
 
 fig = create_grouped_bar(horizon_labels, series_data, title="Returns by Horizon (%)", height=420)
 st.plotly_chart(fig, use_container_width=True)
@@ -219,7 +239,9 @@ for s in score_values:
     else:
         score_colors.append("#ef4444")
 
-fig_scores = create_horizontal_bar(score_labels, score_values, title="Composite Score (0-100)", colors=score_colors)
+fig_scores = create_horizontal_bar(
+    score_labels, score_values, title="Composite Score (0-100)", colors=score_colors
+)
 fig_scores.update_layout(height=max(280, len(score_etfs) * 36 + 80))
 st.plotly_chart(fig_scores, use_container_width=True)
 
@@ -228,54 +250,63 @@ st.plotly_chart(fig_scores, use_container_width=True)
 if theme_rankings:
     _section("Theme Rankings")
 
-    theme_df = pd.DataFrame([
-        {
-            "Theme": t["theme_name"],
-            "Health": t["health_score"],
-            "Momentum": t["momentum_score"],
-            "Risk": t["risk_level"],
-            "1Y Perf": t.get("performance_1y", "--"),
-            "YTD Perf": t.get("performance_ytd", "--"),
-            "Stage": t.get("growth_stage", ""),
-        }
-        for t in theme_rankings
-    ])
+    theme_df = pd.DataFrame(
+        [
+            {
+                "Theme": t["theme_name"],
+                "Health": t["health_score"],
+                "Momentum": t["momentum_score"],
+                "Risk": t["risk_level"],
+                "1Y Perf": t.get("performance_1y", "--"),
+                "YTD Perf": t.get("performance_ytd", "--"),
+                "Stage": t.get("growth_stage", ""),
+            }
+            for t in theme_rankings
+        ]
+    )
 
     st.dataframe(
         theme_df,
         use_container_width=True,
         hide_index=True,
         column_config={
-            "Health": st.column_config.ProgressColumn("Health", min_value=0, max_value=100, format="%d"),
-            "Momentum": st.column_config.ProgressColumn("Momentum", min_value=0, max_value=100, format="%d"),
+            "Health": st.column_config.ProgressColumn(
+                "Health", min_value=0, max_value=100, format="%d"
+            ),
+            "Momentum": st.column_config.ProgressColumn(
+                "Momentum", min_value=0, max_value=100, format="%d"
+            ),
         },
     )
 
 # ─── All Screened ETFs ───────────────────────────────────────
 
 with st.expander("All Screened ETFs", expanded=False):
-    full_df = pd.DataFrame([
-        {
-            "Symbol": e["symbol"],
-            "Name": e.get("name", ""),
-            "Theme": e.get("theme", ""),
-            "Score": e["composite_score"],
-            "Rec": e.get("recommendation", ""),
-            "Price": format_currency(e.get("current_price")),
-            "1M": format_percent(e.get("returns", {}).get("1m")),
-            "3M": format_percent(e.get("returns", {}).get("3m")),
-            "1Y": format_percent(e.get("returns", {}).get("1y")),
-            "Vol": f"{e['volatility']:.1f}%" if e.get("volatility") else "--",
-            "Risk": e.get("risk_level", ""),
-        }
-        for e in all_etfs
-    ])
+    full_df = pd.DataFrame(
+        [
+            {
+                "Symbol": e["symbol"],
+                "Name": e.get("name", ""),
+                "Theme": e.get("theme", ""),
+                "Score": e["composite_score"],
+                "Rec": e.get("recommendation", ""),
+                "Price": format_currency(e.get("current_price")),
+                "1M": format_percent(e.get("returns", {}).get("1m")),
+                "3M": format_percent(e.get("returns", {}).get("3m")),
+                "1Y": format_percent(e.get("returns", {}).get("1y")),
+                "Vol": f"{e['volatility']:.1f}%" if e.get("volatility") else "--",
+                "Risk": e.get("risk_level", ""),
+            }
+            for e in all_etfs
+        ]
+    )
     st.dataframe(full_df, use_container_width=True, hide_index=True)
 
 # ─── Methodology ─────────────────────────────────────────────
 
 with st.expander("Scoring Methodology", expanded=False):
-    st.markdown("""
+    st.markdown(
+        """
 **Composite Score (0-100)** is calculated from five weighted factors:
 
 | Factor | Weight | Description |
@@ -290,7 +321,8 @@ with st.expander("Scoring Methodology", expanded=False):
 
 Data sourced from Yahoo Finance. Analysis covers 17 investment themes and ~50 reference ETFs.
 This is for informational purposes only and does not constitute financial advice.
-    """)
+    """
+    )
 
 
 # ─── AI Advisor CTA ─────────────────────────────────────────

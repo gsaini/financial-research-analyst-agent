@@ -55,7 +55,7 @@ def _gbm_paths(
     rng = np.random.default_rng(seed)
     dt = 1 / _TRADING_DAYS
     # Daily drift and diffusion
-    drift = (mu - 0.5 * sigma ** 2) * dt
+    drift = (mu - 0.5 * sigma**2) * dt
     diffusion = sigma * np.sqrt(dt)
 
     # Generate random shocks
@@ -157,10 +157,7 @@ def simulate_stock(
         # Sample paths for visualization (10 paths, sampled at intervals)
         sample_indices = np.linspace(0, n_simulations - 1, 10, dtype=int)
         step = max(1, days // 50)
-        sample_paths = [
-            [round(float(p), 2) for p in paths[i, ::step]]
-            for i in sample_indices
-        ]
+        sample_paths = [[round(float(p), 2) for p in paths[i, ::step]] for i in sample_indices]
 
         # Distribution histogram (20 bins)
         hist_counts, bin_edges = np.histogram(final_prices, bins=20)
@@ -351,7 +348,14 @@ def simulate_portfolio(
 
                 for i in range(n):
                     drift = (means[i] - 0.5 * cov_matrix[i, i]) * dt
-                    shock = np.sqrt(cov_matrix[i, i]) * np.sqrt(dt) * correlated_z[i] / np.sqrt(cov_matrix[i, i]) if cov_matrix[i, i] > 0 else 0
+                    shock = (
+                        np.sqrt(cov_matrix[i, i])
+                        * np.sqrt(dt)
+                        * correlated_z[i]
+                        / np.sqrt(cov_matrix[i, i])
+                        if cov_matrix[i, i] > 0
+                        else 0
+                    )
                     asset_values[i] *= np.exp(drift + shock)
 
                 portfolio_values[sim, day + 1] = np.sum(asset_values)

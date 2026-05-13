@@ -11,24 +11,23 @@ Tests cover:
 - list_strategies helper
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
 
 from src.tools.strategy_definitions import (
-    rsi_reversal,
-    macd_crossover,
-    golden_death_cross,
-    bollinger_reversion,
-    momentum_composite,
     STRATEGIES,
-    list_strategy_names,
+    _macd_histogram,
     _rsi,
     _sma,
-    _macd_histogram,
+    bollinger_reversion,
+    golden_death_cross,
+    list_strategy_names,
+    macd_crossover,
+    momentum_composite,
+    rsi_reversal,
 )
-
 
 # ─────────────────────────────────────────────────────────────
 # Helpers
@@ -109,9 +108,15 @@ class TestStrategySignals:
         """All 9 strategies should be registered."""
         assert len(STRATEGIES) == 9
         expected = {
-            "rsi_reversal", "macd_crossover", "golden_death_cross",
-            "bollinger_reversion", "momentum_composite", "mean_reversion",
-            "breakout", "pairs_mean_reversion", "trend_following"
+            "rsi_reversal",
+            "macd_crossover",
+            "golden_death_cross",
+            "bollinger_reversion",
+            "momentum_composite",
+            "mean_reversion",
+            "breakout",
+            "pairs_mean_reversion",
+            "trend_following",
         }
         assert set(STRATEGIES.keys()) == expected
 
@@ -186,8 +191,13 @@ class TestSimulation:
                 return "SELL"
             return "HOLD"
 
-        trade_log, equity = _simulate(prices, simple_signal, initial_capital=10000,
-                                       commission_pct=0, slippage_pct=0)
+        trade_log, equity = _simulate(
+            prices,
+            simple_signal,
+            initial_capital=10000,
+            commission_pct=0,
+            slippage_pct=0,
+        )
 
         assert len(trade_log) == 1
         assert trade_log[0]["entry_idx"] == 5
@@ -205,8 +215,9 @@ class TestSimulation:
                 return "BUY"
             return "HOLD"
 
-        trade_log, _ = _simulate(prices, buy_only, initial_capital=10000,
-                                  commission_pct=0, slippage_pct=0)
+        trade_log, _ = _simulate(
+            prices, buy_only, initial_capital=10000, commission_pct=0, slippage_pct=0
+        )
 
         assert len(trade_log) == 1
         assert trade_log[0].get("status") == "open"

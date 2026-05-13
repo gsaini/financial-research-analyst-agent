@@ -3,14 +3,19 @@ Short Interest Analysis - Short squeeze scoring, days to cover,
 historical context, and risk assessment for longs and shorts.
 """
 
-import streamlit as st
 import pandas as pd
-from utils.theme import inject_css, COLORS
-from utils.session import init_session_state
-from utils.formatters import format_percent, format_large_number
-from utils.data_service import get_short_interest, compare_short_interest, get_squeeze_watchlist
+import streamlit as st
 from components.header import render_header
 from components.plotly_charts import create_gauge_chart, create_horizontal_bar
+
+from utils.data_service import (
+    compare_short_interest,
+    get_short_interest,
+    get_squeeze_watchlist,
+)
+from utils.formatters import format_large_number, format_percent
+from utils.session import init_session_state
+from utils.theme import COLORS, inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
 st.set_page_config(
@@ -33,12 +38,16 @@ tab1, tab2, tab3 = st.tabs(["Single Stock", "Compare", "Squeeze Watchlist"])
 with tab1:
     col1, col2 = st.columns([3, 1])
     with col1:
-        symbol = st.text_input(
-            "Stock Symbol",
-            value=st.session_state.get("selected_symbol", "GME"),
-            placeholder="Enter ticker (e.g., GME, AMC, TSLA)",
-            key="si_symbol",
-        ).strip().upper()
+        symbol = (
+            st.text_input(
+                "Stock Symbol",
+                value=st.session_state.get("selected_symbol", "GME"),
+                placeholder="Enter ticker (e.g., GME, AMC, TSLA)",
+                key="si_symbol",
+            )
+            .strip()
+            .upper()
+        )
     with col2:
         st.markdown("<br>", unsafe_allow_html=True)
         analyze_btn = st.button("Analyze", use_container_width=True, type="primary", key="si_btn")
@@ -88,28 +97,45 @@ with tab1:
                 score = sq.get("squeeze_score", 0)
                 risk_level = sq.get("risk_level", "Low")
                 color = (
-                    COLORS.get("danger", "#ef4444") if risk_level == "High"
-                    else COLORS.get("warning", "#eab308") if risk_level == "Elevated"
-                    else COLORS.get("success", "#22c55e")
+                    COLORS.get("danger", "#ef4444")
+                    if risk_level == "High"
+                    else (
+                        COLORS.get("warning", "#eab308")
+                        if risk_level == "Elevated"
+                        else COLORS.get("success", "#22c55e")
+                    )
                 )
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="text-align:center; padding:20px; border-radius:8px; border:1px solid {color};">
                     <div style="font-size:3em; font-weight:bold; color:{color};">{score}</div>
                     <div style="font-size:0.9em; color:{COLORS.get('text_secondary', '#a1a1aa')};">Squeeze Score</div>
                     <div style="font-size:1.2em; color:{color}; font-weight:bold; margin-top:4px;">{risk_level}</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
 
             with scol2:
                 st.markdown("**Squeeze Factor Breakdown**")
                 factors = sq.get("factors", {})
-                factor_df = pd.DataFrame([
-                    {"Factor": "Short % of Float", "Score": factors.get("short_percent_score", 0)},
-                    {"Factor": "Days to Cover", "Score": factors.get("days_to_cover_score", 0)},
-                    {"Factor": "Short Interest Trend", "Score": factors.get("recent_increase_score", 0)},
-                    {"Factor": "Borrow Cost", "Score": factors.get("borrow_cost_score", 0)},
-                ])
-                st.bar_chart(factor_df.set_index("Factor"), color=COLORS.get("accent_primary", "#6366f1"))
+                factor_df = pd.DataFrame(
+                    [
+                        {
+                            "Factor": "Short % of Float",
+                            "Score": factors.get("short_percent_score", 0),
+                        },
+                        {"Factor": "Days to Cover", "Score": factors.get("days_to_cover_score", 0)},
+                        {
+                            "Factor": "Short Interest Trend",
+                            "Score": factors.get("recent_increase_score", 0),
+                        },
+                        {"Factor": "Borrow Cost", "Score": factors.get("borrow_cost_score", 0)},
+                    ]
+                )
+                st.bar_chart(
+                    factor_df.set_index("Factor"), color=COLORS.get("accent_primary", "#6366f1")
+                )
 
             st.markdown(f"**Assessment:** {sq.get('assessment', '')}")
 
@@ -120,14 +146,20 @@ with tab1:
 
             with ccol1:
                 st.markdown("**Historical Context**")
-                st.markdown(f"- **Market Percentile:** {hist.get('market_percentile', 'N/A')}th — {hist.get('percentile_label', '')}")
+                st.markdown(
+                    f"- **Market Percentile:** {hist.get('market_percentile', 'N/A')}th — {hist.get('percentile_label', '')}"
+                )
                 st.markdown(f"- **Trend:** {hist.get('trend', 'N/A').title()}")
-                st.markdown(f"- **Prior Month Shares Short:** {si.get('previous_month_formatted', 'N/A')}")
+                st.markdown(
+                    f"- **Prior Month Shares Short:** {si.get('previous_month_formatted', 'N/A')}"
+                )
                 st.markdown(f"- **MoM Change:** {si.get('change_vs_previous_pct', 0):+.1f}%")
 
             with ccol2:
                 st.markdown("**Borrow Data (Estimated)**")
-                st.markdown(f"- **Est. Borrow Rate:** {borrow.get('estimated_borrow_rate_pct', 0):.1f}%")
+                st.markdown(
+                    f"- **Est. Borrow Rate:** {borrow.get('estimated_borrow_rate_pct', 0):.1f}%"
+                )
                 st.markdown(f"- **Assessment:** {borrow.get('borrow_assessment', 'N/A')}")
                 st.caption(borrow.get("note", ""))
 
@@ -187,7 +219,9 @@ with tab2:
                 for sym, data in individual.items():
                     if "error" in data:
                         continue
-                    with st.expander(f"{sym} — Squeeze Score: {data.get('squeeze_analysis', {}).get('squeeze_score', 0)}"):
+                    with st.expander(
+                        f"{sym} — Squeeze Score: {data.get('squeeze_analysis', {}).get('squeeze_score', 0)}"
+                    ):
                         si = data.get("short_interest", {})
                         st.markdown(
                             f"**Short % Float:** {si.get('short_percent_of_float', 0):.1f}% | "
@@ -212,7 +246,9 @@ with tab3:
             st.error(result["error"])
         else:
             candidates = result.get("candidates", [])
-            st.markdown(f"**Found {len(candidates)} candidates** from {result.get('screened', 0)} stocks scanned")
+            st.markdown(
+                f"**Found {len(candidates)} candidates** from {result.get('screened', 0)} stocks scanned"
+            )
 
             if candidates:
                 df = pd.DataFrame(candidates)
@@ -226,4 +262,6 @@ with tab3:
 
 # ─── Footer ─────────────────────────────────────────────────
 st.markdown("---")
-st.caption("Short interest data is reported bi-monthly by exchanges with ~10 day delay. Squeeze scoring is for informational purposes only — not investment advice.")
+st.caption(
+    "Short interest data is reported bi-monthly by exchanges with ~10 day delay. Squeeze scoring is for informational purposes only — not investment advice."
+)

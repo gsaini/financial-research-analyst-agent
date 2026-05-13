@@ -9,12 +9,14 @@ and produces a ranked list of recommended ETFs based on:
 - Risk-adjusted scoring
 """
 
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import numpy as np
+import yfinance as yf
 
 from src.data import get_provider
-from src.tools.theme_mapper import list_available_themes, analyze_theme
+from src.tools.theme_mapper import analyze_theme, list_available_themes
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -45,13 +47,22 @@ def fetch_etf_data(symbol: str) -> Dict[str, Any]:
 
         current_price = info.get(
             "currentPrice",
-            info.get("regularMarketPrice", info.get("navPrice", float(hist["Close"].iloc[-1]))),
+            info.get(
+                "regularMarketPrice",
+                info.get("navPrice", float(hist["Close"].iloc[-1])),
+            ),
         )
 
         # Calculate returns over various periods
         closes = hist["Close"]
         returns = {}
-        for label, days in [("1w", 5), ("1m", 21), ("3m", 63), ("6m", 126), ("1y", 252)]:
+        for label, days in [
+            ("1w", 5),
+            ("1m", 21),
+            ("3m", 63),
+            ("6m", 126),
+            ("1y", 252),
+        ]:
             if len(closes) >= days:
                 start_price = float(closes.iloc[-days])
                 ret = ((current_price - start_price) / start_price) * 100
@@ -65,7 +76,11 @@ def fetch_etf_data(symbol: str) -> Dict[str, Any]:
 
         # Volatility (annualized)
         daily_returns = closes.pct_change().dropna()
-        volatility = round(float(daily_returns.std() * np.sqrt(252) * 100), 2) if len(daily_returns) > 20 else None
+        volatility = (
+            round(float(daily_returns.std() * np.sqrt(252) * 100), 2)
+            if len(daily_returns) > 20
+            else None
+        )
 
         return {
             "symbol": symbol,
@@ -200,7 +215,9 @@ def screen_etfs(
 
     # Apply risk filter
     max_risk_num = _risk_label_to_number(max_risk) if max_risk else 5
-    themes = [t for t in themes if _risk_label_to_number(t.get("risk_level", "Medium")) <= max_risk_num]
+    themes = [
+        t for t in themes if _risk_label_to_number(t.get("risk_level", "Medium")) <= max_risk_num
+    ]
 
     all_etf_recommendations = []
     theme_summaries = []
@@ -229,17 +246,19 @@ def screen_etfs(
         theme_momentum = theme_result.get("momentum_score", 50)
         perf = theme_result.get("theme_performance", {})
 
-        theme_summaries.append({
-            "theme_id": theme_id,
-            "theme_name": theme_name,
-            "health_score": theme_health,
-            "momentum_score": theme_momentum,
-            "risk_level": risk_level,
-            "growth_stage": theme.get("growth_stage", ""),
-            "performance_1y": perf.get("1y", "N/A"),
-            "performance_ytd": perf.get("ytd", "N/A"),
-            "etf_count": len(reference_etfs),
-        })
+        theme_summaries.append(
+            {
+                "theme_id": theme_id,
+                "theme_name": theme_name,
+                "health_score": theme_health,
+                "momentum_score": theme_momentum,
+                "risk_level": risk_level,
+                "growth_stage": theme.get("growth_stage", ""),
+                "performance_1y": perf.get("1y", "N/A"),
+                "performance_ytd": perf.get("ytd", "N/A"),
+                "etf_count": len(reference_etfs),
+            }
+        )
 
         # Fetch and score each ETF
         for etf_symbol in reference_etfs:
@@ -252,34 +271,39 @@ def screen_etfs(
                 continue
 
             composite_score = _calculate_etf_composite_score(
-                etf_data, theme_health, theme_momentum, risk_level,
+                etf_data,
+                theme_health,
+                theme_momentum,
+                risk_level,
             )
 
             returns = etf_data.get("returns", {})
 
-            all_etf_recommendations.append({
-                "symbol": etf_symbol,
-                "name": etf_data.get("name", etf_symbol),
-                "theme": theme_name,
-                "theme_id": theme_id,
-                "composite_score": composite_score,
-                "theme_health": theme_health,
-                "theme_momentum": theme_momentum,
-                "risk_level": risk_level,
-                "current_price": etf_data.get("current_price"),
-                "returns": {
-                    "1w": returns.get("1w"),
-                    "1m": returns.get("1m"),
-                    "3m": returns.get("3m"),
-                    "6m": returns.get("6m"),
-                    "1y": returns.get("1y"),
-                    "ytd": returns.get("ytd"),
-                },
-                "volatility": etf_data.get("volatility"),
-                "expense_ratio": etf_data.get("expense_ratio"),
-                "total_assets": etf_data.get("total_assets"),
-                "dividend_yield": etf_data.get("dividend_yield"),
-            })
+            all_etf_recommendations.append(
+                {
+                    "symbol": etf_symbol,
+                    "name": etf_data.get("name", etf_symbol),
+                    "theme": theme_name,
+                    "theme_id": theme_id,
+                    "composite_score": composite_score,
+                    "theme_health": theme_health,
+                    "theme_momentum": theme_momentum,
+                    "risk_level": risk_level,
+                    "current_price": etf_data.get("current_price"),
+                    "returns": {
+                        "1w": returns.get("1w"),
+                        "1m": returns.get("1m"),
+                        "3m": returns.get("3m"),
+                        "6m": returns.get("6m"),
+                        "1y": returns.get("1y"),
+                        "ytd": returns.get("ytd"),
+                    },
+                    "volatility": etf_data.get("volatility"),
+                    "expense_ratio": etf_data.get("expense_ratio"),
+                    "total_assets": etf_data.get("total_assets"),
+                    "dividend_yield": etf_data.get("dividend_yield"),
+                }
+            )
 
     # Sort by composite score
     all_etf_recommendations.sort(key=lambda x: x["composite_score"], reverse=True)

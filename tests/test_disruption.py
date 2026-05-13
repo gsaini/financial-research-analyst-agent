@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Tests for Feature 3: Market Disruption Analysis.
 
@@ -13,11 +14,11 @@ Tests cover:
 - API endpoint integration
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
-import numpy as np
+from unittest.mock import MagicMock, patch
 
+import numpy as np
+import pytest
 
 # ─────────────────────────────────────────────────────────────
 # Disruption Metrics Tool Tests
@@ -53,7 +54,11 @@ class TestIndustryBenchmarks:
 
         benchmarks = fetch_industry_benchmarks("Unknown Industry XYZ")
 
-        assert benchmarks == {"rd_intensity": 5.0, "revenue_growth": 8.0, "gross_margin": 35.0}
+        assert benchmarks == {
+            "rd_intensity": 5.0,
+            "revenue_growth": 8.0,
+            "gross_margin": 35.0,
+        }
 
 
 class TestRDIntensity:
@@ -156,7 +161,11 @@ class TestMarginTrajectory:
 
         financials = {
             "revenues": [100_000_000_000, 120_000_000_000, 150_000_000_000],
-            "gross_profits": [30_000_000_000, 40_000_000_000, 55_000_000_000],  # 30%, 33%, 37%
+            "gross_profits": [
+                30_000_000_000,
+                40_000_000_000,
+                55_000_000_000,
+            ],  # 30%, 33%, 37%
             "operating_incomes": [10_000_000_000, 14_000_000_000, 20_000_000_000],
             "industry": "Technology",
         }
@@ -174,7 +183,11 @@ class TestMarginTrajectory:
 
         financials = {
             "revenues": [100_000_000_000, 120_000_000_000, 150_000_000_000],
-            "gross_profits": [40_000_000_000, 42_000_000_000, 45_000_000_000],  # 40%, 35%, 30%
+            "gross_profits": [
+                40_000_000_000,
+                42_000_000_000,
+                45_000_000_000,
+            ],  # 40%, 35%, 30%
             "operating_incomes": [10_000_000_000, 10_000_000_000, 10_000_000_000],
             "industry": "Technology",
         }
@@ -299,10 +312,10 @@ class TestFullAnalysis:
         """Full analysis should produce all expected keys."""
         # This test uses mock data to avoid network calls
         from src.tools.disruption_metrics import (
+            calculate_disruption_score,
+            calculate_margin_trajectory,
             calculate_rd_intensity,
             calculate_revenue_acceleration,
-            calculate_margin_trajectory,
-            calculate_disruption_score,
             identify_risk_factors,
             identify_strengths,
         )
@@ -544,6 +557,7 @@ class TestAPIEndpoints:
     def test_disruption_endpoint_structure(self):
         """Endpoint should return properly structured response."""
         from fastapi.testclient import TestClient
+
         from src.api.routes import app
 
         client = TestClient(app)
@@ -562,6 +576,7 @@ class TestAPIEndpoints:
     def test_disruption_compare_endpoint(self):
         """Compare endpoint should accept list of symbols."""
         from fastapi.testclient import TestClient
+
         from src.api.routes import app
 
         client = TestClient(app)

@@ -4,8 +4,8 @@ Renders financial charts via st.components.v1.html().
 """
 
 import json
-import streamlit.components.v1 as components
 
+import streamlit.components.v1 as components
 
 CHART_THEME = {
     "bg": "#0a0e17",
@@ -56,29 +56,41 @@ def render_candlestick_chart(
     # Build candlestick data
     candle_data = []
     for i in range(len(dates)):
-        candle_data.append({
-            "time": dates[i],
-            "open": round(opens[i], 2) if opens[i] else 0,
-            "high": round(highs[i], 2) if highs[i] else 0,
-            "low": round(lows[i], 2) if lows[i] else 0,
-            "close": round(closes[i], 2) if closes[i] else 0,
-        })
+        candle_data.append(
+            {
+                "time": dates[i],
+                "open": round(opens[i], 2) if opens[i] else 0,
+                "high": round(highs[i], 2) if highs[i] else 0,
+                "low": round(lows[i], 2) if lows[i] else 0,
+                "close": round(closes[i], 2) if closes[i] else 0,
+            }
+        )
 
     # Build volume data
     volume_data = []
     if volumes:
         for i in range(len(dates)):
-            color = CHART_THEME["volume_up"] if i == 0 or closes[i] >= closes[i - 1] else CHART_THEME["volume_down"]
-            volume_data.append({
-                "time": dates[i],
-                "value": volumes[i] if volumes[i] else 0,
-                "color": color,
-            })
+            color = (
+                CHART_THEME["volume_up"]
+                if i == 0 or closes[i] >= closes[i - 1]
+                else CHART_THEME["volume_down"]
+            )
+            volume_data.append(
+                {
+                    "time": dates[i],
+                    "value": volumes[i] if volumes[i] else 0,
+                    "color": color,
+                }
+            )
 
     # Build SMA line data
     sma_series_js = ""
     if sma_data:
-        colors = {"sma_20": CHART_THEME["sma20"], "sma_50": CHART_THEME["sma50"], "sma_200": CHART_THEME["sma200"]}
+        colors = {
+            "sma_20": CHART_THEME["sma20"],
+            "sma_50": CHART_THEME["sma50"],
+            "sma_200": CHART_THEME["sma200"],
+        }
         labels = {"sma_20": "SMA 20", "sma_50": "SMA 50", "sma_200": "SMA 200"}
         for key, values in sma_data.items():
             if values and key in colors:

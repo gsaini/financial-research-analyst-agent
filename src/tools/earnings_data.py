@@ -9,8 +9,9 @@ This module provides tools to fetch and analyze quarterly earnings data:
 - Earnings quality assessment
 """
 
-from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 
@@ -75,7 +76,11 @@ def fetch_quarterly_financials(symbol: str) -> Dict[str, Any]:
 
             quarter_info = {
                 "quarter": quarter_label,
-                "date": quarter_date.strftime("%Y-%m-%d") if hasattr(quarter_date, "strftime") else str(quarter_date)[:10],
+                "date": (
+                    quarter_date.strftime("%Y-%m-%d")
+                    if hasattr(quarter_date, "strftime")
+                    else str(quarter_date)[:10]
+                ),
                 "revenue": float(quarter_data.get("Total Revenue", 0) or 0),
                 "gross_profit": float(quarter_data.get("Gross Profit", 0) or 0),
                 "operating_income": float(quarter_data.get("Operating Income", 0) or 0),
@@ -125,14 +130,17 @@ def fetch_earnings_history(symbol: str) -> Dict[str, Any]:
         if earnings is not None and not earnings.empty:
             for idx, row in earnings.iterrows():
                 record = {
-                    "date": idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx),
+                    "date": (idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)),
                     "eps_actual": float(row.get("epsActual", 0) or 0),
                     "eps_estimate": float(row.get("epsEstimate", 0) or 0),
                 }
 
                 # Calculate surprise
                 if record["eps_estimate"] != 0:
-                    surprise = ((record["eps_actual"] - record["eps_estimate"]) / abs(record["eps_estimate"])) * 100
+                    surprise = (
+                        (record["eps_actual"] - record["eps_estimate"])
+                        / abs(record["eps_estimate"])
+                    ) * 100
                     record["eps_surprise_pct"] = round(surprise, 2)
 
                     if surprise > 1:
@@ -229,7 +237,9 @@ def fetch_upcoming_earnings(symbol: str) -> Dict[str, Any]:
 # ─────────────────────────────────────────────────────────────
 
 
-def calculate_surprise_pattern(earnings_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+def calculate_surprise_pattern(
+    earnings_records: List[Dict[str, Any]],
+) -> Dict[str, Any]:
     """
     Analyze beat/miss pattern across earnings history.
 
@@ -255,7 +265,11 @@ def calculate_surprise_pattern(earnings_records: List[Dict[str, Any]]) -> Dict[s
     inline = sum(1 for r in earnings_records if r.get("verdict") == "INLINE")
     total = len(earnings_records)
 
-    surprises = [r.get("eps_surprise_pct", 0) for r in earnings_records if r.get("eps_surprise_pct") is not None]
+    surprises = [
+        r.get("eps_surprise_pct", 0)
+        for r in earnings_records
+        if r.get("eps_surprise_pct") is not None
+    ]
     avg_surprise = round(np.mean(surprises), 2) if surprises else 0
 
     beat_rate = round((beats / total) * 100, 1) if total > 0 else 0
@@ -410,13 +424,17 @@ def calculate_yoy_comparison(quarters: List[Dict[str, Any]]) -> Dict[str, Any]:
 
         if year_ago_rev > 0:
             rev_growth = ((current_rev - year_ago_rev) / year_ago_rev) * 100
-            comparisons["revenue_growth"] = f"{'+' if rev_growth >= 0 else ''}{round(rev_growth, 1)}%"
+            comparisons["revenue_growth"] = (
+                f"{'+' if rev_growth >= 0 else ''}{round(rev_growth, 1)}%"
+            )
         else:
             comparisons["revenue_growth"] = "N/A"
 
         if year_ago_inc > 0:
             inc_growth = ((current_inc - year_ago_inc) / year_ago_inc) * 100
-            comparisons["net_income_growth"] = f"{'+' if inc_growth >= 0 else ''}{round(inc_growth, 1)}%"
+            comparisons["net_income_growth"] = (
+                f"{'+' if inc_growth >= 0 else ''}{round(inc_growth, 1)}%"
+            )
         elif year_ago_inc < 0 and current_inc > 0:
             comparisons["net_income_growth"] = "Turnaround to profitability"
         else:
@@ -498,15 +516,29 @@ def assess_earnings_quality(quarters: List[Dict[str, Any]]) -> Dict[str, Any]:
             else:
                 score -= 0.25
                 if ratio > 1.5:
-                    factors.append("Net income significantly higher than operating income (non-operating gains)")
+                    factors.append(
+                        "Net income significantly higher than operating income (non-operating gains)"
+                    )
                 elif ratio < 0.5:
-                    factors.append("Net income significantly lower than operating income (non-operating losses)")
+                    factors.append(
+                        "Net income significantly lower than operating income (non-operating losses)"
+                    )
                 break
 
     # Factor 4: Growth quality (revenue-driven vs margin-driven)
     if len(quarters) >= 4:
-        rev_growth = (quarters[0].get("revenue", 0) - quarters[3].get("revenue", 1)) / quarters[3].get("revenue", 1) if quarters[3].get("revenue", 0) > 0 else 0
-        inc_growth = (quarters[0].get("net_income", 0) - quarters[3].get("net_income", 1)) / quarters[3].get("net_income", 1) if quarters[3].get("net_income", 0) > 0 else 0
+        rev_growth = (
+            (quarters[0].get("revenue", 0) - quarters[3].get("revenue", 1))
+            / quarters[3].get("revenue", 1)
+            if quarters[3].get("revenue", 0) > 0
+            else 0
+        )
+        inc_growth = (
+            (quarters[0].get("net_income", 0) - quarters[3].get("net_income", 1))
+            / quarters[3].get("net_income", 1)
+            if quarters[3].get("net_income", 0) > 0
+            else 0
+        )
 
         if rev_growth > 0 and inc_growth > rev_growth:
             score += 0.5
@@ -645,26 +677,33 @@ def compare_earnings(symbols: List[str]) -> Dict[str, Any]:
             trends = result.get("quarterly_trends", {})
             quality = result.get("earnings_quality", {})
 
-            comparison.append({
-                "symbol": result["symbol"],
-                "name": result.get("name"),
-                "beat_rate": surprise_data.get("beat_rate", "N/A"),
-                "average_surprise": surprise_data.get("average_surprise", "N/A"),
-                "pattern": surprise_data.get("pattern", "N/A"),
-                "revenue_trend": trends.get("revenue_trend", "N/A"),
-                "income_trend": trends.get("income_trend", "N/A"),
-                "earnings_quality_score": quality.get("score", 0),
-                "next_earnings_date": result.get("next_earnings", {}).get("date"),
-            })
+            comparison.append(
+                {
+                    "symbol": result["symbol"],
+                    "name": result.get("name"),
+                    "beat_rate": surprise_data.get("beat_rate", "N/A"),
+                    "average_surprise": surprise_data.get("average_surprise", "N/A"),
+                    "pattern": surprise_data.get("pattern", "N/A"),
+                    "revenue_trend": trends.get("revenue_trend", "N/A"),
+                    "income_trend": trends.get("income_trend", "N/A"),
+                    "earnings_quality_score": quality.get("score", 0),
+                    "next_earnings_date": result.get("next_earnings", {}).get("date"),
+                }
+            )
         else:
             comparison.append({"symbol": symbol, "error": result.get("error")})
 
     # Sort by earnings quality score
-    comparison.sort(key=lambda x: x.get("earnings_quality_score", 0) if "error" not in x else 0, reverse=True)
+    comparison.sort(
+        key=lambda x: x.get("earnings_quality_score", 0) if "error" not in x else 0,
+        reverse=True,
+    )
 
     return {
         "companies_compared": len(symbols),
         "comparison": comparison,
-        "best_earnings_quality": comparison[0]["symbol"] if comparison and "error" not in comparison[0] else None,
+        "best_earnings_quality": (
+            comparison[0]["symbol"] if comparison and "error" not in comparison[0] else None
+        ),
         "analyzed_at": datetime.now().isoformat(),
     }

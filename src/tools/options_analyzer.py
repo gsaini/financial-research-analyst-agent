@@ -24,8 +24,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from src.data import get_provider, MarketDataProvider
 
+from src.data import MarketDataProvider, get_provider
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -86,7 +86,7 @@ def analyze_options(symbol: str) -> Dict[str, Any]:
         sentiment = _calculate_sentiment(calls_df, puts_df)
         volatility = _calculate_volatility(calls_df, puts_df)
         unusual = _detect_unusual_activity(calls_df, puts_df, current_price)
-        
+
         # Max pain is typically calculated for the nearest expiration
         nearest_calls = all_calls[0]
         nearest_puts = all_puts[0]
@@ -121,7 +121,7 @@ def _get_current_price(provider: MarketDataProvider, symbol: str) -> Optional[fl
         price = info.get("currentPrice", info.get("regularMarketPrice", info.get("previousClose")))
         if price:
             return float(price)
-        
+
         # Fallback to history
         hist = provider.get_history(symbol, period="1d")
         if not hist.empty:
@@ -135,12 +135,12 @@ def _calculate_sentiment(calls: pd.DataFrame, puts: pd.DataFrame) -> Dict[str, A
     """Calculate Put/Call ratio and total volume."""
     call_vol = int(calls["volume"].sum()) if "volume" in calls and not calls.empty else 0
     put_vol = int(puts["volume"].sum()) if "volume" in puts and not puts.empty else 0
-    
+
     total_vol = call_vol + put_vol
-    
+
     # Avoid division by zero
     pc_ratio = round(put_vol / call_vol, 2) if call_vol > 0 else 0.0
-    
+
     if pc_ratio == 0:
         assessment = "Indeterminate (no call volume)"
     elif pc_ratio < 0.7:
@@ -163,6 +163,7 @@ def _calculate_volatility(calls: pd.DataFrame, puts: pd.DataFrame) -> Dict[str, 
     """
     Calculate volume-weighted average implied volatility and skew.
     """
+
     def _vw_iv(df):
         if df.empty or "impliedVolatility" not in df or "volume" not in df:
             return 0.0
@@ -170,21 +171,21 @@ def _calculate_volatility(calls: pd.DataFrame, puts: pd.DataFrame) -> Dict[str, 
         valid = df[(df["impliedVolatility"] > 0) & (df["volume"] > 0)].copy()
         if valid.empty:
             return 0.0
-        
+
         vol_sum = valid["volume"].sum()
         if vol_sum == 0:
             return 0.0
-            
+
         weighted_iv = (valid["impliedVolatility"] * valid["volume"]).sum() / vol_sum
         return round(weighted_iv * 100, 2)  # Convert to percentage
 
     call_iv = _vw_iv(calls)
     put_iv = _vw_iv(puts)
-    
+
     # Combined IV weighted by side volume
     call_vol = int(calls["volume"].sum()) if "volume" in calls and not calls.empty else 0
     put_vol = int(puts["volume"].sum()) if "volume" in puts and not puts.empty else 0
-    
+
     if call_vol + put_vol > 0:
         combined_iv = round(((call_iv * call_vol) + (put_iv * put_vol)) / (call_vol + put_vol), 2)
     else:
@@ -209,44 +210,42 @@ def _calculate_volatility(calls: pd.DataFrame, puts: pd.DataFrame) -> Dict[str, 
     return {
         "current_iv": combined_iv,
         "iv_assessment": assessment,
-        "iv_skew": {
-            "put_iv": put_iv,
-            "call_iv": call_iv,
-            "skew_assessment": skew
-        }
+        "iv_skew": {"put_iv": put_iv, "call_iv": call_iv, "skew_assessment": skew},
     }
 
 
 def _detect_unusual_activity(
-    calls: pd.DataFrame, puts: pd.DataFrame, current_price: float,
+    calls: pd.DataFrame,
+    puts: pd.DataFrame,
+    current_price: float,
 ) -> List[Dict[str, Any]]:
     """
     Detect unusual activity: Volume >> Open Interest.
     """
     unusual = []
-    
+
     def _scan(df, opt_type):
         if df.empty or "volume" not in df or "openInterest" not in df:
             return
-            
+
         # Filter: meaningful volume, and volume > 2x open interest
         # Also require at least 500 contracts to filter noise
         candidates = df[
-            (df["volume"] >= 500) & 
-            (df["volume"] > df["openInterest"] * 2) &
-            (df["impliedVolatility"] > 0)
+            (df["volume"] >= 500)
+            & (df["volume"] > df["openInterest"] * 2)
+            & (df["impliedVolatility"] > 0)
         ].copy()
-        
+
         for _, row in candidates.iterrows():
             strike = float(row.get("strike", 0))
             vol = int(row.get("volume", 0))
             oi = int(row.get("openInterest", 0))
             exp = str(row.get("expiration", ""))
             last_price = float(row.get("lastPrice", 0))
-            
+
             # Premium paid estimate (assumes all volume was traded at last price)
             premium = round(vol * 100 * last_price, 2)
-            
+
             # Implied move needed to reach strike
             if current_price > 0:
                 implied_move = round(((strike - current_price) / current_price) * 100, 2)
@@ -263,31 +262,35 @@ def _detect_unusual_activity(
                 assessment = f"Bullish: Buying ITM {exp} calls"
             else:
                 assessment = f"Bearish/Hedge: Buying ITM {exp} puts"
-                
-            unusual.append({
-                "type": opt_type_upper,
-                "strike": strike,
-                "expiration": exp,
-                "volume": vol,
-                "open_interest": oi,
-                "vol_oi_ratio": round(vol / max(oi, 1), 1),
-                "est_premium_paid": premium,
-                "implied_move_pct": implied_move,
-                "assessment": assessment
-            })
+
+            unusual.append(
+                {
+                    "type": opt_type_upper,
+                    "strike": strike,
+                    "expiration": exp,
+                    "volume": vol,
+                    "open_interest": oi,
+                    "vol_oi_ratio": round(vol / max(oi, 1), 1),
+                    "est_premium_paid": premium,
+                    "implied_move_pct": implied_move,
+                    "assessment": assessment,
+                }
+            )
 
     _scan(calls, "call")
     _scan(puts, "put")
 
     # Sort largest premium first
     unusual.sort(key=lambda x: x["est_premium_paid"], reverse=True)
-    
+
     # Return top 5
     return unusual[:5]
 
 
 def _calculate_max_pain(
-    calls: pd.DataFrame, puts: pd.DataFrame, current_price: float,
+    calls: pd.DataFrame,
+    puts: pd.DataFrame,
+    current_price: float,
 ) -> Dict[str, Any]:
     """
     Calculate the max pain strike price for a single expiration.
@@ -295,38 +298,46 @@ def _calculate_max_pain(
     and options writers (sellers) keep the most premium.
     """
     if calls.empty or puts.empty or "openInterest" not in calls or "openInterest" not in puts:
-        return {"price": 0.0, "distance_from_current": 0.0, "interpretation": "Insufficient data"}
+        return {
+            "price": 0.0,
+            "distance_from_current": 0.0,
+            "interpretation": "Insufficient data",
+        }
 
     # Extract strike and OI
     call_oi = calls.groupby("strike")["openInterest"].sum().to_dict()
     put_oi = puts.groupby("strike")["openInterest"].sum().to_dict()
 
     all_strikes = sorted(set(list(call_oi.keys()) + list(put_oi.keys())))
-    
+
     if not all_strikes:
-        return {"price": 0.0, "distance_from_current": 0.0, "interpretation": "No open interest found"}
+        return {
+            "price": 0.0,
+            "distance_from_current": 0.0,
+            "interpretation": "No open interest found",
+        }
 
     losses_at_strike = {}
 
     # For every possible strike price (spot price at expiration)
     for test_price in all_strikes:
         loss = 0.0
-        
+
         # Call buyers lose if strike is BELOW test_price
         for strike, oi in call_oi.items():
             if test_price > strike:
                 loss += (test_price - strike) * oi * 100  # * 100 shares per contract
-                
+
         # Put buyers lose if strike is ABOVE test_price
         for strike, oi in put_oi.items():
             if test_price < strike:
                 loss += (strike - test_price) * oi * 100
-                
+
         losses_at_strike[test_price] = loss
 
     # Find strike with MINIMUM loss for option writers
     max_pain_price = min(losses_at_strike, key=losses_at_strike.get)
-    
+
     if current_price > 0:
         dist = round(((max_pain_price - current_price) / current_price) * 100, 2)
     else:
@@ -335,18 +346,20 @@ def _calculate_max_pain(
     return {
         "price": float(max_pain_price),
         "distance_from_current_pct": dist,
-        "interpretation": f"Options writers benefit most if price drifts to ${max_pain_price:.2f}"
+        "interpretation": f"Options writers benefit most if price drifts to ${max_pain_price:.2f}",
     }
 
 
 def _generate_options_signal(
-    sentiment: Dict[str, Any], volatility: Dict[str, Any], unusual: List[Dict[str, Any]],
+    sentiment: Dict[str, Any],
+    volatility: Dict[str, Any],
+    unusual: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """
     Generate an aggregate 0-100 options sentiment score.
     """
     score = 50  # Neutral
-    
+
     # Evaluate P/C ratio
     pcr = sentiment.get("put_call_ratio", 1.0)
     if pcr < 0.6:
@@ -357,26 +370,26 @@ def _generate_options_signal(
         score -= 15  # Very bearish
     elif pcr > 1.1:
         score -= 10
-        
+
     # Evaluate Skew
     skew = volatility.get("iv_skew", {}).get("skew_assessment", "Balanced")
     if "Put skew" in skew:
         score -= 5
     elif "Call skew" in skew:
         score += 5
-        
+
     # Evaluate Unusual Activity
     call_sweeps = sum(1 for u in unusual if u["type"] == "CALL" and "Bullish" in u["assessment"])
     put_sweeps = sum(1 for u in unusual if u["type"] == "PUT" and "Bearish" in u["assessment"])
-    
+
     if call_sweeps > put_sweeps:
         score += min((call_sweeps - put_sweeps) * 5, 20)
     elif put_sweeps > call_sweeps:
         score -= min((put_sweeps - call_sweeps) * 5, 20)
-        
+
     # Clamp
     score = max(0, min(100, score))
-    
+
     # Direction
     if score >= 70:
         direction = "Bullish"
@@ -393,12 +406,12 @@ def _generate_options_signal(
     else:
         direction = "Bearish"
         conf = "Moderate/High"
-        
+
     return {
         "score": score,
         "direction": direction,
         "confidence": conf,
-        "key_insight": f"{direction} signal based on Put/Call ratio of {pcr} and {len(unusual)} unusual trades."
+        "key_insight": f"{direction} signal based on Put/Call ratio of {pcr} and {len(unusual)} unusual trades.",
     }
 
 
@@ -409,9 +422,18 @@ def _empty_options_response(symbol: str, error: str) -> Dict[str, Any]:
         "current_price": 0.0,
         "options_sentiment": _calculate_sentiment(pd.DataFrame(), pd.DataFrame()),
         "implied_volatility": _calculate_volatility(pd.DataFrame(), pd.DataFrame()),
-        "max_pain": {"price": 0.0, "distance_from_current_pct": 0.0, "interpretation": error},
+        "max_pain": {
+            "price": 0.0,
+            "distance_from_current_pct": 0.0,
+            "interpretation": error,
+        },
         "unusual_activity": [],
-        "options_signal": {"score": 50, "direction": "Neutral", "confidence": "Low", "key_insight": "Data error"},
+        "options_signal": {
+            "score": 50,
+            "direction": "Neutral",
+            "confidence": "Low",
+            "key_insight": "Data error",
+        },
         "analyzed_at": datetime.now(timezone.utc).isoformat(),
         "execution_time_seconds": 0.0,
         "expirations_analyzed": [],

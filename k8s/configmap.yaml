@@ -13,21 +13,21 @@ data:
   LOG_LEVEL: "INFO"
   API_HOST: "0.0.0.0"
   API_PORT: "8000"
-  
+
   # LLM Configuration
   LLM_MODEL: "gpt-4-turbo-preview"
   LLM_TEMPERATURE: "0.1"
-  
+
   # Vector Store Configuration
   CHROMA_PERSIST_DIR: "/app/data/chroma"
-  
+
   # Database Configuration (non-sensitive)
   DATABASE_NAME: "financial_agent"
   DATABASE_PORT: "5432"
-  
+
   # Redis Configuration (non-sensitive)
   REDIS_PORT: "6379"
-  
+
   # Agent Configuration
   ORCHESTRATOR_MAX_ITERATIONS: "10"
   ORCHESTRATOR_TIMEOUT_SECONDS: "300"

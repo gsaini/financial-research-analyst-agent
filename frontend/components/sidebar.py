@@ -4,7 +4,8 @@ Branding and navigation moved to header.
 """
 
 import streamlit as st
-from utils.session import init_session_state, add_to_watchlist
+
+from utils.session import add_to_watchlist, init_session_state
 
 
 def render_sidebar():

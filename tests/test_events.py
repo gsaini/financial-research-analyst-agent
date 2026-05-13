@@ -11,13 +11,12 @@ Tests cover:
 - Orchestrator integration
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
-
+import pytest
 
 # ─────────────────────────────────────────────────────────────
 # Helpers
@@ -61,26 +60,20 @@ def _mock_ticker_factory(
         # dividends
         if dividend_data is not None:
             idx = pd.to_datetime([d["date"] for d in dividend_data])
-            m.dividends = pd.Series(
-                [d["amount"] for d in dividend_data], index=idx
-            )
+            m.dividends = pd.Series([d["amount"] for d in dividend_data], index=idx)
         else:
             m.dividends = pd.Series(dtype=float)
 
         # splits
         if split_data is not None:
             idx = pd.to_datetime([s["date"] for s in split_data])
-            m.splits = pd.Series(
-                [s["ratio"] for s in split_data], index=idx
-            )
+            m.splits = pd.Series([s["ratio"] for s in split_data], index=idx)
         else:
             m.splits = pd.Series(dtype=float)
 
         # history() for price data
         if prices is not None:
-            m.history.return_value = pd.DataFrame(
-                {"Close": prices.values}, index=prices.index
-            )
+            m.history.return_value = pd.DataFrame({"Close": prices.values}, index=prices.index)
         else:
             m.history.return_value = pd.DataFrame(
                 {"Close": _make_price_series(100, 110, 60).values},
@@ -107,11 +100,16 @@ class TestEventCalendar:
 
         mock_provider = MagicMock()
         mock_provider_func.return_value = mock_provider
-        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
-        df = pd.DataFrame([
+        mock_provider.get_info.return_value = {
+            "longName": "Mock AAPL",
+            "sector": "Technology",
+        }
+        df = pd.DataFrame(
+            [
                 {"date": "2025-10-30", "epsActual": 1.50, "epsEstimate": 1.40},
                 {"date": "2025-07-31", "epsActual": 1.30, "epsEstimate": 1.25},
-        ])
+            ]
+        )
         df.index = pd.to_datetime(df.pop("date"))
         mock_provider.get_earnings_history.return_value = df
         mock_provider.get_calendar.return_value = pd.DataFrame()
@@ -130,17 +128,20 @@ class TestEventCalendar:
 
         mock_provider = MagicMock()
         mock_provider_func.return_value = mock_provider
-        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
+        mock_provider.get_info.return_value = {
+            "longName": "Mock AAPL",
+            "sector": "Technology",
+        }
         mock_provider.get_earnings_history.return_value = pd.DataFrame()
         mock_provider.get_calendar.return_value = pd.DataFrame()
 
         dividend_data = [
-                {"date": "2025-08-07", "amount": 0.25},
-                {"date": "2025-11-06", "amount": 0.26},
+            {"date": "2025-08-07", "amount": 0.25},
+            {"date": "2025-11-06", "amount": 0.26},
         ]
         idx = pd.to_datetime([d["date"] for d in dividend_data])
         mock_provider.get_dividends.return_value = pd.Series(
-                [d["amount"] for d in dividend_data], index=idx
+            [d["amount"] for d in dividend_data], index=idx
         )
 
         result = get_event_calendar("AAPL")
@@ -155,7 +156,10 @@ class TestEventCalendar:
 
         mock_provider = MagicMock()
         mock_provider_func.return_value = mock_provider
-        mock_provider.get_info.return_value = {"longName": "Mock XYZ", "sector": "Technology"}
+        mock_provider.get_info.return_value = {
+            "longName": "Mock XYZ",
+            "sector": "Technology",
+        }
         mock_provider.get_earnings_history.return_value = pd.DataFrame()
         mock_provider.get_calendar.return_value = pd.DataFrame()
         mock_provider.get_dividends.return_value = pd.Series()
@@ -239,10 +243,42 @@ class TestPatternAggregation:
         from src.tools.event_analyzer import _aggregate_patterns
 
         windows = [
-            {"_returns_raw": {"pre_event": 1.5, "event_day": 3.0, "post_event_1d": -0.5, "post_event": -1.0, "full_window": 3.0}},
-            {"_returns_raw": {"pre_event": 2.0, "event_day": 1.5, "post_event_1d": 0.5, "post_event": 0.0, "full_window": 4.0}},
-            {"_returns_raw": {"pre_event": 1.0, "event_day": -1.0, "post_event_1d": -1.0, "post_event": -2.0, "full_window": -2.0}},
-            {"_returns_raw": {"pre_event": 2.5, "event_day": 2.0, "post_event_1d": 0.0, "post_event": -0.5, "full_window": 4.0}},
+            {
+                "_returns_raw": {
+                    "pre_event": 1.5,
+                    "event_day": 3.0,
+                    "post_event_1d": -0.5,
+                    "post_event": -1.0,
+                    "full_window": 3.0,
+                }
+            },
+            {
+                "_returns_raw": {
+                    "pre_event": 2.0,
+                    "event_day": 1.5,
+                    "post_event_1d": 0.5,
+                    "post_event": 0.0,
+                    "full_window": 4.0,
+                }
+            },
+            {
+                "_returns_raw": {
+                    "pre_event": 1.0,
+                    "event_day": -1.0,
+                    "post_event_1d": -1.0,
+                    "post_event": -2.0,
+                    "full_window": -2.0,
+                }
+            },
+            {
+                "_returns_raw": {
+                    "pre_event": 2.5,
+                    "event_day": 2.0,
+                    "post_event_1d": 0.0,
+                    "post_event": -0.5,
+                    "full_window": 4.0,
+                }
+            },
         ]
 
         result = _aggregate_patterns(windows)
@@ -267,7 +303,15 @@ class TestPatternAggregation:
         from src.tools.event_analyzer import _aggregate_patterns
 
         windows = [
-            {"_returns_raw": {"pre_event": r, "event_day": 1.0, "post_event_1d": 0.0, "post_event": 0.0, "full_window": 0.0}}
+            {
+                "_returns_raw": {
+                    "pre_event": r,
+                    "event_day": 1.0,
+                    "post_event_1d": 0.0,
+                    "post_event": 0.0,
+                    "full_window": 0.0,
+                }
+            }
             for r in [1.0, 2.0, 1.5, 3.0]
         ]
 
@@ -340,18 +384,23 @@ class TestAnalyzeEvents:
 
         mock_provider = MagicMock()
         mock_provider_func.return_value = mock_provider
-        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
-        df = pd.DataFrame([
+        mock_provider.get_info.return_value = {
+            "longName": "Mock AAPL",
+            "sector": "Technology",
+        }
+        df = pd.DataFrame(
+            [
                 {"date": "2025-10-30", "epsActual": 1.50, "epsEstimate": 1.40},
                 {"date": "2025-07-31", "epsActual": 1.30, "epsEstimate": 1.25},
                 {"date": "2025-04-30", "epsActual": 1.20, "epsEstimate": 1.15},
-        ])
+            ]
+        )
         df.index = pd.to_datetime(df.pop("date"))
         mock_provider.get_earnings_history.return_value = df
         mock_provider.get_calendar.return_value = pd.DataFrame()
         mock_provider.get_dividends.return_value = pd.Series()
         mock_provider.get_history.return_value = pd.DataFrame(
-                {"Close": prices.values}, index=prices.index
+            {"Close": prices.values}, index=prices.index
         )
 
         result = analyze_events("AAPL")
@@ -371,7 +420,10 @@ class TestAnalyzeEvents:
 
         mock_provider = MagicMock()
         mock_provider_func.return_value = mock_provider
-        mock_provider.get_info.return_value = {"longName": "Mock XYZ", "sector": "Technology"}
+        mock_provider.get_info.return_value = {
+            "longName": "Mock XYZ",
+            "sector": "Technology",
+        }
         mock_provider.get_earnings_history.return_value = pd.DataFrame()
 
         result = analyze_events("XYZ", event_type="earnings")
@@ -386,7 +438,10 @@ class TestAnalyzeEvents:
 
         mock_provider = MagicMock()
         mock_provider_func.return_value = mock_provider
-        mock_provider.get_info.return_value = {"longName": "Mock AAPL", "sector": "Technology"}
+        mock_provider.get_info.return_value = {
+            "longName": "Mock AAPL",
+            "sector": "Technology",
+        }
 
         result = analyze_events("AAPL", event_type="unknown")
 
@@ -411,8 +466,14 @@ class TestEventSchemas:
             event_type="earnings",
             events_analyzed=4,
             events=[{"date": "2025-10-30", "returns": {"event_day": "3.5%"}}],
-            historical_patterns={"average_event_day_move": "2.5%", "consistency": "High"},
-            correlation_with_surprise={"correlation": 0.72, "insight": "Strong positive"},
+            historical_patterns={
+                "average_event_day_move": "2.5%",
+                "consistency": "High",
+            },
+            correlation_with_surprise={
+                "correlation": 0.72,
+                "insight": "Strong positive",
+            },
         )
 
         assert resp.symbol == "AAPL"

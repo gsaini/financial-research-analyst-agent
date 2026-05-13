@@ -2,23 +2,39 @@
 Portfolio Analysis - Multi-stock portfolio with correlation and sector insights.
 """
 
-import streamlit as st
-import pandas as pd
 import numpy as np
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_currency, format_percent, format_large_number
-from utils.data_service import (
-    get_stock_price, get_historical_data, get_company_info, get_technical_analysis,
-    optimize_portfolio, get_efficient_frontier, get_correlation_analysis,
-    get_portfolio_benchmark, get_rebalance_suggestions,
-)
-from components.header import render_header
-from components.plotly_charts import create_donut_chart, create_heatmap, create_gauge_chart
+import pandas as pd
+import streamlit as st
 from components.charts import render_area_chart
+from components.header import render_header
+from components.plotly_charts import (
+    create_donut_chart,
+    create_gauge_chart,
+    create_heatmap,
+)
+
+from utils.data_service import (
+    get_company_info,
+    get_correlation_analysis,
+    get_efficient_frontier,
+    get_historical_data,
+    get_portfolio_benchmark,
+    get_rebalance_suggestions,
+    get_stock_price,
+    get_technical_analysis,
+    optimize_portfolio,
+)
+from utils.formatters import format_currency, format_large_number, format_percent
+from utils.session import init_session_state
+from utils.theme import inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Portfolio | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Portfolio | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -29,7 +45,8 @@ st.caption("Analyze multi-stock portfolios with correlation insights")
 # ─── Portfolio Builder ───────────────────────────────────────
 symbols_input = st.text_input(
     "Portfolio Symbols (comma-separated)",
-    value=", ".join(st.session_state.get("portfolio_symbols", [])) or "AAPL, MSFT, GOOGL, AMZN, NVDA",
+    value=", ".join(st.session_state.get("portfolio_symbols", []))
+    or "AAPL, MSFT, GOOGL, AMZN, NVDA",
     placeholder="e.g. AAPL, MSFT, GOOGL, AMZN, NVDA",
     key="portfolio_input",
 )
@@ -70,10 +87,7 @@ if analyze or symbols:
     st.markdown("---")
     st.markdown("### Portfolio Overview")
 
-    total_mcap = sum(
-        stock_data[s].get("market_cap", 0) or 0
-        for s in valid_symbols
-    )
+    total_mcap = sum(stock_data[s].get("market_cap", 0) or 0 for s in valid_symbols)
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Stocks", len(valid_symbols))
@@ -87,15 +101,17 @@ if analyze or symbols:
     for sym in valid_symbols:
         sd = stock_data[sym]
         cd = company_data.get(sym, {})
-        rows.append({
-            "Symbol": sym,
-            "Name": cd.get("name", sym),
-            "Price": format_currency(sd.get("current_price")),
-            "Change %": format_percent(sd.get("change_percent", 0)),
-            "Market Cap": format_large_number(sd.get("market_cap")),
-            "P/E": f"{sd.get('pe_ratio', 0):.1f}" if sd.get("pe_ratio") else "--",
-            "Sector": cd.get("sector", "--"),
-        })
+        rows.append(
+            {
+                "Symbol": sym,
+                "Name": cd.get("name", sym),
+                "Price": format_currency(sd.get("current_price")),
+                "Change %": format_percent(sd.get("change_percent", 0)),
+                "Market Cap": format_large_number(sd.get("market_cap")),
+                "P/E": f"{sd.get('pe_ratio', 0):.1f}" if sd.get("pe_ratio") else "--",
+                "Sector": cd.get("sector", "--"),
+            }
+        )
 
     df = pd.DataFrame(rows)
     st.dataframe(df, use_container_width=True, hide_index=True)
@@ -123,7 +139,12 @@ if analyze or symbols:
 
     with c2:
         st.markdown("### Market Cap Distribution")
-        cap_buckets = {"Mega (>$200B)": 0, "Large ($10-200B)": 0, "Mid ($2-10B)": 0, "Small (<$2B)": 0}
+        cap_buckets = {
+            "Mega (>$200B)": 0,
+            "Large ($10-200B)": 0,
+            "Mid ($2-10B)": 0,
+            "Small (<$2B)": 0,
+        }
         for sym in valid_symbols:
             mcap = stock_data[sym].get("market_cap", 0) or 0
             if mcap >= 200e9:
@@ -165,7 +186,11 @@ if analyze or symbols:
             rsi_signal = "Neutral"
             if "error" not in tech:
                 rsi = tech.get("rsi", {})
-                rsi_val = f"{rsi.get('value', 0):.0f}" if isinstance(rsi.get("value"), (int, float)) else "--"
+                rsi_val = (
+                    f"{rsi.get('value', 0):.0f}"
+                    if isinstance(rsi.get("value"), (int, float))
+                    else "--"
+                )
                 rsi_signal = rsi.get("signal", "NEUTRAL")
 
             st.markdown(
@@ -204,7 +229,7 @@ if analyze or symbols:
 
     if len(all_returns) >= 2 and min_len > 10:
         # Align to same length
-        aligned = {sym: ret[:int(min_len)] for sym, ret in all_returns.items()}
+        aligned = {sym: ret[: int(min_len)] for sym, ret in all_returns.items()}
         syms_list = list(aligned.keys())
         returns_matrix = np.array([aligned[s] for s in syms_list])
 
@@ -224,11 +249,15 @@ if analyze or symbols:
         st.caption(f"Average pairwise correlation: **{avg_corr:.3f}**")
 
         if avg_corr < 0.3:
-            st.success("Good diversification - low average correlation between portfolio components.")
+            st.success(
+                "Good diversification - low average correlation between portfolio components."
+            )
         elif avg_corr < 0.6:
             st.info("Moderate diversification - some correlation between portfolio components.")
         else:
-            st.warning("High correlation between portfolio components - consider diversifying further.")
+            st.warning(
+                "High correlation between portfolio components - consider diversifying further."
+            )
     else:
         st.caption("Insufficient return data to calculate correlation matrix.")
 
@@ -238,7 +267,9 @@ if analyze or symbols:
 
     if len(all_returns) >= 2 and min_len > 10:
         # Equal-weighted portfolio returns
-        aligned_arr = np.array([all_returns[s][:int(min_len)] for s in valid_symbols if s in all_returns])
+        aligned_arr = np.array(
+            [all_returns[s][: int(min_len)] for s in valid_symbols if s in all_returns]
+        )
         portfolio_returns = np.mean(aligned_arr, axis=0)
 
         port_vol_daily = np.std(portfolio_returns)
@@ -296,12 +327,14 @@ if analyze or symbols:
                     eq_w = round(100 / len(valid_symbols), 1)
                     opt_w = data.get("weight_pct", 0)
                     change = round(opt_w - eq_w, 1)
-                    alloc_rows.append({
-                        "Symbol": sym,
-                        "Current (%)": eq_w,
-                        "Optimal (%)": opt_w,
-                        "Change": f"{change:+.1f}%",
-                    })
+                    alloc_rows.append(
+                        {
+                            "Symbol": sym,
+                            "Current (%)": eq_w,
+                            "Optimal (%)": opt_w,
+                            "Change": f"{change:+.1f}%",
+                        }
+                    )
                 st.dataframe(pd.DataFrame(alloc_rows), use_container_width=True, hide_index=True)
 
             with ocol2:
@@ -318,17 +351,21 @@ if analyze or symbols:
 
             if "error" not in frontier and frontier.get("frontier"):
                 f_data = frontier["frontier"]
-                f_df = pd.DataFrame([
-                    {"Risk (%)": p["volatility_pct"], "Return (%)": p["return_pct"]}
-                    for p in f_data
-                ])
+                f_df = pd.DataFrame(
+                    [
+                        {"Risk (%)": p["volatility_pct"], "Return (%)": p["return_pct"]}
+                        for p in f_data
+                    ]
+                )
                 st.scatter_chart(f_df, x="Risk (%)", y="Return (%)", color=None)
 
                 # Mark special portfolios
                 for p in f_data:
                     label = p.get("label")
                     if label:
-                        st.caption(f"**{label}**: Return {p['return_pct']}%, Risk {p['volatility_pct']}%, Sharpe {p['sharpe']:.3f}")
+                        st.caption(
+                            f"**{label}**: Return {p['return_pct']}%, Risk {p['volatility_pct']}%, Sharpe {p['sharpe']:.3f}"
+                        )
 
             # Correlation insights
             st.markdown("---")

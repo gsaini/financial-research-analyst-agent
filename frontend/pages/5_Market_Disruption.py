@@ -2,19 +2,29 @@
 Market Disruption Analysis - Disruption scoring, classification, and comparison.
 """
 
-import streamlit as st
 import pandas as pd
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_currency, format_large_number, format_number
-from utils.data_service import analyze_disruption, compare_disruption
-from components.header import render_header
-from components.plotly_charts import create_gauge_chart, create_horizontal_bar, create_grouped_bar
-from components.metrics_cards import render_score_badge, render_strength_weakness
+import streamlit as st
 from components.data_tables import render_styled_dataframe
+from components.header import render_header
+from components.metrics_cards import render_score_badge, render_strength_weakness
+from components.plotly_charts import (
+    create_gauge_chart,
+    create_grouped_bar,
+    create_horizontal_bar,
+)
+
+from utils.data_service import analyze_disruption, compare_disruption
+from utils.formatters import format_currency, format_large_number, format_number
+from utils.session import init_session_state
+from utils.theme import inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Market Disruption | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Market Disruption | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -23,18 +33,24 @@ st.markdown("## Market Disruption Analysis")
 st.caption("Evaluate a company's innovation and disruption potential")
 
 # ─── Mode Toggle ─────────────────────────────────────────────
-mode = st.radio("Mode", ["Single Company", "Compare Companies"], horizontal=True, label_visibility="collapsed")
+mode = st.radio(
+    "Mode", ["Single Company", "Compare Companies"], horizontal=True, label_visibility="collapsed"
+)
 
 if mode == "Single Company":
     # ─── Single Analysis ─────────────────────────────────────
     c1, c2 = st.columns([2, 1])
     with c1:
-        symbol = st.text_input(
-            "Stock Symbol",
-            value=st.session_state.get("selected_symbol", "NVDA"),
-            placeholder="e.g. NVDA",
-            key="disruption_symbol",
-        ).upper().strip()
+        symbol = (
+            st.text_input(
+                "Stock Symbol",
+                value=st.session_state.get("selected_symbol", "NVDA"),
+                placeholder="e.g. NVDA",
+                key="disruption_symbol",
+            )
+            .upper()
+            .strip()
+        )
     with c2:
         st.markdown("<br>", unsafe_allow_html=True)
         analyze = st.button("Analyze Disruption", use_container_width=True)
@@ -114,13 +130,17 @@ if mode == "Single Company":
         with c2:
             growth_score = components_data.get("growth_score", 0)
             weight = weights.get("revenue_acceleration", 0.40)
-            fig = create_gauge_chart(growth_score, f"Revenue Growth ({weight*100:.0f}%)", height=200)
+            fig = create_gauge_chart(
+                growth_score, f"Revenue Growth ({weight*100:.0f}%)", height=200
+            )
             st.plotly_chart(fig, use_container_width=True)
 
         with c3:
             margin_score = components_data.get("margin_score", 0)
             weight = weights.get("margin_trajectory", 0.25)
-            fig = create_gauge_chart(margin_score, f"Margin Trajectory ({weight*100:.0f}%)", height=200)
+            fig = create_gauge_chart(
+                margin_score, f"Margin Trajectory ({weight*100:.0f}%)", height=200
+            )
             st.plotly_chart(fig, use_container_width=True)
 
         # ─── Quantitative Signals ────────────────────────────
@@ -235,8 +255,16 @@ else:
         if comparison:
             # Comparison table
             df = pd.DataFrame(comparison)
-            column_order = ["symbol", "name", "industry", "disruption_score", "classification",
-                           "rd_intensity", "revenue_growth", "margin_trend"]
+            column_order = [
+                "symbol",
+                "name",
+                "industry",
+                "disruption_score",
+                "classification",
+                "rd_intensity",
+                "revenue_growth",
+                "margin_trend",
+            ]
             existing_cols = [c for c in column_order if c in df.columns]
             df = df[existing_cols]
             df = df.sort_values("disruption_score", ascending=False)
@@ -263,7 +291,8 @@ else:
                         colors.append("#ef4444")
 
                 fig = create_horizontal_bar(
-                    list(labels), list(scores),
+                    list(labels),
+                    list(scores),
                     title="Disruption Score Ranking",
                     colors=list(colors),
                 )

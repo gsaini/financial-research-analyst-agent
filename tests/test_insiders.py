@@ -12,28 +12,27 @@ Tests cover:
 - Orchestrator integration
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
 from src.tools.insider_activity import (
-    get_insider_activity,
-    get_institutional_holdings,
-    analyze_smart_money,
     _classify_transaction,
     _compute_net_activity,
-    _detect_cluster_buying,
     _compute_smart_money_score,
+    _detect_cluster_buying,
+    _empty_net,
     _extract_insider_ownership,
     _extract_institutional_ownership,
     _parse_transactions,
     _to_float,
-    _empty_net,
+    analyze_smart_money,
+    get_insider_activity,
+    get_institutional_holdings,
 )
-
 
 # ─────────────────────────────────────────────────────────────
 # Helpers: synthetic data
@@ -50,55 +49,87 @@ def _recent_date(days_ago: int = 5) -> str:
 
 
 def _sample_insider_buys():
-    return _make_insider_txn_df([
-        {
-            "Insider": "John Smith",
-            "Position": "CEO",
-            "Transaction": "Purchase",
-            "Start Date": _recent_date(5),
-            "Shares": 50000,
-            "Value": 7250000,
-        },
-        {
-            "Insider": "Jane Doe",
-            "Position": "CFO",
-            "Transaction": "Purchase",
-            "Start Date": _recent_date(8),
-            "Shares": 10000,
-            "Value": 1465000,
-        },
-        {
-            "Insider": "Bob Lee",
-            "Position": "Director",
-            "Transaction": "Sale",
-            "Start Date": _recent_date(10),
-            "Shares": -5000,
-            "Value": 740000,
-        },
-    ])
+    return _make_insider_txn_df(
+        [
+            {
+                "Insider": "John Smith",
+                "Position": "CEO",
+                "Transaction": "Purchase",
+                "Start Date": _recent_date(5),
+                "Shares": 50000,
+                "Value": 7250000,
+            },
+            {
+                "Insider": "Jane Doe",
+                "Position": "CFO",
+                "Transaction": "Purchase",
+                "Start Date": _recent_date(8),
+                "Shares": 10000,
+                "Value": 1465000,
+            },
+            {
+                "Insider": "Bob Lee",
+                "Position": "Director",
+                "Transaction": "Sale",
+                "Start Date": _recent_date(10),
+                "Shares": -5000,
+                "Value": 740000,
+            },
+        ]
+    )
 
 
 def _sample_major_holders():
-    return pd.DataFrame([
-        ["0.07%", "% of Shares Held by All Insider"],
-        ["60.50%", "% of Shares Held by Institutions"],
-        ["72.30%", "% of Float Held by Institutions"],
-        ["5423", "Number of Institutions Holding Shares"],
-    ])
+    return pd.DataFrame(
+        [
+            ["0.07%", "% of Shares Held by All Insider"],
+            ["60.50%", "% of Shares Held by Institutions"],
+            ["72.30%", "% of Float Held by Institutions"],
+            ["5423", "Number of Institutions Holding Shares"],
+        ]
+    )
 
 
 def _sample_institutional_holders():
-    return pd.DataFrame([
-        {"Holder": "Vanguard Group", "Shares": 1280000000, "% Out": 0.078, "Value": 2.5e11, "Date Reported": "2026-01-15"},
-        {"Holder": "BlackRock", "Shares": 1050000000, "% Out": 0.064, "Value": 2.0e11, "Date Reported": "2026-01-15"},
-        {"Holder": "Berkshire Hathaway", "Shares": 915000000, "% Out": 0.056, "Value": 1.7e11, "Date Reported": "2026-01-15"},
-    ])
+    return pd.DataFrame(
+        [
+            {
+                "Holder": "Vanguard Group",
+                "Shares": 1280000000,
+                "% Out": 0.078,
+                "Value": 2.5e11,
+                "Date Reported": "2026-01-15",
+            },
+            {
+                "Holder": "BlackRock",
+                "Shares": 1050000000,
+                "% Out": 0.064,
+                "Value": 2.0e11,
+                "Date Reported": "2026-01-15",
+            },
+            {
+                "Holder": "Berkshire Hathaway",
+                "Shares": 915000000,
+                "% Out": 0.056,
+                "Value": 1.7e11,
+                "Date Reported": "2026-01-15",
+            },
+        ]
+    )
 
 
 def _sample_mf_holders():
-    return pd.DataFrame([
-        {"Holder": "Vanguard Total Stock Market", "Shares": 400000000, "% Out": 0.024, "Value": 7.5e10, "Date Reported": "2026-01-15"},
-    ])
+    return pd.DataFrame(
+        [
+            {
+                "Holder": "Vanguard Total Stock Market",
+                "Shares": 400000000,
+                "% Out": 0.024,
+                "Value": 7.5e10,
+                "Date Reported": "2026-01-15",
+            },
+        ]
+    )
 
 
 # ─────────────────────────────────────────────────────────────
@@ -191,10 +222,20 @@ class TestClusterBuying:
 
     def test_cluster_detected(self):
         txns = [
-            {"transaction_type": "Buy", "shares": 50000, "value": 7250000,
-             "name": "John Smith", "date": _recent_date(5)},
-            {"transaction_type": "Buy", "shares": 10000, "value": 1465000,
-             "name": "Jane Doe", "date": _recent_date(8)},
+            {
+                "transaction_type": "Buy",
+                "shares": 50000,
+                "value": 7250000,
+                "name": "John Smith",
+                "date": _recent_date(5),
+            },
+            {
+                "transaction_type": "Buy",
+                "shares": 10000,
+                "value": 1465000,
+                "name": "Jane Doe",
+                "date": _recent_date(8),
+            },
         ]
         result = _detect_cluster_buying(txns, window_days=14, min_buyers=2)
         assert result["detected"] is True
@@ -203,16 +244,26 @@ class TestClusterBuying:
 
     def test_no_cluster_single_buyer(self):
         txns = [
-            {"transaction_type": "Buy", "shares": 50000, "value": 7250000,
-             "name": "John Smith", "date": _recent_date(5)},
+            {
+                "transaction_type": "Buy",
+                "shares": 50000,
+                "value": 7250000,
+                "name": "John Smith",
+                "date": _recent_date(5),
+            },
         ]
         result = _detect_cluster_buying(txns, min_buyers=2)
         assert result["detected"] is False
 
     def test_no_cluster_no_buys(self):
         txns = [
-            {"transaction_type": "Sale", "shares": 5000, "value": 740000,
-             "name": "Bob Lee", "date": _recent_date(10)},
+            {
+                "transaction_type": "Sale",
+                "shares": 5000,
+                "value": 740000,
+                "name": "Bob Lee",
+                "date": _recent_date(10),
+            },
         ]
         result = _detect_cluster_buying(txns, min_buyers=2)
         assert result["detected"] is False
@@ -280,7 +331,11 @@ class TestSmartMoneyScore:
     def test_score_clamped(self):
         """Score should never exceed 0-100 range."""
         insider = {
-            "net_activity": {"total_buys": 20, "total_sales": 0, "net_value": 100000000},
+            "net_activity": {
+                "total_buys": 20,
+                "total_sales": 0,
+                "net_value": 100000000,
+            },
             "cluster_buying": {"detected": True},
         }
         institutional = {"institutional_ownership_pct": 90}
@@ -301,10 +356,17 @@ class TestParseTransactions:
         assert len(txns) == 3
 
     def test_filters_old_transactions(self):
-        df = _make_insider_txn_df([
-            {"Insider": "Old Timer", "Transaction": "Purchase",
-             "Start Date": "2020-01-01", "Shares": 100, "Value": 10000},
-        ])
+        df = _make_insider_txn_df(
+            [
+                {
+                    "Insider": "Old Timer",
+                    "Transaction": "Purchase",
+                    "Start Date": "2020-01-01",
+                    "Shares": 100,
+                    "Value": 10000,
+                },
+            ]
+        )
         txns = _parse_transactions(df, days=90)
         assert len(txns) == 0
 

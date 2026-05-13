@@ -29,26 +29,120 @@ _REQUEST_TIMEOUT = 10
 
 # Common words that look like tickers but aren't
 _TICKER_BLACKLIST = {
-    "I", "A", "AM", "PM", "DD", "CEO", "CFO", "COO", "CTO", "IPO", "ETF",
-    "SEC", "FDA", "GDP", "CPI", "IMF", "FED", "API", "AI", "ML", "USA",
-    "UK", "EU", "NYSE", "THE", "FOR", "AND", "NOT", "ARE", "HAS", "HAD",
-    "WAS", "ALL", "CAN", "HER", "HIS", "NEW", "OLD", "OUR", "OUT", "OWN",
-    "SAY", "SHE", "TOO", "USE", "WAY", "WHO", "BOY", "DID", "GET", "HIM",
-    "HOW", "MAN", "ITS", "LET", "MAY", "SAY", "TRY", "ASK", "BIG", "EOD",
-    "ATH", "ATL", "EPS", "PE", "PB", "PS", "ROE", "ROA", "EV", "EBITDA",
-    "YOLO", "HODL", "FOMO", "FUD", "IMO", "TLDR", "LOL", "OMG", "WTF",
-    "RIP", "TIL", "PSA", "EDIT", "LMAO", "PUMP", "DUMP", "BEAR", "BULL",
-    "CALL", "PUT", "LONG", "SHORT", "BUY", "SELL", "HOLD", "OPEN", "HIGH",
-    "LOW", "CLOSE", "GAIN", "LOSS", "MOON", "DIP", "RUN", "RED", "GREEN",
+    "I",
+    "A",
+    "AM",
+    "PM",
+    "DD",
+    "CEO",
+    "CFO",
+    "COO",
+    "CTO",
+    "IPO",
+    "ETF",
+    "SEC",
+    "FDA",
+    "GDP",
+    "CPI",
+    "IMF",
+    "FED",
+    "API",
+    "AI",
+    "ML",
+    "USA",
+    "UK",
+    "EU",
+    "NYSE",
+    "THE",
+    "FOR",
+    "AND",
+    "NOT",
+    "ARE",
+    "HAS",
+    "HAD",
+    "WAS",
+    "ALL",
+    "CAN",
+    "HER",
+    "HIS",
+    "NEW",
+    "OLD",
+    "OUR",
+    "OUT",
+    "OWN",
+    "SAY",
+    "SHE",
+    "TOO",
+    "USE",
+    "WAY",
+    "WHO",
+    "BOY",
+    "DID",
+    "GET",
+    "HIM",
+    "HOW",
+    "MAN",
+    "ITS",
+    "LET",
+    "MAY",
+    "SAY",
+    "TRY",
+    "ASK",
+    "BIG",
+    "EOD",
+    "ATH",
+    "ATL",
+    "EPS",
+    "PE",
+    "PB",
+    "PS",
+    "ROE",
+    "ROA",
+    "EV",
+    "EBITDA",
+    "YOLO",
+    "HODL",
+    "FOMO",
+    "FUD",
+    "IMO",
+    "TLDR",
+    "LOL",
+    "OMG",
+    "WTF",
+    "RIP",
+    "TIL",
+    "PSA",
+    "EDIT",
+    "LMAO",
+    "PUMP",
+    "DUMP",
+    "BEAR",
+    "BULL",
+    "CALL",
+    "PUT",
+    "LONG",
+    "SHORT",
+    "BUY",
+    "SELL",
+    "HOLD",
+    "OPEN",
+    "HIGH",
+    "LOW",
+    "CLOSE",
+    "GAIN",
+    "LOSS",
+    "MOON",
+    "DIP",
+    "RUN",
+    "RED",
+    "GREEN",
 }
 
 
 # ── Reddit Public JSON API ──────────────────────────────────
 
 
-def _reddit_search(
-    subreddit: str, query: str, limit: int = 25
-) -> List[Dict[str, Any]]:
+def _reddit_search(subreddit: str, query: str, limit: int = 25) -> List[Dict[str, Any]]:
     """Search a subreddit using public JSON API."""
     try:
         url = f"https://www.reddit.com/r/{subreddit}/search.json"
@@ -67,15 +161,17 @@ def _reddit_search(
         posts = []
         for child in data.get("data", {}).get("children", []):
             post = child.get("data", {})
-            posts.append({
-                "title": post.get("title", ""),
-                "score": post.get("score", 0),
-                "num_comments": post.get("num_comments", 0),
-                "created_utc": post.get("created_utc", 0),
-                "subreddit": subreddit,
-                "upvote_ratio": post.get("upvote_ratio", 0.5),
-                "selftext": (post.get("selftext", "") or "")[:200],
-            })
+            posts.append(
+                {
+                    "title": post.get("title", ""),
+                    "score": post.get("score", 0),
+                    "num_comments": post.get("num_comments", 0),
+                    "created_utc": post.get("created_utc", 0),
+                    "subreddit": subreddit,
+                    "upvote_ratio": post.get("upvote_ratio", 0.5),
+                    "selftext": (post.get("selftext", "") or "")[:200],
+                }
+            )
         return posts
 
     except Exception as e:
@@ -96,13 +192,15 @@ def _reddit_hot(subreddit: str, limit: int = 50) -> List[Dict[str, Any]]:
         posts = []
         for child in data.get("data", {}).get("children", []):
             post = child.get("data", {})
-            posts.append({
-                "title": post.get("title", ""),
-                "score": post.get("score", 0),
-                "num_comments": post.get("num_comments", 0),
-                "created_utc": post.get("created_utc", 0),
-                "selftext": (post.get("selftext", "") or "")[:200],
-            })
+            posts.append(
+                {
+                    "title": post.get("title", ""),
+                    "score": post.get("score", 0),
+                    "num_comments": post.get("num_comments", 0),
+                    "created_utc": post.get("created_utc", 0),
+                    "selftext": (post.get("selftext", "") or "")[:200],
+                }
+            )
         return posts
 
     except Exception as e:
@@ -169,7 +267,11 @@ def get_reddit_sentiment(
                 p["sentiment"] = round(s, 3)
             all_posts.extend(posts)
         else:
-            sub_breakdown[sub] = {"post_count": 0, "avg_sentiment": 0, "sentiment_label": "neutral"}
+            sub_breakdown[sub] = {
+                "post_count": 0,
+                "avg_sentiment": 0,
+                "sentiment_label": "neutral",
+            }
         # Rate limit courtesy
         time.sleep(1)
 
@@ -234,7 +336,7 @@ def get_trending_tickers(subreddit: str = "wallstreetbets") -> Dict[str, Any]:
     # Extract tickers from titles
     ticker_counts: Dict[str, int] = {}
     # Match $TICKER or standalone 2-5 uppercase words
-    pattern = re.compile(r'\$([A-Z]{1,5})\b|(?<!\w)([A-Z]{2,5})(?!\w)')
+    pattern = re.compile(r"\$([A-Z]{1,5})\b|(?<!\w)([A-Z]{2,5})(?!\w)")
 
     for post in posts:
         text = post["title"]
@@ -254,10 +356,7 @@ def get_trending_tickers(subreddit: str = "wallstreetbets") -> Dict[str, Any]:
         "subreddit": subreddit,
         "source": "reddit",
         "posts_scanned": len(posts),
-        "tickers": [
-            {"symbol": t, "mentions": c}
-            for t, c in sorted_tickers[:20]
-        ],
+        "tickers": [{"symbol": t, "mentions": c} for t, c in sorted_tickers[:20]],
         "analyzed_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -284,12 +383,16 @@ def get_social_sentiment_composite(symbol: str) -> Dict[str, Any]:
     news_available = False
     try:
         from src.tools.news_fetcher import fetch_company_news
+
         articles = fetch_company_news(symbol)
         if articles:
             # Filter out sample data
             real_articles = [a for a in articles if not a.get("_is_sample")]
             if real_articles:
-                news_sentiments = [_score_text(f"{a.get('title', '')} {a.get('description', '')}") for a in real_articles]
+                news_sentiments = [
+                    _score_text(f"{a.get('title', '')} {a.get('description', '')}")
+                    for a in real_articles
+                ]
                 news_score = sum(news_sentiments) / len(news_sentiments)
                 news_available = True
     except Exception as e:

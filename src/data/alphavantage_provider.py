@@ -32,9 +32,16 @@ AV_BASE = "https://www.alphavantage.co/query"
 # ── Period string → calendar days lookup ────────────────────────────────────
 
 _PERIOD_DAYS: Dict[str, int] = {
-    "1d": 1, "5d": 5, "1mo": 30, "3mo": 90,
-    "6mo": 180, "1y": 365, "2y": 730, "5y": 1825,
-    "10y": 3650, "max": 7300,
+    "1d": 1,
+    "5d": 5,
+    "1mo": 30,
+    "3mo": 90,
+    "6mo": 180,
+    "1y": 365,
+    "2y": 730,
+    "5y": 1825,
+    "10y": 3650,
+    "max": 7300,
 }
 
 
@@ -155,7 +162,9 @@ class AlphaVantageProvider(MarketDataProvider):
             "returnOnEquity": self._safe_float(data.get("ReturnOnEquityTTM")),
             "debtToEquity": 0,  # Not directly in OVERVIEW
             "totalRevenue": self._safe_float(data.get("RevenueTTM")),
-            "netIncomeToCommon": self._safe_float(data.get("NetIncomeTTM")),  # AV sometimes has this
+            "netIncomeToCommon": self._safe_float(
+                data.get("NetIncomeTTM")
+            ),  # AV sometimes has this
             "freeCashflow": 0,  # Not in OVERVIEW; available via CASH_FLOW
             "sharesOutstanding": shares,
             "exchange": data.get("Exchange", ""),
@@ -211,14 +220,16 @@ class AlphaVantageProvider(MarketDataProvider):
             dt = pd.to_datetime(date_str)
             if dt < pd.Timestamp(cutoff):
                 continue
-            rows.append({
-                "Date": dt,
-                "Open": self._safe_float(ohlcv.get("1. open")),
-                "High": self._safe_float(ohlcv.get("2. high")),
-                "Low": self._safe_float(ohlcv.get("3. low")),
-                "Close": self._safe_float(ohlcv.get("4. close")),
-                "Volume": self._safe_float(ohlcv.get("5. volume")),
-            })
+            rows.append(
+                {
+                    "Date": dt,
+                    "Open": self._safe_float(ohlcv.get("1. open")),
+                    "High": self._safe_float(ohlcv.get("2. high")),
+                    "Low": self._safe_float(ohlcv.get("3. low")),
+                    "Close": self._safe_float(ohlcv.get("4. close")),
+                    "Volume": self._safe_float(ohlcv.get("5. volume")),
+                }
+            )
 
         if not rows:
             return self._empty_df()
@@ -326,8 +337,7 @@ class AlphaVantageProvider(MarketDataProvider):
         Returns ``None`` to signal that the data is unavailable.
         """
         logger.debug(
-            f"AlphaVantageProvider.get_calendar({symbol}): "
-            "not supported by Alpha Vantage API"
+            f"AlphaVantageProvider.get_calendar({symbol}): " "not supported by Alpha Vantage API"
         )
         return None
 
@@ -359,49 +369,33 @@ class AlphaVantageProvider(MarketDataProvider):
     # ── Category 6: Options (not supported) ─────────────────────────────────
 
     def get_options_expirations(self, symbol: str) -> List[str]:
-        logger.debug(
-            "AlphaVantageProvider: options data not available via Alpha Vantage"
-        )
+        logger.debug("AlphaVantageProvider: options data not available via Alpha Vantage")
         return []
 
-    def get_options_chain(
-        self, symbol: str, expiration: str
-    ) -> Dict[str, pd.DataFrame]:
-        logger.debug(
-            "AlphaVantageProvider: options chain not available via Alpha Vantage"
-        )
+    def get_options_chain(self, symbol: str, expiration: str) -> Dict[str, pd.DataFrame]:
+        logger.debug("AlphaVantageProvider: options chain not available via Alpha Vantage")
         return {"calls": self._empty_df(), "puts": self._empty_df()}
 
     # ── Category 7: Holders & Insider Data (not supported) ──────────────────
 
     def get_insider_transactions(self, symbol: str) -> pd.DataFrame:
-        logger.debug(
-            "AlphaVantageProvider: insider transactions not available via Alpha Vantage"
-        )
+        logger.debug("AlphaVantageProvider: insider transactions not available via Alpha Vantage")
         return self._empty_df()
 
     def get_insider_purchases(self, symbol: str) -> pd.DataFrame:
-        logger.debug(
-            "AlphaVantageProvider: insider purchases not available via Alpha Vantage"
-        )
+        logger.debug("AlphaVantageProvider: insider purchases not available via Alpha Vantage")
         return self._empty_df()
 
     def get_institutional_holders(self, symbol: str) -> pd.DataFrame:
-        logger.debug(
-            "AlphaVantageProvider: institutional holders not available via Alpha Vantage"
-        )
+        logger.debug("AlphaVantageProvider: institutional holders not available via Alpha Vantage")
         return self._empty_df()
 
     def get_mutualfund_holders(self, symbol: str) -> pd.DataFrame:
-        logger.debug(
-            "AlphaVantageProvider: mutual fund holders not available via Alpha Vantage"
-        )
+        logger.debug("AlphaVantageProvider: mutual fund holders not available via Alpha Vantage")
         return self._empty_df()
 
     def get_major_holders(self, symbol: str) -> pd.DataFrame:
-        logger.debug(
-            "AlphaVantageProvider: major holders not available via Alpha Vantage"
-        )
+        logger.debug("AlphaVantageProvider: major holders not available via Alpha Vantage")
         return self._empty_df()
 
     # ── Category 8: News ────────────────────────────────────────────────────
@@ -426,17 +420,17 @@ class AlphaVantageProvider(MarketDataProvider):
             except (ValueError, IndexError):
                 pub_ts = raw_time
 
-            articles.append({
-                "title": item.get("title", ""),
-                "publisher": item.get("source", ""),
-                "link": item.get("url", ""),
-                "providerPublishTime": pub_ts,
-                "thumbnail": item.get("banner_image", ""),
-                # AV-specific sentiment extras
-                "_av_overall_sentiment": item.get("overall_sentiment_label", ""),
-                "_av_overall_score": self._safe_float(
-                    item.get("overall_sentiment_score")
-                ),
-            })
+            articles.append(
+                {
+                    "title": item.get("title", ""),
+                    "publisher": item.get("source", ""),
+                    "link": item.get("url", ""),
+                    "providerPublishTime": pub_ts,
+                    "thumbnail": item.get("banner_image", ""),
+                    # AV-specific sentiment extras
+                    "_av_overall_sentiment": item.get("overall_sentiment_label", ""),
+                    "_av_overall_score": self._safe_float(item.get("overall_sentiment_score")),
+                }
+            )
 
         return articles

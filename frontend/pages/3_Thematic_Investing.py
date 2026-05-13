@@ -3,16 +3,27 @@ Thematic Investing - Browse themes, analyze performance, compare.
 """
 
 import streamlit as st
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_percent, format_currency, format_large_number
-from utils.data_service import get_themes_list, analyze_theme, refresh_themes_cache
 from components.header import render_header
-from components.plotly_charts import create_gauge_chart, create_donut_chart, create_horizontal_bar, create_radar_chart
 from components.metrics_cards import render_kpi_row
+from components.plotly_charts import (
+    create_donut_chart,
+    create_gauge_chart,
+    create_horizontal_bar,
+    create_radar_chart,
+)
+
+from utils.data_service import analyze_theme, get_themes_list, refresh_themes_cache
+from utils.formatters import format_currency, format_large_number, format_percent
+from utils.session import init_session_state
+from utils.theme import inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Thematic Investing | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Thematic Investing | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -40,7 +51,9 @@ if not themes:
     st.stop()
 
 # Mode toggle
-mode = st.radio("Mode", ["Browse & Analyze", "Compare Themes"], horizontal=True, label_visibility="collapsed")
+mode = st.radio(
+    "Mode", ["Browse & Analyze", "Compare Themes"], horizontal=True, label_visibility="collapsed"
+)
 
 if mode == "Browse & Analyze":
     # ─── Theme Selection Grid ────────────────────────────────
@@ -50,11 +63,15 @@ if mode == "Browse & Analyze":
     for i, theme in enumerate(themes):
         with cols[i % 2]:
             risk = theme.get("risk_level", "Medium")
-            risk_class = "risk-high" if "high" in risk.lower() else "risk-low" if "low" in risk.lower() else "risk-medium"
+            risk_class = (
+                "risk-high"
+                if "high" in risk.lower()
+                else "risk-low" if "low" in risk.lower() else "risk-medium"
+            )
 
-            tags_html = "".join([
-                f'<span class="tag">{tag}</span>' for tag in theme.get("sector_tags", [])[:3]
-            ])
+            tags_html = "".join(
+                [f'<span class="tag">{tag}</span>' for tag in theme.get("sector_tags", [])[:3]]
+            )
             tags_html += f'<span class="tag {risk_class}">{risk}</span>'
 
             st.markdown(
@@ -70,7 +87,11 @@ if mode == "Browse & Analyze":
                 """,
                 unsafe_allow_html=True,
             )
-            if st.button(f"Analyze {theme.get('name', '')}", key=f"theme_{theme.get('theme_id', i)}", use_container_width=True):
+            if st.button(
+                f"Analyze {theme.get('name', '')}",
+                key=f"theme_{theme.get('theme_id', i)}",
+                use_container_width=True,
+            ):
                 st.session_state.selected_theme = theme.get("theme_id")
                 st.rerun()
 
@@ -115,7 +136,14 @@ if mode == "Browse & Analyze":
         # Performance Table
         st.markdown("#### Multi-Horizon Performance")
         perf_cols = st.columns(6)
-        horizons = [("1W", "1w"), ("1M", "1m"), ("3M", "3m"), ("6M", "6m"), ("1Y", "1y"), ("YTD", "ytd")]
+        horizons = [
+            ("1W", "1w"),
+            ("1M", "1m"),
+            ("3M", "3m"),
+            ("6M", "6m"),
+            ("1Y", "1y"),
+            ("YTD", "ytd"),
+        ]
         for col, (label, key) in zip(perf_cols, horizons):
             val = perf.get(key, "N/A")
             col.metric(label=label, value=val)
@@ -188,16 +216,19 @@ if mode == "Browse & Analyze":
         if details:
             with st.expander("Constituent Details", expanded=False):
                 import pandas as pd
+
                 rows = []
                 for sym, d in details.items():
-                    rows.append({
-                        "Symbol": sym,
-                        "Name": d.get("name", ""),
-                        "Price": format_currency(d.get("current_price")),
-                        "Return": format_percent(d.get("total_return_pct")),
-                        "Market Cap": format_large_number(d.get("market_cap")),
-                        "Sector": d.get("sector", ""),
-                    })
+                    rows.append(
+                        {
+                            "Symbol": sym,
+                            "Name": d.get("name", ""),
+                            "Price": format_currency(d.get("current_price")),
+                            "Return": format_percent(d.get("total_return_pct")),
+                            "Market Cap": format_large_number(d.get("market_cap")),
+                            "Sector": d.get("sector", ""),
+                        }
+                    )
                 st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 else:
@@ -239,14 +270,19 @@ else:
                     values.append(float(str(val).replace("%", "").replace("+", "")))
                 except ValueError:
                     values.append(0)
-            series_data.append({
-                "name": theme_names.get(tid, tid),
-                "values": values,
-                "color": colors[i % len(colors)],
-            })
+            series_data.append(
+                {
+                    "name": theme_names.get(tid, tid),
+                    "values": values,
+                    "color": colors[i % len(colors)],
+                }
+            )
 
         from components.plotly_charts import create_grouped_bar
-        fig = create_grouped_bar(horizon_labels, series_data, title="Performance by Horizon (%)", height=400)
+
+        fig = create_grouped_bar(
+            horizon_labels, series_data, title="Performance by Horizon (%)", height=400
+        )
         st.plotly_chart(fig, use_container_width=True)
 
         # Health/Momentum Radar
@@ -257,7 +293,9 @@ else:
             r = results.get(tid, {})
             risk = r.get("theme_risk", {})
             div_score_str = risk.get("diversification_score", "Moderate")
-            div_num = {"Low": 25, "Moderate": 50, "Good": 75, "Excellent": 100}.get(div_score_str, 50)
+            div_num = {"Low": 25, "Moderate": 50, "Good": 75, "Excellent": 100}.get(
+                div_score_str, 50
+            )
 
             cols = st.columns(3)
             cols[0].metric(theme_names.get(tid, tid) + " Health", r.get("theme_health_score", 0))

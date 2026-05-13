@@ -3,16 +3,29 @@ Dashboard - Market overview, quick analysis, news feed.
 """
 
 import streamlit as st
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_currency, format_percent, format_large_number, format_date
-from utils.data_service import get_stock_price, get_historical_data, get_company_news, get_technical_analysis
+from components.charts import render_area_chart, render_candlestick_chart
 from components.header import render_header
-from components.charts import render_candlestick_chart, render_area_chart
 from components.metrics_cards import render_kpi_row, render_news_card
 
+from utils.data_service import (
+    get_company_news,
+    get_historical_data,
+    get_stock_price,
+    get_technical_analysis,
+)
+from utils.formatters import (
+    format_currency,
+    format_date,
+    format_large_number,
+    format_percent,
+)
+from utils.session import init_session_state
+from utils.theme import inject_css
+
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Dashboard | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(
+    page_title="Dashboard | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide"
+)
 inject_css()
 init_session_state()
 render_header()
@@ -121,15 +134,25 @@ with right_col:
             tech = get_technical_analysis(quick_sym)
 
         if "error" not in price_data:
-            st.metric("Price", format_currency(price_data.get("current_price", 0)),
-                       delta=format_percent(price_data.get("change_percent", 0)))
+            st.metric(
+                "Price",
+                format_currency(price_data.get("current_price", 0)),
+                delta=format_percent(price_data.get("change_percent", 0)),
+            )
 
             if "error" not in tech:
                 rsi = tech.get("rsi", {})
                 macd = tech.get("macd", {})
 
                 c1, c2 = st.columns(2)
-                c1.metric("RSI", f"{rsi.get('value', '--'):.1f}" if isinstance(rsi.get('value'), (int, float)) else "--")
+                c1.metric(
+                    "RSI",
+                    (
+                        f"{rsi.get('value', '--'):.1f}"
+                        if isinstance(rsi.get("value"), (int, float))
+                        else "--"
+                    ),
+                )
                 c2.metric("MACD Signal", macd.get("trend", "--").title())
 
                 rsi_val = rsi.get("value", 50)
@@ -142,7 +165,10 @@ with right_col:
                     rec = "HOLD"
 
                 badge_class = "buy" if "BUY" in rec else "sell" if "SELL" in rec else "neutral"
-                st.markdown(f'<span class="score-badge {badge_class}" style="font-size: 1rem;">{rec}</span>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<span class="score-badge {badge_class}" style="font-size: 1rem;">{rec}</span>',
+                    unsafe_allow_html=True,
+                )
 
             if st.button("Full Analysis", key="goto_full_analysis"):
                 st.session_state.selected_symbol = quick_sym

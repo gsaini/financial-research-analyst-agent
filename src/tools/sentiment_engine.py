@@ -5,9 +5,9 @@ Uses FinBERT (ProsusAI/finbert) when transformers is available,
 falls back to NLTK VADER with financial-domain lexicon enhancements.
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime, timedelta
 import math
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from src.utils.logger import get_logger
 
@@ -17,24 +17,71 @@ logger = get_logger(__name__)
 # These capture terms that generic sentiment models often miss
 _FINANCIAL_LEXICON = {
     # Positive financial terms
-    "beat": 2.0, "beats": 2.0, "exceeded": 2.5, "outperform": 2.5,
-    "outperforms": 2.5, "upgrade": 2.0, "upgraded": 2.0, "bullish": 2.5,
-    "rally": 2.0, "rallied": 2.0, "surge": 2.5, "surged": 2.5,
-    "soar": 2.5, "soared": 2.5, "record": 1.5, "breakout": 2.0,
-    "momentum": 1.0, "growth": 1.5, "dividend": 1.0, "buyback": 1.5,
-    "rebound": 1.5, "recovery": 1.5, "profitable": 2.0, "earnings": 0.5,
-    "revenue": 0.5, "upside": 2.0, "catalyst": 1.5, "innovation": 1.5,
-    "tailwind": 1.5, "overweight": 1.5,
+    "beat": 2.0,
+    "beats": 2.0,
+    "exceeded": 2.5,
+    "outperform": 2.5,
+    "outperforms": 2.5,
+    "upgrade": 2.0,
+    "upgraded": 2.0,
+    "bullish": 2.5,
+    "rally": 2.0,
+    "rallied": 2.0,
+    "surge": 2.5,
+    "surged": 2.5,
+    "soar": 2.5,
+    "soared": 2.5,
+    "record": 1.5,
+    "breakout": 2.0,
+    "momentum": 1.0,
+    "growth": 1.5,
+    "dividend": 1.0,
+    "buyback": 1.5,
+    "rebound": 1.5,
+    "recovery": 1.5,
+    "profitable": 2.0,
+    "earnings": 0.5,
+    "revenue": 0.5,
+    "upside": 2.0,
+    "catalyst": 1.5,
+    "innovation": 1.5,
+    "tailwind": 1.5,
+    "overweight": 1.5,
     # Negative financial terms
-    "miss": -2.0, "missed": -2.0, "misses": -2.0, "downgrade": -2.5,
-    "downgraded": -2.5, "bearish": -2.5, "selloff": -2.5, "sell-off": -2.5,
-    "crash": -3.0, "plunge": -3.0, "plunged": -3.0, "tank": -2.5,
-    "tanked": -2.5, "recession": -2.5, "default": -2.5, "bankruptcy": -3.5,
-    "layoff": -2.0, "layoffs": -2.0, "headwind": -1.5, "underperform": -2.0,
-    "underweight": -1.5, "overvalued": -1.5, "writedown": -2.0,
-    "impairment": -2.0, "shortfall": -2.0, "warning": -1.5,
-    "guidance cut": -2.5, "debt": -0.5, "lawsuit": -1.5, "fraud": -3.5,
-    "investigation": -2.0, "fine": -1.5, "penalty": -1.5, "recall": -2.0,
+    "miss": -2.0,
+    "missed": -2.0,
+    "misses": -2.0,
+    "downgrade": -2.5,
+    "downgraded": -2.5,
+    "bearish": -2.5,
+    "selloff": -2.5,
+    "sell-off": -2.5,
+    "crash": -3.0,
+    "plunge": -3.0,
+    "plunged": -3.0,
+    "tank": -2.5,
+    "tanked": -2.5,
+    "recession": -2.5,
+    "default": -2.5,
+    "bankruptcy": -3.5,
+    "layoff": -2.0,
+    "layoffs": -2.0,
+    "headwind": -1.5,
+    "underperform": -2.0,
+    "underweight": -1.5,
+    "overvalued": -1.5,
+    "writedown": -2.0,
+    "impairment": -2.0,
+    "shortfall": -2.0,
+    "warning": -1.5,
+    "guidance cut": -2.5,
+    "debt": -0.5,
+    "lawsuit": -1.5,
+    "fraud": -3.5,
+    "investigation": -2.0,
+    "fine": -1.5,
+    "penalty": -1.5,
+    "recall": -2.0,
 }
 
 # Singleton for model caching
@@ -52,6 +99,7 @@ def _get_analyzer():
     # Try FinBERT first
     try:
         from transformers import pipeline
+
         _analyzer = pipeline(
             "sentiment-analysis",
             model="ProsusAI/finbert",
@@ -68,11 +116,13 @@ def _get_analyzer():
     # Fallback to VADER with financial lexicon
     try:
         import nltk
+
         try:
             nltk.data.find("sentiment/vader_lexicon.zip")
         except LookupError:
             nltk.download("vader_lexicon", quiet=True)
         from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
         vader = SentimentIntensityAnalyzer()
         # Enhance with financial lexicon
         vader.lexicon.update(_FINANCIAL_LEXICON)
@@ -185,10 +235,12 @@ def analyze_articles(articles: List[Dict[str, Any]]) -> Dict[str, Any]:
         text = f"{title}. {desc}".strip() if desc else title
 
         sentiment = score_text(text)
-        scored.append({
-            **article,
-            "sentiment": sentiment,
-        })
+        scored.append(
+            {
+                **article,
+                "sentiment": sentiment,
+            }
+        )
 
     # Compute aggregates
     scores = [a["sentiment"]["score"] for a in scored]

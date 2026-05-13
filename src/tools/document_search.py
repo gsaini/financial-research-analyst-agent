@@ -35,6 +35,7 @@ def _get_retriever():
     global _retriever
     if _retriever is None:
         from src.rag.retriever import RAGRetriever
+
         _retriever = RAGRetriever()
     return _retriever
 
@@ -43,6 +44,7 @@ def _get_ingester():
     global _ingester
     if _ingester is None:
         from src.rag.ingester import SECIngester
+
         _ingester = SECIngester()
     return _ingester
 
@@ -134,7 +136,8 @@ def search_transcripts(
                 "text": r["text"][:500],
                 "relevance": r["relevance_score"],
                 "metadata": {
-                    k: v for k, v in r["metadata"].items()
+                    k: v
+                    for k, v in r["metadata"].items()
                     if k in ("quarter", "year", "doc_type", "filed_date")
                 },
             }

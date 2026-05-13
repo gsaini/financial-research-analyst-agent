@@ -16,8 +16,8 @@ Usage::
 
 from __future__ import annotations
 
-import re
 import hashlib
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -159,7 +159,9 @@ class SECIngester:
         if metadata:
             base_meta.update(metadata)
 
-        metadata_list = [{**base_meta, "chunk_index": i, "total_chunks": len(chunks)} for i in range(len(chunks))]
+        metadata_list = [
+            {**base_meta, "chunk_index": i, "total_chunks": len(chunks)} for i in range(len(chunks))
+        ]
         ids = [
             hashlib.md5(f"{symbol}:{doc_type}:{i}:{text[:20]}".encode()).hexdigest()
             for i in range(len(chunks))
@@ -209,12 +211,14 @@ class SECIngester:
                         f"https://www.sec.gov/Archives/edgar/data/"
                         f"{cik.lstrip('0')}/{acc_clean}/{primary_docs[i]}"
                     )
-                    filings.append({
-                        "form": form,
-                        "filed": dates[i] if i < len(dates) else "",
-                        "accession": accessions[i] if i < len(accessions) else "",
-                        "url": doc_url,
-                    })
+                    filings.append(
+                        {
+                            "form": form,
+                            "filed": dates[i] if i < len(dates) else "",
+                            "accession": accessions[i] if i < len(accessions) else "",
+                            "url": doc_url,
+                        }
+                    )
 
             return filings
         except Exception as e:

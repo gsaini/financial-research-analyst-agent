@@ -24,13 +24,15 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from src.tools.insight_engine import (
-    _detect_technical_signals,
-    _detect_valuation_signals,
-    _detect_earnings_signals,
-    _detect_performance_signals,
     _detect_anomalies,
     _detect_confluences,
+    _detect_earnings_signals,
+    _detect_performance_signals,
+    _detect_technical_signals,
+    _detect_valuation_signals,
     _rank_observations,
+)
+from src.tools.insight_engine import (
     generate_observations as generate_rule_based_observations,
 )
 from src.utils.logger import get_logger
@@ -64,6 +66,7 @@ def compute_historical_context(symbol: str) -> Dict[str, Any]:
         # Convert to DataFrame if not already
         if isinstance(hist, dict):
             import pandas as pd
+
             hist = pd.DataFrame(hist)
 
         context: Dict[str, Any] = {}
@@ -71,9 +74,7 @@ def compute_historical_context(symbol: str) -> Dict[str, Any]:
         # --- Price context ---
         closes = hist["Close"].dropna() if "Close" in hist.columns else None
         if closes is not None and len(closes) > 12:
-            current_price = info.get(
-                "currentPrice", info.get("regularMarketPrice", 0)
-            )
+            current_price = info.get("currentPrice", info.get("regularMarketPrice", 0))
             if current_price and current_price > 0:
                 low_5y = float(closes.min())
                 high_5y = float(closes.max())
@@ -117,9 +118,11 @@ def compute_historical_context(symbol: str) -> Dict[str, Any]:
                 "context": (
                     "Below book value — potential deep value or distressed"
                     if pb < 1
-                    else "Moderate premium to book"
-                    if pb < 3
-                    else "High premium to book — priced for growth"
+                    else (
+                        "Moderate premium to book"
+                        if pb < 3
+                        else "High premium to book — priced for growth"
+                    )
                 ),
             }
 
@@ -162,9 +165,11 @@ def compute_historical_context(symbol: str) -> Dict[str, Any]:
                         + (
                             "Elevated volatility — risk is above normal."
                             if current_vol > hist_vol * 1.3
-                            else "Compressed volatility — may precede a large move."
-                            if current_vol < hist_vol * 0.7
-                            else "Volatility is near historical average."
+                            else (
+                                "Compressed volatility — may precede a large move."
+                                if current_vol < hist_vol * 0.7
+                                else "Volatility is near historical average."
+                            )
                         )
                     ),
                 }
@@ -174,9 +179,7 @@ def compute_historical_context(symbol: str) -> Dict[str, Any]:
         low_52w = info.get("fiftyTwoWeekLow", 0)
         curr = info.get("currentPrice", info.get("regularMarketPrice", 0))
         if high_52w and low_52w and curr and (high_52w - low_52w) > 0:
-            pct_of_range = round(
-                (curr - low_52w) / (high_52w - low_52w) * 100
-            )
+            pct_of_range = round((curr - low_52w) / (high_52w - low_52w) * 100)
             context["52_week_range"] = {
                 "current": round(curr, 2),
                 "low": round(low_52w, 2),
@@ -187,9 +190,11 @@ def compute_historical_context(symbol: str) -> Dict[str, Any]:
                     + (
                         "Near 52-week high — momentum intact but limited upside to recent peak."
                         if pct_of_range > 85
-                        else "Near 52-week low — potential value if fundamentals support."
-                        if pct_of_range < 15
-                        else "Mid-range — no extreme positioning signal."
+                        else (
+                            "Near 52-week low — potential value if fundamentals support."
+                            if pct_of_range < 15
+                            else "Mid-range — no extreme positioning signal."
+                        )
                     )
                 ),
             }
@@ -210,19 +215,22 @@ def _percentile_rank(values, current: float) -> int:
     return int(round(np.sum(arr < current) / len(arr) * 100))
 
 
-def _range_label(
-    metric: str, current: float, low: float, high: float, pct: int
-) -> str:
+def _range_label(metric: str, current: float, low: float, high: float, pct: int) -> str:
     """Human-readable label for where current sits in its historical range."""
     if pct >= 90:
         return f"{metric} at {current} is near its 5-year high ({high}) — {pct}th percentile."
     if pct <= 10:
         return f"{metric} at {current} is near its 5-year low ({low}) — {pct}th percentile."
     if pct >= 70:
-        return f"{metric} at {current} is in the upper range — {pct}th percentile of 5-year history."
+        return (
+            f"{metric} at {current} is in the upper range — {pct}th percentile of 5-year history."
+        )
     if pct <= 30:
-        return f"{metric} at {current} is in the lower range — {pct}th percentile of 5-year history."
+        return (
+            f"{metric} at {current} is in the lower range — {pct}th percentile of 5-year history."
+        )
     return f"{metric} at {current} is mid-range — {pct}th percentile of 5-year history."
+
 
 # ─── LLM Synthesis Prompt ───────────────────────────────────────
 
@@ -447,7 +455,7 @@ async def _run_llm_synthesis(
         sentiment_data=_summarize_for_llm(analyses.get("sentiment")),
     )
 
-    from langchain_core.messages import SystemMessage, HumanMessage
+    from langchain_core.messages import HumanMessage, SystemMessage
 
     messages = [
         SystemMessage(content=INSIGHT_SYSTEM_PROMPT),
@@ -484,6 +492,7 @@ def _get_default_llm():
 
     if provider == "ollama":
         from langchain_ollama import ChatOllama
+
         return ChatOllama(
             model=settings.llm.ollama_model,
             base_url=settings.llm.ollama_base_url,
@@ -491,6 +500,7 @@ def _get_default_llm():
         )
     elif provider == "groq":
         from langchain_groq import ChatGroq
+
         return ChatGroq(
             model=settings.llm.groq_model,
             api_key=settings.llm.groq_api_key,
@@ -498,6 +508,7 @@ def _get_default_llm():
         )
     elif provider == "openai":
         from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
             model=settings.llm.model,
             api_key=settings.llm.openai_api_key,
@@ -505,6 +516,7 @@ def _get_default_llm():
         )
     elif provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
+
         return ChatAnthropic(
             model=settings.llm.model,
             api_key=settings.llm.anthropic_api_key,
@@ -512,6 +524,7 @@ def _get_default_llm():
         )
     else:
         from langchain_ollama import ChatOllama
+
         return ChatOllama(
             model=settings.llm.ollama_model,
             base_url=settings.llm.ollama_base_url,
@@ -539,19 +552,21 @@ def _build_llm_result(
 
     for i, insight in enumerate(llm_data.get("key_insights", []), start=1):
         cat = insight.get("category", "Watch Item")
-        observations.append({
-            "rank": i,
-            "category": cat,
-            "icon": icon_map.get(cat, ""),
-            "severity": insight.get("severity", "Medium"),
-            "title": insight.get("title", ""),
-            "observation": insight.get("observation", ""),
-            "supporting_evidence": insight.get("supporting_evidence", []),
-            "confidence": insight.get("confidence", 0.5),
-            "actionability": insight.get("actionability", "Medium"),
-            "direction": insight.get("direction", "neutral"),
-            "time_horizon": insight.get("time_horizon", "medium-term"),
-        })
+        observations.append(
+            {
+                "rank": i,
+                "category": cat,
+                "icon": icon_map.get(cat, ""),
+                "severity": insight.get("severity", "Medium"),
+                "title": insight.get("title", ""),
+                "observation": insight.get("observation", ""),
+                "supporting_evidence": insight.get("supporting_evidence", []),
+                "confidence": insight.get("confidence", 0.5),
+                "actionability": insight.get("actionability", "Medium"),
+                "direction": insight.get("direction", "neutral"),
+                "time_horizon": insight.get("time_horizon", "medium-term"),
+            }
+        )
 
     overall = llm_data.get("overall_assessment", {})
     bullish_count = sum(1 for o in observations if o.get("direction") == "bullish")
@@ -589,13 +604,13 @@ def generate_smart_observations_sync(
 ) -> Dict[str, Any]:
     """Synchronous version of generate_smart_observations."""
     import asyncio
+
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
             import nest_asyncio
+
             nest_asyncio.apply()
-        return loop.run_until_complete(
-            generate_smart_observations(symbol, analyses, llm)
-        )
+        return loop.run_until_complete(generate_smart_observations(symbol, analyses, llm))
     except RuntimeError:
         return asyncio.run(generate_smart_observations(symbol, analyses, llm))

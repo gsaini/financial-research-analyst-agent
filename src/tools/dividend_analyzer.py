@@ -10,8 +10,9 @@ This module provides tools to fetch and analyze dividend data:
 - Yield comparison vs sector and market averages
 """
 
-from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 
@@ -64,7 +65,9 @@ def fetch_dividend_info(symbol: str) -> Dict[str, Any]:
             # Calculate average days between dividends
             dates = dividends.index.tolist()
             if len(dates) >= 2:
-                avg_days = np.mean([(dates[i] - dates[i-1]).days for i in range(1, min(5, len(dates)))])
+                avg_days = np.mean(
+                    [(dates[i] - dates[i - 1]).days for i in range(1, min(5, len(dates)))]
+                )
                 if avg_days < 45:
                     frequency = "Monthly"
                 elif avg_days < 100:
@@ -79,11 +82,15 @@ def fetch_dividend_info(symbol: str) -> Dict[str, Any]:
             "name": info.get("longName", info.get("shortName", symbol)),
             "currency": info.get("currency", "USD"),
             "annual_dividend": round(annual_dividend, 4),
-            "dividend_yield": round(dividend_yield * 100, 2) if dividend_yield < 1 else round(dividend_yield, 2),
-            "payout_ratio": round(payout_ratio * 100, 1) if payout_ratio < 1 else round(payout_ratio, 1),
+            "dividend_yield": (
+                round(dividend_yield * 100, 2) if dividend_yield < 1 else round(dividend_yield, 2)
+            ),
+            "payout_ratio": (
+                round(payout_ratio * 100, 1) if payout_ratio < 1 else round(payout_ratio, 1)
+            ),
             "frequency": frequency,
             "ex_dividend_date": ex_date_str,
-            "last_dividend_amount": round(dividends.iloc[-1], 4) if not dividends.empty else None,
+            "last_dividend_amount": (round(dividends.iloc[-1], 4) if not dividends.empty else None),
             "sector": info.get("sector", "N/A"),
             "industry": info.get("industry", "N/A"),
         }
@@ -124,10 +131,12 @@ def fetch_dividend_history(symbol: str, years: int = 10) -> Dict[str, Any]:
         # Build history list
         history = []
         for date, amount in dividends_filtered.items():
-            history.append({
-                "date": date.strftime("%Y-%m-%d"),
-                "amount": round(float(amount), 4),
-            })
+            history.append(
+                {
+                    "date": date.strftime("%Y-%m-%d"),
+                    "amount": round(float(amount), 4),
+                }
+            )
 
         # Calculate annual totals by year
         annual_totals = {}
@@ -211,7 +220,7 @@ def calculate_dividend_growth(symbol: str) -> Dict[str, Any]:
             consecutive_increases = 0
         else:
             for i in range(len(check_years) - 1, 0, -1):
-                if annual_totals[check_years[i]] > annual_totals[check_years[i-1]]:
+                if annual_totals[check_years[i]] > annual_totals[check_years[i - 1]]:
                     consecutive_increases += 1
                 else:
                     break
@@ -231,7 +240,9 @@ def calculate_dividend_growth(symbol: str) -> Dict[str, Any]:
 
         if len(sorted_years) >= 4:
             recent = annual_totals.get(sorted_years[-1], 0)
-            three_years_ago = annual_totals.get(sorted_years[-4], 0) if len(sorted_years) >= 4 else 0
+            three_years_ago = (
+                annual_totals.get(sorted_years[-4], 0) if len(sorted_years) >= 4 else 0
+            )
             cagr_3y = calc_cagr(three_years_ago, recent, 3)
 
         if len(sorted_years) >= 6:
@@ -239,7 +250,9 @@ def calculate_dividend_growth(symbol: str) -> Dict[str, Any]:
             cagr_5y = calc_cagr(five_years_ago, annual_totals.get(sorted_years[-1], 0), 5)
 
         if len(sorted_years) >= 11:
-            ten_years_ago = annual_totals.get(sorted_years[-11], 0) if len(sorted_years) >= 11 else 0
+            ten_years_ago = (
+                annual_totals.get(sorted_years[-11], 0) if len(sorted_years) >= 11 else 0
+            )
             cagr_10y = calc_cagr(ten_years_ago, annual_totals.get(sorted_years[-1], 0), 10)
 
         # Determine classification
@@ -264,8 +277,12 @@ def calculate_dividend_growth(symbol: str) -> Dict[str, Any]:
             prev_year = sorted_years[-2]
             if annual_totals[prev_year] > 0:
                 last_increase_pct = round(
-                    ((annual_totals[recent_year] - annual_totals[prev_year]) / annual_totals[prev_year]) * 100,
-                    1
+                    (
+                        (annual_totals[recent_year] - annual_totals[prev_year])
+                        / annual_totals[prev_year]
+                    )
+                    * 100,
+                    1,
                 )
                 last_increase_date = f"{recent_year}"
 
@@ -280,7 +297,9 @@ def calculate_dividend_growth(symbol: str) -> Dict[str, Any]:
             "cagr_10_year": round(cagr_10y, 1) if cagr_10y else None,
             "last_increase_pct": last_increase_pct,
             "last_increase_year": last_increase_date,
-            "annual_dividends_by_year": {str(y): round(v, 4) for y, v in sorted(annual_totals.items())[-10:]},
+            "annual_dividends_by_year": {
+                str(y): round(v, 4) for y, v in sorted(annual_totals.items())[-10:]
+            },
         }
 
     except Exception as e:
@@ -372,16 +391,24 @@ def calculate_dividend_safety(symbol: str) -> Dict[str, Any]:
                         }
                         if fcf_coverage >= 2.5:
                             score += 25
-                            factors["fcf_coverage"]["assessment"] = f"Excellent - FCF covers dividend {fcf_coverage:.1f}x"
+                            factors["fcf_coverage"][
+                                "assessment"
+                            ] = f"Excellent - FCF covers dividend {fcf_coverage:.1f}x"
                         elif fcf_coverage >= 1.5:
                             score += 18
-                            factors["fcf_coverage"]["assessment"] = f"Strong - FCF covers dividend {fcf_coverage:.1f}x"
+                            factors["fcf_coverage"][
+                                "assessment"
+                            ] = f"Strong - FCF covers dividend {fcf_coverage:.1f}x"
                         elif fcf_coverage >= 1.0:
                             score += 10
-                            factors["fcf_coverage"]["assessment"] = f"Adequate - FCF covers dividend {fcf_coverage:.1f}x"
+                            factors["fcf_coverage"][
+                                "assessment"
+                            ] = f"Adequate - FCF covers dividend {fcf_coverage:.1f}x"
                         else:
                             score -= 10
-                            factors["fcf_coverage"]["assessment"] = "Warning - FCF does not cover dividend"
+                            factors["fcf_coverage"][
+                                "assessment"
+                            ] = "Warning - FCF does not cover dividend"
             except Exception as e:
                 logger.debug(f"FCF calculation error: {e}")
 
@@ -389,7 +416,9 @@ def calculate_dividend_safety(symbol: str) -> Dict[str, Any]:
         if not balance_sheet.empty:
             try:
                 total_debt = float(balance_sheet.iloc[:, 0].get("Total Debt", 0) or 0)
-                total_equity = float(balance_sheet.iloc[:, 0].get("Total Equity Gross Minority Interest", 0) or 0)
+                total_equity = float(
+                    balance_sheet.iloc[:, 0].get("Total Equity Gross Minority Interest", 0) or 0
+                )
 
                 if total_equity > 0:
                     debt_to_equity = total_debt / total_equity
@@ -451,25 +480,25 @@ def calculate_dividend_safety(symbol: str) -> Dict[str, Any]:
             score += 20
             factors["dividend_history"] = {
                 "value": consecutive_years,
-                "assessment": f"Dividend Aristocrat - {consecutive_years} consecutive years"
+                "assessment": f"Dividend Aristocrat - {consecutive_years} consecutive years",
             }
         elif consecutive_years >= 10:
             score += 15
             factors["dividend_history"] = {
                 "value": consecutive_years,
-                "assessment": f"Dividend Champion - {consecutive_years} consecutive years"
+                "assessment": f"Dividend Champion - {consecutive_years} consecutive years",
             }
         elif consecutive_years >= 5:
             score += 10
             factors["dividend_history"] = {
                 "value": consecutive_years,
-                "assessment": f"Dividend Contender - {consecutive_years} consecutive years"
+                "assessment": f"Dividend Contender - {consecutive_years} consecutive years",
             }
         elif consecutive_years >= 1:
             score += 5
             factors["dividend_history"] = {
                 "value": consecutive_years,
-                "assessment": f"{consecutive_years} year(s) of increases"
+                "assessment": f"{consecutive_years} year(s) of increases",
             }
 
         # Cap score at 0-100
@@ -704,24 +733,28 @@ def compare_dividends(symbols: List[str]) -> Dict[str, Any]:
             safety = result.get("dividend_safety", {})
             growth = result.get("dividend_growth", {})
 
-            comparison.append({
-                "symbol": result["symbol"],
-                "name": result.get("name"),
-                "dividend_yield": current.get("dividend_yield", 0),
-                "payout_ratio": current.get("payout_ratio", 0),
-                "safety_score": safety.get("safety_score", 0),
-                "safety_rating": safety.get("rating", "N/A"),
-                "consecutive_years": growth.get("consecutive_years_increased", 0),
-                "classification": growth.get("classification", "N/A"),
-                "cagr_5_year": growth.get("cagr_5_year"),
-            })
+            comparison.append(
+                {
+                    "symbol": result["symbol"],
+                    "name": result.get("name"),
+                    "dividend_yield": current.get("dividend_yield", 0),
+                    "payout_ratio": current.get("payout_ratio", 0),
+                    "safety_score": safety.get("safety_score", 0),
+                    "safety_rating": safety.get("rating", "N/A"),
+                    "consecutive_years": growth.get("consecutive_years_increased", 0),
+                    "classification": growth.get("classification", "N/A"),
+                    "cagr_5_year": growth.get("cagr_5_year"),
+                }
+            )
         elif result.get("pays_dividends") is False:
-            comparison.append({
-                "symbol": symbol,
-                "name": result.get("name", symbol),
-                "dividend_yield": 0,
-                "pays_dividends": False,
-            })
+            comparison.append(
+                {
+                    "symbol": symbol,
+                    "name": result.get("name", symbol),
+                    "dividend_yield": 0,
+                    "pays_dividends": False,
+                }
+            )
         else:
             comparison.append({"symbol": symbol, "error": result.get("error")})
 

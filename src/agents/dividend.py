@@ -1,4 +1,5 @@
 from datetime import timezone
+
 """
 Dividend Analyst Agent for the Financial Research Analyst.
 
@@ -11,22 +12,22 @@ This agent performs comprehensive dividend analysis for income investors:
 - LLM-synthesized income investing narratives
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.tools.dividend_analyzer import (
     analyze_dividends,
-    compare_dividends,
-    fetch_dividend_info,
-    fetch_dividend_history,
     calculate_dividend_growth,
     calculate_dividend_safety,
+    compare_dividends,
     compare_yields,
+    fetch_dividend_history,
+    fetch_dividend_info,
 )
 from src.utils.logger import get_logger
 
@@ -233,18 +234,14 @@ Present findings with clear safety ratings, growth trends, and income investing 
 
         try:
             result = analyze_dividends(symbol)
-            result["execution_time_seconds"] = (
-                datetime.now(timezone.utc) - start
-            ).total_seconds()
+            result["execution_time_seconds"] = (datetime.now(timezone.utc) - start).total_seconds()
             return result
         except Exception as e:
             logger.error(f"Dividend analysis failed for '{symbol}': {e}")
             return {
                 "error": str(e),
                 "symbol": symbol,
-                "execution_time_seconds": (
-                    datetime.now(timezone.utc) - start
-                ).total_seconds(),
+                "execution_time_seconds": (datetime.now(timezone.utc) - start).total_seconds(),
             }
 
     async def analyze_with_narrative(self, symbol: str) -> Dict[str, Any]:
@@ -263,7 +260,9 @@ Present findings with clear safety ratings, growth trends, and income investing 
             return data
 
         if not data.get("pays_dividends", False):
-            data["qualitative_assessment"] = f"{data.get('name', symbol)} does not pay dividends and is not suitable for income-focused portfolios."
+            data["qualitative_assessment"] = (
+                f"{data.get('name', symbol)} does not pay dividends and is not suitable for income-focused portfolios."
+            )
             return data
 
         # Build context for LLM narrative
@@ -312,9 +311,7 @@ Provide a balanced assessment of dividend reliability and income investing suita
 
         return data
 
-    async def compare_companies_direct(
-        self, symbols: List[str]
-    ) -> Dict[str, Any]:
+    async def compare_companies_direct(self, symbols: List[str]) -> Dict[str, Any]:
         """
         Compare dividend profiles across multiple companies.
 
@@ -329,23 +326,17 @@ Provide a balanced assessment of dividend reliability and income investing suita
 
         try:
             result = compare_dividends(symbols)
-            result["execution_time_seconds"] = (
-                datetime.now(timezone.utc) - start
-            ).total_seconds()
+            result["execution_time_seconds"] = (datetime.now(timezone.utc) - start).total_seconds()
             return result
         except Exception as e:
             logger.error(f"Dividend comparison failed: {e}")
             return {
                 "error": str(e),
                 "symbols": symbols,
-                "execution_time_seconds": (
-                    datetime.now(timezone.utc) - start
-                ).total_seconds(),
+                "execution_time_seconds": (datetime.now(timezone.utc) - start).total_seconds(),
             }
 
-    async def analyze_with_comparative_narrative(
-        self, symbols: List[str]
-    ) -> Dict[str, Any]:
+    async def analyze_with_comparative_narrative(self, symbols: List[str]) -> Dict[str, Any]:
         """
         Compare companies and generate comparative dividend narrative.
 

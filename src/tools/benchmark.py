@@ -70,7 +70,7 @@ def calculate_portfolio_vs_benchmark(
             return {"error": f"Missing benchmark data for {benchmark}"}
 
         # Portfolio returns
-        port_weights = np.array(weights[:len(symbols)])
+        port_weights = np.array(weights[: len(symbols)])
         port_weights = port_weights / port_weights.sum()  # Normalize
         port_returns = (returns[symbols] * port_weights).sum(axis=1)
         bench_returns = returns[benchmark]
@@ -93,11 +93,15 @@ def calculate_portfolio_vs_benchmark(
         tracking_error = float(tracking_diff.std()) * np.sqrt(_TRADING_DAYS)
 
         # Information ratio
-        info_ratio = float(tracking_diff.mean() * _TRADING_DAYS / tracking_error) if tracking_error > 0 else 0
+        info_ratio = (
+            float(tracking_diff.mean() * _TRADING_DAYS / tracking_error)
+            if tracking_error > 0
+            else 0
+        )
 
         # R-squared
         correlation = float(np.corrcoef(p, b)[0, 1])
-        r_squared = correlation ** 2
+        r_squared = correlation**2
 
         # Cumulative returns
         cum_port = float((1 + p).prod() - 1)
@@ -138,15 +142,18 @@ def calculate_portfolio_vs_benchmark(
             "interpretation": {
                 "alpha": "Outperforming" if alpha > 0 else "Underperforming",
                 "beta": (
-                    "More volatile than market" if beta > 1.1
-                    else "Less volatile than market" if beta < 0.9
-                    else "Market-like volatility"
+                    "More volatile than market"
+                    if beta > 1.1
+                    else ("Less volatile than market" if beta < 0.9 else "Market-like volatility")
                 ),
                 "tracking": (
                     "High tracking error — portfolio behaves differently from benchmark"
                     if tracking_error > 0.15
-                    else "Moderate tracking" if tracking_error > 0.08
-                    else "Low tracking error — closely follows benchmark"
+                    else (
+                        "Moderate tracking"
+                        if tracking_error > 0.08
+                        else "Low tracking error — closely follows benchmark"
+                    )
                 ),
             },
             "analyzed_at": datetime.now(timezone.utc).isoformat(),
@@ -178,7 +185,7 @@ def rolling_analysis(
         if missing or benchmark not in returns.columns:
             return {"error": "Missing data for some symbols"}
 
-        port_weights = np.array(weights[:len(symbols)])
+        port_weights = np.array(weights[: len(symbols)])
         port_weights = port_weights / port_weights.sum()
         port_returns = (returns[symbols] * port_weights).sum(axis=1)
         bench_returns = returns[benchmark]
@@ -192,8 +199,8 @@ def rolling_analysis(
         dates = []
 
         for i in range(window, len(aligned)):
-            p = aligned["portfolio"].iloc[i - window:i]
-            b = aligned["benchmark"].iloc[i - window:i]
+            p = aligned["portfolio"].iloc[i - window : i]
+            b = aligned["benchmark"].iloc[i - window : i]
 
             cov = np.cov(p, b)
             beta = cov[0, 1] / cov[1, 1] if cov[1, 1] > 0 else 1.0
@@ -214,9 +221,9 @@ def rolling_analysis(
             recent_alpha = np.mean(rolling_alpha[-20:])
             early_alpha = np.mean(rolling_alpha[:20])
             alpha_trend = (
-                "improving" if recent_alpha > early_alpha + 1
-                else "deteriorating" if recent_alpha < early_alpha - 1
-                else "stable"
+                "improving"
+                if recent_alpha > early_alpha + 1
+                else "deteriorating" if recent_alpha < early_alpha - 1 else "stable"
             )
         else:
             alpha_trend = "insufficient data"
@@ -281,9 +288,7 @@ def attribution_analysis(
 
         # Equal weight comparison
         eq_weight = 1 / len(available)
-        eq_return = sum(
-            float((1 + returns[s]).prod() - 1) * eq_weight for s in available
-        )
+        eq_return = sum(float((1 + returns[s]).prod() - 1) * eq_weight for s in available)
         port_return = sum(
             float((1 + returns[s]).prod() - 1) * float(port_weights[i])
             for i, s in enumerate(available)
@@ -302,8 +307,12 @@ def attribution_analysis(
             "benchmark_return_pct": round(bench_return * 100, 2),
             "allocation_effect_pct": round((port_return - eq_return) * 100, 2),
             "selection_effect_pct": round((eq_return - bench_return) * 100, 2),
-            "top_contributor": max(contributions, key=lambda s: contributions[s]["contribution_pct"]),
-            "bottom_contributor": min(contributions, key=lambda s: contributions[s]["contribution_pct"]),
+            "top_contributor": max(
+                contributions, key=lambda s: contributions[s]["contribution_pct"]
+            ),
+            "bottom_contributor": min(
+                contributions, key=lambda s: contributions[s]["contribution_pct"]
+            ),
             "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
 

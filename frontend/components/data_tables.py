@@ -2,8 +2,8 @@
 Styled dataframe and table rendering components.
 """
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
 
 def render_styled_dataframe(df: pd.DataFrame, highlight_column: str = None, height: int = None):
@@ -50,6 +50,7 @@ def render_comparison_table(data: list, highlight_symbol: str = None):
     df = pd.DataFrame(data)
 
     if highlight_symbol and "symbol" in df.columns:
+
         def highlight_target(row):
             if row.get("symbol") == highlight_symbol:
                 return ["font-weight: 700; background-color: rgba(59, 130, 246, 0.08);"] * len(row)
@@ -75,12 +76,11 @@ def render_metrics_table(metrics: dict, title: str = ""):
         st.caption("No metrics available.")
         return
 
-    df = pd.DataFrame([
-        {"Metric": k, "Value": v}
-        for k, v in metrics.items()
-    ])
+    df = pd.DataFrame([{"Metric": k, "Value": v} for k, v in metrics.items()])
 
-    st.dataframe(df, use_container_width=True, hide_index=True, height=min(400, len(metrics) * 38 + 40))
+    st.dataframe(
+        df, use_container_width=True, hide_index=True, height=min(400, len(metrics) * 38 + 40)
+    )
 
 
 def _color_value(val):

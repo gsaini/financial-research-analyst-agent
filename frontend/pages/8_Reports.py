@@ -6,17 +6,34 @@ import json
 from datetime import datetime
 
 import streamlit as st
-from utils.theme import inject_css
-from utils.session import init_session_state
-from utils.formatters import format_currency, format_percent, format_large_number, format_number, format_date
-from utils.data_service import (
-    get_stock_price, get_company_info, get_technical_analysis,
-    get_financial_health, get_company_news, analyze_disruption, analyze_earnings,
-)
 from components.header import render_header
 
+from utils.data_service import (
+    analyze_disruption,
+    analyze_earnings,
+    get_company_info,
+    get_company_news,
+    get_financial_health,
+    get_stock_price,
+    get_technical_analysis,
+)
+from utils.formatters import (
+    format_currency,
+    format_date,
+    format_large_number,
+    format_number,
+    format_percent,
+)
+from utils.session import init_session_state
+from utils.theme import inject_css
+
 # ─── Page Config ─────────────────────────────────────────────
-st.set_page_config(page_title="Reports | FinancialAI", page_icon=":chart_with_upwards_trend:", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Reports | FinancialAI",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 inject_css()
 init_session_state()
 render_header()
@@ -100,17 +117,19 @@ with st.spinner(f"Generating report for {', '.join(symbols)}..."):
                     "52_week_low": price.get("52_week_low"),
                 }
 
-                markdown_parts.extend([
-                    f"### Overview",
-                    f"- **Company:** {company.get('name', symbol)}",
-                    f"- **Sector:** {company.get('sector', 'N/A')} / {company.get('industry', 'N/A')}",
-                    f"- **Price:** {format_currency(price.get('current_price'))} ({format_percent(price.get('change_percent', 0))})",
-                    f"- **Market Cap:** {format_large_number(price.get('market_cap'))}",
-                    f"- **P/E Ratio:** {format_number(price.get('pe_ratio'))}",
-                    f"- **EPS:** {format_currency(price.get('eps'))}",
-                    f"- **52-Week Range:** {format_currency(price.get('52_week_low'))} - {format_currency(price.get('52_week_high'))}",
-                    "",
-                ])
+                markdown_parts.extend(
+                    [
+                        f"### Overview",
+                        f"- **Company:** {company.get('name', symbol)}",
+                        f"- **Sector:** {company.get('sector', 'N/A')} / {company.get('industry', 'N/A')}",
+                        f"- **Price:** {format_currency(price.get('current_price'))} ({format_percent(price.get('change_percent', 0))})",
+                        f"- **Market Cap:** {format_large_number(price.get('market_cap'))}",
+                        f"- **P/E Ratio:** {format_number(price.get('pe_ratio'))}",
+                        f"- **EPS:** {format_currency(price.get('eps'))}",
+                        f"- **52-Week Range:** {format_currency(price.get('52_week_low'))} - {format_currency(price.get('52_week_high'))}",
+                        "",
+                    ]
+                )
 
         # Technical
         if include_technical:
@@ -138,21 +157,25 @@ with st.spinner(f"Generating report for {', '.join(symbols)}..."):
                 else:
                     rec = "HOLD"
 
-                markdown_parts.extend([
-                    f"### Technical Analysis",
-                    f"- **RSI (14):** {format_number(rsi.get('value'))} ({rsi.get('signal', 'N/A')})",
-                    f"- **MACD Trend:** {str(macd.get('trend', 'N/A')).title()}",
-                    f"- **MACD Histogram:** {format_number(macd.get('histogram'), 4)}",
-                    f"- **MA Trend:** {str(ma.get('trend', 'N/A')).title()}",
-                    f"- **Signal:** **{rec}**",
-                    "",
-                ])
+                markdown_parts.extend(
+                    [
+                        f"### Technical Analysis",
+                        f"- **RSI (14):** {format_number(rsi.get('value'))} ({rsi.get('signal', 'N/A')})",
+                        f"- **MACD Trend:** {str(macd.get('trend', 'N/A')).title()}",
+                        f"- **MACD Histogram:** {format_number(macd.get('histogram'), 4)}",
+                        f"- **MA Trend:** {str(ma.get('trend', 'N/A')).title()}",
+                        f"- **Signal:** **{rec}**",
+                        "",
+                    ]
+                )
 
                 patterns = tech.get("patterns", {}).get("patterns_detected", [])
                 if patterns:
                     markdown_parts.append("**Patterns Detected:**")
                     for p in patterns:
-                        markdown_parts.append(f"- {p.get('name', 'Unknown')} ({p.get('implication', 'neutral')}, {p.get('confidence', 0)*100:.0f}% confidence)")
+                        markdown_parts.append(
+                            f"- {p.get('name', 'Unknown')} ({p.get('implication', 'neutral')}, {p.get('confidence', 0)*100:.0f}% confidence)"
+                        )
                     markdown_parts.append("")
 
         # Fundamental
@@ -161,12 +184,14 @@ with st.spinner(f"Generating report for {', '.join(symbols)}..."):
             if "error" not in health:
                 symbol_data["fundamental"] = health
 
-                markdown_parts.extend([
-                    f"### Fundamental Analysis",
-                    f"- **Health Score:** {format_number(health.get('health_score'))}/10",
-                    f"- **Assessment:** {health.get('overall_assessment', 'N/A')}",
-                    "",
-                ])
+                markdown_parts.extend(
+                    [
+                        f"### Fundamental Analysis",
+                        f"- **Health Score:** {format_number(health.get('health_score'))}/10",
+                        f"- **Assessment:** {health.get('overall_assessment', 'N/A')}",
+                        "",
+                    ]
+                )
 
                 strengths = health.get("strengths", [])
                 if strengths:
@@ -193,12 +218,14 @@ with st.spinner(f"Generating report for {', '.join(symbols)}..."):
                     "risk_factors": disruption.get("risk_factors", []),
                 }
 
-                markdown_parts.extend([
-                    f"### Disruption Analysis",
-                    f"- **Disruption Score:** {disruption.get('disruption_score', 0)}/100",
-                    f"- **Classification:** {disruption.get('classification', 'N/A')}",
-                    "",
-                ])
+                markdown_parts.extend(
+                    [
+                        f"### Disruption Analysis",
+                        f"- **Disruption Score:** {disruption.get('disruption_score', 0)}/100",
+                        f"- **Classification:** {disruption.get('classification', 'N/A')}",
+                        "",
+                    ]
+                )
 
         # Earnings
         if include_earnings:
@@ -215,26 +242,30 @@ with st.spinner(f"Generating report for {', '.join(symbols)}..."):
                     "quality_assessment": quality.get("assessment"),
                 }
 
-                markdown_parts.extend([
-                    f"### Earnings Analysis",
-                    f"- **Beat Rate:** {surprise.get('beat_rate', 'N/A')}",
-                    f"- **Avg Surprise:** {surprise.get('average_surprise', 'N/A')}",
-                    f"- **Pattern:** {surprise.get('pattern', 'N/A')}",
-                    f"- **Quality Score:** {format_number(quality.get('score'))}/10 ({quality.get('assessment', 'N/A')})",
-                    "",
-                ])
+                markdown_parts.extend(
+                    [
+                        f"### Earnings Analysis",
+                        f"- **Beat Rate:** {surprise.get('beat_rate', 'N/A')}",
+                        f"- **Avg Surprise:** {surprise.get('average_surprise', 'N/A')}",
+                        f"- **Pattern:** {surprise.get('pattern', 'N/A')}",
+                        f"- **Quality Score:** {format_number(quality.get('score'))}/10 ({quality.get('assessment', 'N/A')})",
+                        "",
+                    ]
+                )
 
         report_data["sections"][symbol] = symbol_data
         markdown_parts.extend(["", "---", ""])
 
     # Disclaimer
-    markdown_parts.extend([
-        "## Disclaimer",
-        "This report is generated for informational purposes only and does not constitute financial advice. "
-        "Always conduct your own research before making investment decisions.",
-        "",
-        f"*Generated by FinancialAI Research Platform on {datetime.utcnow().strftime('%B %d, %Y')}*",
-    ])
+    markdown_parts.extend(
+        [
+            "## Disclaimer",
+            "This report is generated for informational purposes only and does not constitute financial advice. "
+            "Always conduct your own research before making investment decisions.",
+            "",
+            f"*Generated by FinancialAI Research Platform on {datetime.utcnow().strftime('%B %d, %Y')}*",
+        ]
+    )
 
     markdown_content = "\n".join(markdown_parts)
     json_content = json.dumps(report_data, indent=2, default=str)

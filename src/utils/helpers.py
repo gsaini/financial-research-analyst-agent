@@ -2,24 +2,24 @@
 Helper utilities for the Financial Research Analyst Agent.
 """
 
-from typing import Any, Optional, Union
 from decimal import Decimal
+from typing import Any, Optional, Union
 
 
 def format_currency(value: Union[int, float, Decimal], currency: str = "USD") -> str:
     """
     Format a number as currency.
-    
+
     Args:
         value: Numeric value to format
         currency: Currency code
-        
+
     Returns:
         Formatted currency string
     """
     symbols = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
     symbol = symbols.get(currency, currency + " ")
-    
+
     if abs(value) >= 1_000_000_000_000:
         return f"{symbol}{value / 1_000_000_000_000:.2f}T"
     elif abs(value) >= 1_000_000_000:
@@ -35,11 +35,11 @@ def format_currency(value: Union[int, float, Decimal], currency: str = "USD") ->
 def format_percentage(value: float, decimals: int = 2) -> str:
     """
     Format a number as percentage.
-    
+
     Args:
         value: Decimal value (0.15 = 15%)
         decimals: Number of decimal places
-        
+
     Returns:
         Formatted percentage string
     """
@@ -49,10 +49,10 @@ def format_percentage(value: float, decimals: int = 2) -> str:
 def format_large_number(value: Union[int, float]) -> str:
     """
     Format large numbers with suffixes.
-    
+
     Args:
         value: Numeric value
-        
+
     Returns:
         Formatted number string
     """
@@ -71,12 +71,12 @@ def format_large_number(value: Union[int, float]) -> str:
 def safe_divide(numerator: float, denominator: float, default: float = 0.0) -> float:
     """
     Safely divide two numbers, returning default if denominator is zero.
-    
+
     Args:
         numerator: The numerator
         denominator: The denominator
         default: Default value if division fails
-        
+
     Returns:
         Result of division or default value
     """
@@ -91,11 +91,11 @@ def safe_divide(numerator: float, denominator: float, default: float = 0.0) -> f
 def calculate_percentage_change(old_value: float, new_value: float) -> Optional[float]:
     """
     Calculate percentage change between two values.
-    
+
     Args:
         old_value: Original value
         new_value: New value
-        
+
     Returns:
         Percentage change or None if calculation fails
     """
@@ -107,19 +107,19 @@ def calculate_percentage_change(old_value: float, new_value: float) -> Optional[
 def clean_numeric(value: Any) -> Optional[float]:
     """
     Clean and convert a value to float.
-    
+
     Args:
         value: Value to clean
-        
+
     Returns:
         Float value or None
     """
     if value is None:
         return None
-    
+
     if isinstance(value, (int, float)):
         return float(value)
-    
+
     if isinstance(value, str):
         # Remove common formatting
         cleaned = value.replace(",", "").replace("$", "").replace("%", "").strip()
@@ -127,22 +127,22 @@ def clean_numeric(value: Any) -> Optional[float]:
             return float(cleaned)
         except ValueError:
             return None
-    
+
     return None
 
 
 def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:
     """
     Truncate text to a maximum length.
-    
+
     Args:
         text: Text to truncate
         max_length: Maximum length
         suffix: Suffix to add when truncated
-        
+
     Returns:
         Truncated text
     """
     if len(text) <= max_length:
         return text
-    return text[:max_length - len(suffix)] + suffix
+    return text[: max_length - len(suffix)] + suffix

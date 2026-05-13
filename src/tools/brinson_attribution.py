@@ -96,8 +96,7 @@ def brinson_attribution(
 
         # Portfolio return
         port_return = sum(
-            float(port_weights[i]) * cum_returns.get(sym, 0)
-            for i, sym in enumerate(symbols)
+            float(port_weights[i]) * cum_returns.get(sym, 0) for i, sym in enumerate(symbols)
         )
         excess_return = port_return - bench_return
 
@@ -133,7 +132,8 @@ def brinson_attribution(
             port_sector_weight = sum(data["weights"])
             port_sector_return = (
                 sum(w * r for w, r in zip(data["weights"], data["returns"])) / port_sector_weight
-                if port_sector_weight > 0 else 0
+                if port_sector_weight > 0
+                else 0
             )
             bench_sec_weight = bench_sector_weight
             bench_sec_return = bench_sector_returns.get(sec, bench_return)
@@ -141,7 +141,9 @@ def brinson_attribution(
             # Brinson-Fachler formulas
             allocation = (port_sector_weight - bench_sec_weight) * (bench_sec_return - bench_return)
             selection = bench_sec_weight * (port_sector_return - bench_sec_return)
-            interaction = (port_sector_weight - bench_sec_weight) * (port_sector_return - bench_sec_return)
+            interaction = (port_sector_weight - bench_sec_weight) * (
+                port_sector_return - bench_sec_return
+            )
 
             total_allocation += allocation
             total_selection += selection
@@ -181,22 +183,28 @@ def brinson_attribution(
                 "allocation_effect_pct": round(total_allocation * 100, 2),
                 "selection_effect_pct": round(total_selection * 100, 2),
                 "interaction_effect_pct": round(total_interaction * 100, 2),
-                "total_explained_pct": round((total_allocation + total_selection + total_interaction) * 100, 2),
+                "total_explained_pct": round(
+                    (total_allocation + total_selection + total_interaction) * 100, 2
+                ),
             },
             "interpretation": {
                 "allocation": (
                     "Positive — overweighting outperforming sectors added value"
                     if total_allocation > 0.005
-                    else "Negative — sector allocation detracted from performance"
-                    if total_allocation < -0.005
-                    else "Neutral — sector allocation had minimal impact"
+                    else (
+                        "Negative — sector allocation detracted from performance"
+                        if total_allocation < -0.005
+                        else "Neutral — sector allocation had minimal impact"
+                    )
                 ),
                 "selection": (
                     "Positive — stock selection within sectors added value"
                     if total_selection > 0.005
-                    else "Negative — stock selection detracted from performance"
-                    if total_selection < -0.005
-                    else "Neutral — stock selection had minimal impact"
+                    else (
+                        "Negative — stock selection detracted from performance"
+                        if total_selection < -0.005
+                        else "Neutral — stock selection had minimal impact"
+                    )
                 ),
             },
             "sector_detail": sector_attribution,

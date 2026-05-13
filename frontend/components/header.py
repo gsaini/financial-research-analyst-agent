@@ -4,7 +4,6 @@ Top header navigation bar with brand and menus on same row.
 
 import streamlit as st
 
-
 # Navigation structure
 NAV_GROUPS = {
     "Analysis": [
@@ -153,6 +152,7 @@ def render_header():
 
     # Theme toggle (compact, in-line)
     from utils.theme import render_theme_toggle
+
     with st.container():
         c1, c2 = st.columns([10, 1])
         with c2:

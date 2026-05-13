@@ -4,11 +4,13 @@ Analysis data models.
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class TechnicalIndicators(BaseModel):
     """Technical indicator values."""
+
     rsi: Optional[float] = None
     macd: Optional[float] = None
     macd_signal: Optional[float] = None
@@ -19,6 +21,7 @@ class TechnicalIndicators(BaseModel):
 
 class TechnicalAnalysis(BaseModel):
     """Technical analysis results."""
+
     symbol: str
     trend: str = "neutral"
     trend_strength: float = 0.5
@@ -33,6 +36,7 @@ class TechnicalAnalysis(BaseModel):
 
 class ValuationMetrics(BaseModel):
     """Valuation ratio metrics."""
+
     pe_ratio: Optional[float] = None
     pb_ratio: Optional[float] = None
     ps_ratio: Optional[float] = None
@@ -42,6 +46,7 @@ class ValuationMetrics(BaseModel):
 
 class ProfitabilityMetrics(BaseModel):
     """Profitability metrics."""
+
     gross_margin: Optional[float] = None
     operating_margin: Optional[float] = None
     net_margin: Optional[float] = None
@@ -52,6 +57,7 @@ class ProfitabilityMetrics(BaseModel):
 
 class FundamentalAnalysis(BaseModel):
     """Fundamental analysis results."""
+
     symbol: str
     company_name: str = ""
     sector: str = ""
@@ -67,6 +73,7 @@ class FundamentalAnalysis(BaseModel):
 
 class SentimentAnalysis(BaseModel):
     """Sentiment analysis results."""
+
     symbol: str
     overall_sentiment: str = "neutral"
     sentiment_score: float = 0.0
@@ -80,6 +87,7 @@ class SentimentAnalysis(BaseModel):
 
 class RiskMetrics(BaseModel):
     """Risk analysis metrics."""
+
     volatility_daily: float = 0.0
     volatility_annual: float = 0.0
     var_95: float = 0.0
@@ -91,6 +99,7 @@ class RiskMetrics(BaseModel):
 
 class AnalysisResult(BaseModel):
     """Complete analysis result combining all analyses."""
+
     symbol: str
     current_price: float = 0.0
     technical: Optional[TechnicalAnalysis] = None
@@ -101,8 +110,7 @@ class AnalysisResult(BaseModel):
     recommendation: str = "HOLD"
     confidence: float = 0.5
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     from pydantic import ConfigDict
-    model_config = ConfigDict(
-        json_encoders={datetime: lambda v: v.isoformat()}
-    )
+
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})

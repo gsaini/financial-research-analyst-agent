@@ -18,12 +18,19 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
-    Column, String, Float, Integer, DateTime, Text, JSON,
-    Boolean, ForeignKey, Index, create_engine,
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    create_engine,
 )
-from sqlalchemy.orm import (
-    DeclarativeBase, Session, sessionmaker, relationship,
-)
+from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
 from src.utils.logger import get_logger
 
@@ -42,6 +49,7 @@ class Base(DeclarativeBase):
 
 class UserSession(Base):
     """Session-based user identification (no full auth)."""
+
     __tablename__ = "user_sessions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -57,6 +65,7 @@ class UserSession(Base):
 
 class Watchlist(Base):
     """User watchlist — tracks symbols a user is monitoring."""
+
     __tablename__ = "watchlists"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -69,13 +78,12 @@ class Watchlist(Base):
 
     user = relationship("UserSession", back_populates="watchlists")
 
-    __table_args__ = (
-        Index("ix_watchlist_user_symbol", "user_id", "symbol", unique=True),
-    )
+    __table_args__ = (Index("ix_watchlist_user_symbol", "user_id", "symbol", unique=True),)
 
 
 class Portfolio(Base):
     """User portfolio definition."""
+
     __tablename__ = "portfolios"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -85,11 +93,14 @@ class Portfolio(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("UserSession", back_populates="portfolios")
-    holdings = relationship("PortfolioHolding", back_populates="portfolio", cascade="all, delete-orphan")
+    holdings = relationship(
+        "PortfolioHolding", back_populates="portfolio", cascade="all, delete-orphan"
+    )
 
 
 class PortfolioHolding(Base):
     """Individual holding within a portfolio."""
+
     __tablename__ = "portfolio_holdings"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -104,6 +115,7 @@ class PortfolioHolding(Base):
 
 class AnalysisHistory(Base):
     """Stored analysis results for comparison over time."""
+
     __tablename__ = "analysis_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -120,9 +132,7 @@ class AnalysisHistory(Base):
 
     user = relationship("UserSession", back_populates="analyses")
 
-    __table_args__ = (
-        Index("ix_analysis_user_symbol", "user_id", "symbol"),
-    )
+    __table_args__ = (Index("ix_analysis_user_symbol", "user_id", "symbol"),)
 
 
 # ── Database Engine & Session ────────────────────────────────
@@ -136,6 +146,7 @@ def get_engine():
     global _engine
     if _engine is None:
         from src.config import settings
+
         _engine = create_engine(
             settings.database.database_url,
             echo=False,
@@ -181,9 +192,7 @@ def add_to_watchlist(session_id: str, symbol: str, notes: str = "") -> Dict:
     session = get_session()
     get_or_create_user(session_id)
 
-    existing = session.query(Watchlist).filter_by(
-        user_id=session_id, symbol=symbol.upper()
-    ).first()
+    existing = session.query(Watchlist).filter_by(user_id=session_id, symbol=symbol.upper()).first()
     if existing:
         return {"status": "already_exists", "symbol": symbol}
 
@@ -197,15 +206,15 @@ def get_watchlist(session_id: str) -> list:
     """Get user's watchlist."""
     session = get_session()
     items = session.query(Watchlist).filter_by(user_id=session_id).all()
-    return [{"symbol": w.symbol, "added_at": w.added_at.isoformat(), "notes": w.notes} for w in items]
+    return [
+        {"symbol": w.symbol, "added_at": w.added_at.isoformat(), "notes": w.notes} for w in items
+    ]
 
 
 def remove_from_watchlist(session_id: str, symbol: str) -> Dict:
     """Remove a symbol from watchlist."""
     session = get_session()
-    item = session.query(Watchlist).filter_by(
-        user_id=session_id, symbol=symbol.upper()
-    ).first()
+    item = session.query(Watchlist).filter_by(user_id=session_id, symbol=symbol.upper()).first()
     if item:
         session.delete(item)
         session.commit()

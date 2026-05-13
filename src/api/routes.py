@@ -1,67 +1,77 @@
 from datetime import timezone
+
 """
 FastAPI routes for the Financial Research Analyst API.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List
+import asyncio
 import time
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from src.agents import FinancialResearchAgent
 from src.api.schemas import (
     AnalysisRequest,
     AnalysisResponse,
+    BacktestRequest,
+    BacktestResponse,
+    DisruptionAnalysisRequest,
+    DisruptionAnalysisResponse,
+    DisruptionCompareRequest,
+    DisruptionCompareResponse,
+    DividendAnalysisRequest,
+    DividendAnalysisResponse,
+    DividendCompareRequest,
+    DividendCompareResponse,
+    EarningsAnalysisRequest,
+    EarningsAnalysisResponse,
+    EarningsCompareRequest,
+    EarningsCompareResponse,
+    ErrorResponse,
+    EventAnalysisResponse,
+    HealthResponse,
+    ObservationsResponse,
+    OptionsAnalysisResponse,
+    PeerComparisonRequest,
+    PeerComparisonResponse,
+    PerformanceResponse,
     PortfolioRequest,
     PortfolioResponse,
     ReportRequest,
     ReportResponse,
-    HealthResponse,
-    ErrorResponse,
+    SmartMoneyResponse,
     ThemeAnalysisRequest,
     ThemeAnalysisResponse,
     ThemeCompareRequest,
     ThemeListResponse,
     ThemeSummary,
-    PeerComparisonRequest,
-    PeerComparisonResponse,
-    DisruptionAnalysisRequest,
-    DisruptionAnalysisResponse,
-    DisruptionCompareRequest,
-    DisruptionCompareResponse,
-    EarningsAnalysisRequest,
-    EarningsAnalysisResponse,
-    EarningsCompareRequest,
-    EarningsCompareResponse,
-    PerformanceResponse,
-    EventAnalysisResponse,
-    BacktestRequest,
-    BacktestResponse,
-    ObservationsResponse,
-    SmartMoneyResponse,
-    OptionsAnalysisResponse,
-    DividendAnalysisRequest,
-    DividendAnalysisResponse,
-    DividendCompareRequest,
-    DividendCompareResponse,
 )
-from src.agents import FinancialResearchAgent
-from src.tools.market_data import get_stock_price, get_historical_data, get_company_info
-from src.tools.technical_indicators import calculate_rsi, calculate_macd, calculate_moving_averages
-from src.tools.theme_mapper import list_available_themes, analyze_theme, get_theme_definition
-from src.tools.peer_comparison import compare_peers
-from src.tools.disruption_metrics import analyze_disruption, compare_disruption
-from src.tools.earnings_data import analyze_earnings, compare_earnings
-from src.tools.performance_tracker import track_performance
-from src.tools.event_analyzer import analyze_events
-from src.tools.backtesting_engine import run_backtest, list_strategies
-from src.tools.insight_engine import generate_observations
-from src.tools.insider_activity import analyze_smart_money
-from src.tools.options_analyzer import analyze_options
-from src.tools.dividend_analyzer import analyze_dividends, compare_dividends
 from src.config import settings
+from src.tools.backtesting_engine import list_strategies, run_backtest
+from src.tools.disruption_metrics import analyze_disruption, compare_disruption
+from src.tools.dividend_analyzer import analyze_dividends, compare_dividends
+from src.tools.earnings_data import analyze_earnings, compare_earnings
+from src.tools.event_analyzer import analyze_events
+from src.tools.insider_activity import analyze_smart_money
+from src.tools.insight_engine import generate_observations
+from src.tools.market_data import get_company_info, get_historical_data, get_stock_price
+from src.tools.options_analyzer import analyze_options
+from src.tools.peer_comparison import compare_peers
+from src.tools.performance_tracker import track_performance
+from src.tools.technical_indicators import (
+    calculate_macd,
+    calculate_moving_averages,
+    calculate_rsi,
+)
+from src.tools.theme_mapper import (
+    analyze_theme,
+    get_theme_definition,
+    list_available_themes,
+)
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -101,6 +111,7 @@ def get_agent() -> FinancialResearchAgent:
 
 # Create router for API versioning
 from fastapi import APIRouter
+
 router = APIRouter(prefix="/api/v1")
 
 
@@ -207,7 +218,7 @@ async def health_check():
     if overall_status == "unhealthy":
         return JSONResponse(
             status_code=503,
-            content=health_response.model_dump(mode='json'),
+            content=health_response.model_dump(mode="json"),
         )
 
     return health_response
@@ -217,25 +228,25 @@ async def health_check():
 async def analyze_stock(request: AnalysisRequest):
     """
     Analyze a stock symbol.
-    
+
     Performs comprehensive analysis including technical, fundamental,
     sentiment, and risk analysis.
     """
     start_time = time.time()
-    
+
     try:
         logger.info(f"Analyzing {request.symbol}")
-        
+
         # Get current price
         price_data = get_stock_price(request.symbol)
         if "error" in price_data:
             raise HTTPException(status_code=400, detail=f"Invalid symbol: {request.symbol}")
-        
+
         current_price = price_data.get("current_price", 0)
-        
+
         # Get historical data
         hist_data = get_historical_data(request.symbol, period="1y")
-        
+
         # Calculate technical indicators
         technical = {}
         if "closes" in hist_data and len(hist_data["closes"]) > 0:
@@ -243,14 +254,14 @@ async def analyze_stock(request: AnalysisRequest):
             technical["rsi"] = calculate_rsi(closes)
             technical["macd"] = calculate_macd(closes)
             technical["moving_averages"] = calculate_moving_averages(closes)
-        
+
         # Get company info for fundamental
         company = get_company_info(request.symbol)
-        
+
         # Generate summary and recommendation
         rsi_value = technical.get("rsi", {}).get("value", 50)
         macd_hist = technical.get("macd", {}).get("histogram", 0)
-        
+
         if rsi_value < 30 and macd_hist > 0:
             recommendation = "BUY"
             confidence = 0.75
@@ -260,12 +271,12 @@ async def analyze_stock(request: AnalysisRequest):
         else:
             recommendation = "HOLD"
             confidence = 0.5
-        
+
         summary = f"{request.symbol} is currently trading at ${current_price:.2f}. "
         summary += f"Technical indicators suggest a {recommendation} signal with {confidence*100:.0f}% confidence."
-        
+
         execution_time = time.time() - start_time
-        
+
         return AnalysisResponse(
             symbol=request.symbol,
             analysis_type=request.analysis_type.value,
@@ -280,7 +291,7 @@ async def analyze_stock(request: AnalysisRequest):
             analyzed_at=datetime.now(timezone.utc),
             execution_time_seconds=round(execution_time, 2),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -293,12 +304,12 @@ async def get_technical_analysis(symbol: str):
     """Get technical analysis for a symbol."""
     try:
         hist_data = get_historical_data(symbol, period="1y")
-        
+
         if "error" in hist_data:
             raise HTTPException(status_code=400, detail=f"No data for symbol: {symbol}")
-        
+
         closes = hist_data.get("closes", [])
-        
+
         return {
             "symbol": symbol,
             "rsi": calculate_rsi(closes),
@@ -316,7 +327,7 @@ async def get_fundamental_analysis(symbol: str):
     try:
         company = get_company_info(symbol)
         price_data = get_stock_price(symbol)
-        
+
         return {
             "symbol": symbol,
             "company": company,
@@ -347,11 +358,13 @@ async def analyze_portfolio(request: PortfolioRequest):
         analyses = []
         for symbol in request.symbols:
             price_data = get_stock_price(symbol)
-            analyses.append({
-                "symbol": symbol,
-                "data": price_data,
-            })
-        
+            analyses.append(
+                {
+                    "symbol": symbol,
+                    "data": price_data,
+                }
+            )
+
         return PortfolioResponse(
             symbols=request.symbols,
             individual_analyses=analyses,
@@ -369,15 +382,15 @@ async def analyze_portfolio(request: PortfolioRequest):
 async def generate_report(request: ReportRequest):
     """Generate an investment research report."""
     import uuid
-    
+
     try:
         report_id = str(uuid.uuid4())[:8]
-        
+
         content = f"# Investment Research Report\n\n"
         content += f"Symbols: {', '.join(request.symbols)}\n"
         content += f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n"
         content += "## Summary\n\nDetailed analysis available upon request."
-        
+
         return ReportResponse(
             report_id=report_id,
             symbols=request.symbols,
@@ -463,6 +476,7 @@ async def analyze_investment_theme(theme_id: str, request: ThemeAnalysisRequest 
         if request and request.include_narrative:
             try:
                 from src.agents.thematic import ThematicAnalystAgent
+
                 agent = ThematicAnalystAgent()
                 enriched = await agent.analyze_with_narrative(theme_id)
                 result["outlook"] = enriched.get("outlook")
@@ -508,22 +522,22 @@ async def compare_investment_themes(request: ThemeCompareRequest):
         for tid in request.theme_ids:
             result = analyze_theme(tid)
             if "error" not in result:
-                comparison.append({
-                    "theme": result.get("theme"),
-                    "theme_id": tid,
-                    "performance": result.get("theme_performance", {}),
-                    "momentum_score": result.get("momentum_score", 0),
-                    "health_score": result.get("theme_health_score", 0),
-                    "diversification": result.get("theme_risk", {}).get(
-                        "diversification_score", "N/A"
-                    ),
-                    "intra_correlation": result.get("theme_risk", {}).get(
-                        "intra_correlation"
-                    ),
-                    "risk_level": result.get("risk_level", "Unknown"),
-                    "top_performers": result.get("top_performers", [])[:2],
-                    "laggards": result.get("laggards", [])[:2],
-                })
+                comparison.append(
+                    {
+                        "theme": result.get("theme"),
+                        "theme_id": tid,
+                        "performance": result.get("theme_performance", {}),
+                        "momentum_score": result.get("momentum_score", 0),
+                        "health_score": result.get("theme_health_score", 0),
+                        "diversification": result.get("theme_risk", {}).get(
+                            "diversification_score", "N/A"
+                        ),
+                        "intra_correlation": result.get("theme_risk", {}).get("intra_correlation"),
+                        "risk_level": result.get("risk_level", "Unknown"),
+                        "top_performers": result.get("top_performers", [])[:2],
+                        "laggards": result.get("laggards", [])[:2],
+                    }
+                )
             else:
                 comparison.append({"theme_id": tid, "error": result["error"]})
 
@@ -640,6 +654,7 @@ async def analyze_disruption_profile(request: DisruptionAnalysisRequest):
             # Use the agent for narrative generation
             try:
                 from src.agents.disruption import DisruptionAnalystAgent
+
                 agent = DisruptionAnalystAgent()
                 result = await agent.analyze_with_narrative(symbol)
             except Exception as agent_err:
@@ -694,6 +709,7 @@ async def compare_disruption_profiles(request: DisruptionCompareRequest):
         if request.include_narrative:
             try:
                 from src.agents.disruption import DisruptionAnalystAgent
+
                 agent = DisruptionAnalystAgent()
                 result = await agent.analyze_with_competitive_narrative(symbols)
             except Exception as agent_err:
@@ -773,6 +789,7 @@ async def analyze_earnings_profile(request: EarningsAnalysisRequest):
             # Use the agent for narrative generation
             try:
                 from src.agents.earnings import EarningsAnalystAgent
+
                 agent = EarningsAnalystAgent()
                 result = await agent.analyze_with_narrative(symbol)
             except Exception as agent_err:
@@ -828,6 +845,7 @@ async def compare_earnings_profiles(request: EarningsCompareRequest):
         if request.include_narrative:
             try:
                 from src.agents.earnings import EarningsAnalystAgent
+
                 agent = EarningsAnalystAgent()
                 result = await agent.analyze_with_comparative_narrative(symbols)
             except Exception as agent_err:
@@ -968,12 +986,17 @@ async def get_observations(symbol: str):
                 rsi = calculate_rsi(price_data["prices"])
                 macd = calculate_macd(price_data["prices"])
                 ma = calculate_moving_averages(price_data["prices"])
-                analyses["technical"] = {"rsi": rsi, "macd": macd, "moving_averages": ma}
+                analyses["technical"] = {
+                    "rsi": rsi,
+                    "macd": macd,
+                    "moving_averages": ma,
+                }
         except Exception:
             pass
 
         try:
             from src.tools.performance_tracker import track_performance
+
             perf = track_performance(sym)
             if perf and "error" not in perf:
                 analyses["performance"] = perf
@@ -982,6 +1005,7 @@ async def get_observations(symbol: str):
 
         try:
             from src.tools.earnings_data import analyze_earnings
+
             earn = analyze_earnings(sym)
             if earn and "error" not in earn:
                 analyses["earnings"] = earn
@@ -990,6 +1014,7 @@ async def get_observations(symbol: str):
 
         try:
             from src.tools.peer_comparison import compare_peers
+
             peers = compare_peers(sym)
             if peers and "error" not in peers:
                 analyses["peers"] = peers
@@ -1025,7 +1050,6 @@ async def get_insider_institutional(symbol: str, days: int = 90):
     except Exception as e:
         logger.error(f"Smart money analysis error for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 # ─────────────────────────────────────────────────────────────
@@ -1125,7 +1149,8 @@ async def compare_dividend_profiles(request: DividendCompareRequest):
         if request.include_narrative and result.get("comparison"):
             # Generate comparative narrative
             dividend_payers = [
-                c for c in result["comparison"]
+                c
+                for c in result["comparison"]
                 if c.get("dividend_yield", 0) > 0 and "error" not in c
             ]
 
@@ -1138,10 +1163,12 @@ async def compare_dividend_profiles(request: DividendCompareRequest):
                 )
 
                 if len(dividend_payers) > 1:
-                    others = [c['symbol'] for c in dividend_payers[1:3]]
+                    others = [c["symbol"] for c in dividend_payers[1:3]]
                     narrative += f"Other strong candidates include {', '.join(others)}. "
 
-                non_payers = [c['symbol'] for c in result["comparison"] if c.get("pays_dividends") is False]
+                non_payers = [
+                    c["symbol"] for c in result["comparison"] if c.get("pays_dividends") is False
+                ]
                 if non_payers:
                     narrative += f"Note: {', '.join(non_payers)} do not currently pay dividends."
 
@@ -1165,7 +1192,7 @@ async def http_exception_handler(request, exc):
         content=ErrorResponse(
             error=exc.detail,
             detail=str(exc),
-        ).model_dump(mode='json'),
+        ).model_dump(mode="json"),
     )
 
 
@@ -1182,6 +1209,7 @@ async def optimize_portfolio_endpoint(request: Dict[str, Any]):
     """
     try:
         from src.tools.portfolio_optimizer import optimize_portfolio
+
         symbols = request.get("symbols", [])
         method = request.get("method", "max_sharpe")
         if not symbols or len(symbols) < 2:
@@ -1198,6 +1226,7 @@ async def efficient_frontier_endpoint(request: Dict[str, Any]):
     """Generate efficient frontier curve."""
     try:
         from src.tools.portfolio_optimizer import calculate_efficient_frontier
+
         symbols = request.get("symbols", [])
         n_points = request.get("n_points", 30)
         if not symbols or len(symbols) < 2:
@@ -1214,6 +1243,7 @@ async def correlation_endpoint(request: Dict[str, Any]):
     """Compute correlation matrix with insights."""
     try:
         from src.tools.portfolio_optimizer import correlation_analysis
+
         symbols = request.get("symbols", [])
         if not symbols or len(symbols) < 2:
             raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
@@ -1232,6 +1262,7 @@ async def full_optimization_endpoint(request: Dict[str, Any]):
     """
     try:
         from src.tools.portfolio_optimizer import full_portfolio_optimization
+
         symbols = request.get("symbols", [])
         weights = request.get("current_weights")
         if not symbols or len(symbols) < 2:
@@ -1248,6 +1279,7 @@ async def rebalance_endpoint(request: Dict[str, Any]):
     """Get rebalancing suggestions vs optimal weights."""
     try:
         from src.tools.portfolio_optimizer import rebalance_suggestions
+
         symbols = request.get("symbols", [])
         weights = request.get("current_weights", [])
         method = request.get("method", "max_sharpe")
@@ -1265,6 +1297,7 @@ async def portfolio_benchmark_endpoint(request: Dict[str, Any]):
     """Compare portfolio vs benchmark (alpha, beta, tracking error)."""
     try:
         from src.tools.benchmark import calculate_portfolio_vs_benchmark
+
         symbols = request.get("symbols", [])
         weights = request.get("weights", [])
         benchmark = request.get("benchmark", "SPY")
@@ -1284,6 +1317,7 @@ async def portfolio_benchmark_endpoint(request: Dict[str, Any]):
 async def create_alert(request: Dict[str, Any]):
     """Create a new alert."""
     from src.tools.alerts import add_alert
+
     symbol = request.get("symbol", "")
     alert_type = request.get("type", request.get("alert_type", ""))
     threshold = request.get("threshold", request.get("value", 0))
@@ -1298,6 +1332,7 @@ async def create_alert(request: Dict[str, Any]):
 async def get_alerts(status: Optional[str] = None):
     """List all alerts. Optional status filter: active, triggered."""
     from src.tools.alerts import list_alerts
+
     return {"alerts": list_alerts(status=status)}
 
 
@@ -1305,6 +1340,7 @@ async def get_alerts(status: Optional[str] = None):
 async def get_alert_types():
     """List available alert types with descriptions."""
     from src.tools.alerts import get_available_alert_types
+
     return {"types": get_available_alert_types()}
 
 
@@ -1312,6 +1348,7 @@ async def get_alert_types():
 async def get_triggered():
     """Get recently triggered alerts."""
     from src.tools.alerts import get_triggered_history
+
     return {"triggered": get_triggered_history()}
 
 
@@ -1319,6 +1356,7 @@ async def get_triggered():
 async def get_single_alert(alert_id: str):
     """Get a single alert by ID."""
     from src.tools.alerts import get_alert
+
     result = get_alert(alert_id)
     if not result:
         raise HTTPException(status_code=404, detail="Alert not found")
@@ -1329,6 +1367,7 @@ async def get_single_alert(alert_id: str):
 async def patch_alert(alert_id: str, request: Dict[str, Any]):
     """Update an alert."""
     from src.tools.alerts import update_alert
+
     return update_alert(alert_id, **request)
 
 
@@ -1336,6 +1375,7 @@ async def patch_alert(alert_id: str, request: Dict[str, Any]):
 async def delete_alert(alert_id: str):
     """Delete an alert."""
     from src.tools.alerts import remove_alert
+
     return remove_alert(alert_id)
 
 
@@ -1343,12 +1383,16 @@ async def delete_alert(alert_id: str):
 async def evaluate_alerts():
     """Manually trigger evaluation of all pending alerts."""
     from src.tools.alerts import check_alerts
+
     triggered = check_alerts()
-    return {"evaluated": True, "triggered_count": len(triggered), "triggered": triggered}
+    return {
+        "evaluated": True,
+        "triggered_count": len(triggered),
+        "triggered": triggered,
+    }
 
 
 from typing import Optional
-
 
 # ── Analyst Consensus (Feature 16) ────────────────────────────
 
@@ -1358,6 +1402,7 @@ async def get_analyst_data(symbol: str):
     """Get analyst consensus, price targets, and estimate revisions."""
     try:
         from src.tools.analyst_tracker import get_analyst_consensus
+
         result = get_analyst_consensus(symbol.upper())
         if "error" in result:
             raise HTTPException(status_code=404, detail=result["error"])
@@ -1373,6 +1418,7 @@ async def compare_analyst_data(request: Dict[str, Any]):
     """Compare analyst consensus across multiple stocks."""
     try:
         from src.tools.analyst_tracker import compare_analyst_consensus
+
         symbols = request.get("symbols", [])
         if not symbols or len(symbols) < 2:
             raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
@@ -1391,6 +1437,7 @@ async def get_short_interest(symbol: str):
     """Get short interest analysis and squeeze scoring for a stock."""
     try:
         from src.tools.short_interest import analyze_short_interest
+
         result = analyze_short_interest(symbol.upper())
         if "error" in result:
             raise HTTPException(status_code=404, detail=result["error"])
@@ -1406,6 +1453,7 @@ async def compare_short_interest(request: Dict[str, Any]):
     """Compare short interest across multiple stocks."""
     try:
         from src.tools.short_interest import compare_short_interest
+
         symbols = request.get("symbols", [])
         if not symbols or len(symbols) < 2:
             raise HTTPException(status_code=400, detail="Provide at least 2 symbols")
@@ -1422,6 +1470,7 @@ async def short_squeeze_watchlist(min_score: int = 50):
     """Screen stocks for short squeeze potential."""
     try:
         from src.tools.short_interest import get_short_squeeze_watchlist
+
         result = get_short_squeeze_watchlist(min_squeeze_score=min_score)
         return result
     except Exception as e:
@@ -1447,6 +1496,7 @@ async def websocket_alerts(websocket: WebSocket):
 
     try:
         from src.tools.alerts import get_alert_manager
+
         manager = get_alert_manager()
 
         while True:
@@ -1486,9 +1536,6 @@ async def websocket_alerts(websocket: WebSocket):
         logger.error(f"WebSocket error: {e}")
 
 
-import asyncio
-
-
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}")
@@ -1497,5 +1544,5 @@ async def general_exception_handler(request, exc):
         content=ErrorResponse(
             error="Internal server error",
             detail=str(exc),
-        ).model_dump(mode='json'),
+        ).model_dump(mode="json"),
     )

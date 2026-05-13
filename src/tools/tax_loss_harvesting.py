@@ -73,9 +73,7 @@ def analyze_tax_loss_opportunities(
 
             # Get current price
             info = provider.get_info(symbol)
-            current_price = info.get(
-                "currentPrice", info.get("regularMarketPrice", 0)
-            )
+            current_price = info.get("currentPrice", info.get("regularMarketPrice", 0))
             if not current_price:
                 continue
 

@@ -1,11 +1,12 @@
 from datetime import timezone
+
 """
 Market data tools for fetching financial data from various sources.
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from src.data import get_provider
 from src.utils.logger import get_logger
@@ -16,17 +17,17 @@ logger = get_logger(__name__)
 def get_stock_price(symbol: str) -> Dict[str, Any]:
     """
     Get current stock price and basic metrics.
-    
+
     Args:
         symbol: Stock ticker symbol
-        
+
     Returns:
         Dictionary with current price data
     """
     try:
         provider = get_provider()
         info = provider.get_info(symbol)
-        
+
         return {
             "symbol": symbol,
             "current_price": info.get("currentPrice", info.get("regularMarketPrice", 0)),
@@ -41,10 +42,18 @@ def get_stock_price(symbol: str) -> Dict[str, Any]:
             "52_week_high": info.get("fiftyTwoWeekHigh", 0),
             "52_week_low": info.get("fiftyTwoWeekLow", 0),
             "change": round(info.get("currentPrice", 0) - info.get("previousClose", 0), 2),
-            "change_percent": round(
-                ((info.get("currentPrice", 0) - info.get("previousClose", 1)) / 
-                 info.get("previousClose", 1)) * 100, 2
-            ) if info.get("previousClose", 0) > 0 else 0,
+            "change_percent": (
+                round(
+                    (
+                        (info.get("currentPrice", 0) - info.get("previousClose", 1))
+                        / info.get("previousClose", 1)
+                    )
+                    * 100,
+                    2,
+                )
+                if info.get("previousClose", 0) > 0
+                else 0
+            ),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
@@ -55,21 +64,21 @@ def get_stock_price(symbol: str) -> Dict[str, Any]:
 def get_historical_data(symbol: str, period: str = "1y") -> Dict[str, Any]:
     """
     Get historical price data for a stock.
-    
+
     Args:
         symbol: Stock ticker symbol
         period: Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)
-        
+
     Returns:
         Dictionary with historical OHLCV data
     """
     try:
         provider = get_provider()
         hist = provider.get_history(symbol, period=period)
-        
+
         if hist.empty:
             return {"symbol": symbol, "error": "No historical data available"}
-        
+
         return {
             "symbol": symbol,
             "period": period,
@@ -92,17 +101,17 @@ def get_historical_data(symbol: str, period: str = "1y") -> Dict[str, Any]:
 def get_company_info(symbol: str) -> Dict[str, Any]:
     """
     Get detailed company information.
-    
+
     Args:
         symbol: Stock ticker symbol
-        
+
     Returns:
         Dictionary with company profile
     """
     try:
         provider = get_provider()
         info = provider.get_info(symbol)
-        
+
         return {
             "symbol": symbol,
             "name": info.get("longName", info.get("shortName", symbol)),
@@ -126,23 +135,23 @@ def get_company_info(symbol: str) -> Dict[str, Any]:
 def get_financial_statements(symbol: str) -> Dict[str, Any]:
     """
     Get company financial statements.
-    
+
     Args:
         symbol: Stock ticker symbol
-        
+
     Returns:
         Dictionary with financial statement data
     """
     try:
         provider = get_provider()
-        
+
         # Get financial statements
         income_stmt = provider.get_income_statement(symbol)
         balance_sheet = provider.get_balance_sheet(symbol)
         cash_flow = provider.get_cash_flow(symbol)
-        
+
         result = {"symbol": symbol}
-        
+
         # Income statement metrics
         if not income_stmt.empty:
             latest = income_stmt.iloc[:, 0]
@@ -153,18 +162,20 @@ def get_financial_statements(symbol: str) -> Dict[str, Any]:
                 "net_income": float(latest.get("Net Income", 0)),
                 "ebitda": float(latest.get("EBITDA", 0)),
             }
-        
+
         # Balance sheet metrics
         if not balance_sheet.empty:
             latest = balance_sheet.iloc[:, 0]
             result["balance_sheet"] = {
                 "total_assets": float(latest.get("Total Assets", 0)),
-                "total_liabilities": float(latest.get("Total Liabilities Net Minority Interest", 0)),
+                "total_liabilities": float(
+                    latest.get("Total Liabilities Net Minority Interest", 0)
+                ),
                 "total_equity": float(latest.get("Total Equity Gross Minority Interest", 0)),
                 "cash": float(latest.get("Cash And Cash Equivalents", 0)),
                 "total_debt": float(latest.get("Total Debt", 0)),
             }
-        
+
         # Cash flow metrics
         if not cash_flow.empty:
             latest = cash_flow.iloc[:, 0]
@@ -173,10 +184,9 @@ def get_financial_statements(symbol: str) -> Dict[str, Any]:
                 "capital_expenditure": float(latest.get("Capital Expenditure", 0)),
                 "free_cash_flow": float(latest.get("Free Cash Flow", 0)),
             }
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Error fetching financial statements for {symbol}: {e}")
         return {"symbol": symbol, "error": str(e)}
-

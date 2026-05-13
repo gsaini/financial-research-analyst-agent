@@ -17,10 +17,10 @@ Usage::
 from __future__ import annotations
 
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, asdict
 
 from src.utils.logger import get_logger
 
@@ -117,7 +117,7 @@ class AlertManager:
         except ValueError:
             return {
                 "error": f"Invalid alert type: {alert_type}. "
-                         f"Valid: {[t.value for t in AlertType]}",
+                f"Valid: {[t.value for t in AlertType]}",
             }
 
         alert = Alert(
@@ -227,6 +227,7 @@ class AlertManager:
         market_data = {}
         try:
             from src.data import get_provider
+
             provider = get_provider()
 
             for sym in symbols:
@@ -257,8 +258,12 @@ class AlertManager:
                         # Check for recent cross
                         prev_sma_50 = float(closes[-51:-1].mean())
                         prev_sma_200 = float(closes[-201:-1].mean())
-                        data["golden_cross"] = data["sma_50"] > data["sma_200"] and prev_sma_50 <= prev_sma_200
-                        data["death_cross"] = data["sma_50"] < data["sma_200"] and prev_sma_50 >= prev_sma_200
+                        data["golden_cross"] = (
+                            data["sma_50"] > data["sma_200"] and prev_sma_50 <= prev_sma_200
+                        )
+                        data["death_cross"] = (
+                            data["sma_50"] < data["sma_200"] and prev_sma_50 >= prev_sma_200
+                        )
 
                 # Calendar data
                 try:
@@ -273,7 +278,9 @@ class AlertManager:
                             next_earnings = None
 
                         if next_earnings:
-                            data["days_to_earnings"] = (next_earnings - datetime.now(timezone.utc)).days
+                            data["days_to_earnings"] = (
+                                next_earnings - datetime.now(timezone.utc)
+                            ).days
                 except Exception:
                     pass
 
@@ -301,13 +308,19 @@ class AlertManager:
         # ── Price alerts ──
         if alert.alert_type == AlertType.PRICE_ABOVE:
             if price >= threshold:
-                return {"triggered": True, "value": price,
-                        "message": f"{alert.symbol} crossed above ${threshold:.2f} (now ${price:.2f})"}
+                return {
+                    "triggered": True,
+                    "value": price,
+                    "message": f"{alert.symbol} crossed above ${threshold:.2f} (now ${price:.2f})",
+                }
 
         elif alert.alert_type == AlertType.PRICE_BELOW:
             if price <= threshold:
-                return {"triggered": True, "value": price,
-                        "message": f"{alert.symbol} dropped below ${threshold:.2f} (now ${price:.2f})"}
+                return {
+                    "triggered": True,
+                    "value": price,
+                    "message": f"{alert.symbol} dropped below ${threshold:.2f} (now ${price:.2f})",
+                }
 
         elif alert.alert_type == AlertType.PERCENT_CHANGE:
             prev = data.get("prev_close", 0)
@@ -315,8 +328,11 @@ class AlertManager:
                 pct = abs((price - prev) / prev * 100)
                 if pct >= threshold:
                     direction = "up" if price > prev else "down"
-                    return {"triggered": True, "value": pct,
-                            "message": f"{alert.symbol} moved {direction} {pct:.1f}% today"}
+                    return {
+                        "triggered": True,
+                        "value": pct,
+                        "message": f"{alert.symbol} moved {direction} {pct:.1f}% today",
+                    }
 
         # ── Volume alerts ──
         elif alert.alert_type == AlertType.VOLUME_SPIKE:
@@ -324,68 +340,101 @@ class AlertManager:
             avg_vol = data.get("avg_volume", 1)
             ratio = vol / avg_vol if avg_vol > 0 else 0
             if ratio >= threshold:
-                return {"triggered": True, "value": ratio,
-                        "message": f"{alert.symbol} volume is {ratio:.1f}x average ({vol:,} vs avg {avg_vol:,})"}
+                return {
+                    "triggered": True,
+                    "value": ratio,
+                    "message": f"{alert.symbol} volume is {ratio:.1f}x average ({vol:,} vs avg {avg_vol:,})",
+                }
 
         # ── Technical alerts ──
         elif alert.alert_type == AlertType.RSI_OVERSOLD:
             rsi = data.get("rsi")
             if rsi is not None and rsi <= threshold:
-                return {"triggered": True, "value": rsi,
-                        "message": f"{alert.symbol} RSI dropped to {rsi:.1f} (oversold threshold: {threshold})"}
+                return {
+                    "triggered": True,
+                    "value": rsi,
+                    "message": f"{alert.symbol} RSI dropped to {rsi:.1f} (oversold threshold: {threshold})",
+                }
 
         elif alert.alert_type == AlertType.RSI_OVERBOUGHT:
             rsi = data.get("rsi")
             if rsi is not None and rsi >= threshold:
-                return {"triggered": True, "value": rsi,
-                        "message": f"{alert.symbol} RSI rose to {rsi:.1f} (overbought threshold: {threshold})"}
+                return {
+                    "triggered": True,
+                    "value": rsi,
+                    "message": f"{alert.symbol} RSI rose to {rsi:.1f} (overbought threshold: {threshold})",
+                }
 
         elif alert.alert_type == AlertType.MACD_BULLISH:
             macd = data.get("macd", {})
             if macd.get("crossover") == "bullish":
-                return {"triggered": True, "value": macd.get("histogram", 0),
-                        "message": f"{alert.symbol} MACD bullish crossover detected"}
+                return {
+                    "triggered": True,
+                    "value": macd.get("histogram", 0),
+                    "message": f"{alert.symbol} MACD bullish crossover detected",
+                }
 
         elif alert.alert_type == AlertType.MACD_BEARISH:
             macd = data.get("macd", {})
             if macd.get("crossover") == "bearish":
-                return {"triggered": True, "value": macd.get("histogram", 0),
-                        "message": f"{alert.symbol} MACD bearish crossover detected"}
+                return {
+                    "triggered": True,
+                    "value": macd.get("histogram", 0),
+                    "message": f"{alert.symbol} MACD bearish crossover detected",
+                }
 
         elif alert.alert_type == AlertType.GOLDEN_CROSS:
             if data.get("golden_cross"):
-                return {"triggered": True, "value": data.get("sma_50", 0),
-                        "message": f"{alert.symbol} Golden Cross: 50-SMA crossed above 200-SMA"}
+                return {
+                    "triggered": True,
+                    "value": data.get("sma_50", 0),
+                    "message": f"{alert.symbol} Golden Cross: 50-SMA crossed above 200-SMA",
+                }
 
         elif alert.alert_type == AlertType.DEATH_CROSS:
             if data.get("death_cross"):
-                return {"triggered": True, "value": data.get("sma_50", 0),
-                        "message": f"{alert.symbol} Death Cross: 50-SMA crossed below 200-SMA"}
+                return {
+                    "triggered": True,
+                    "value": data.get("sma_50", 0),
+                    "message": f"{alert.symbol} Death Cross: 50-SMA crossed below 200-SMA",
+                }
 
         # ── 52-week alerts ──
         elif alert.alert_type == AlertType.NEW_HIGH_52W:
             if price >= data.get("high_52w", float("inf")):
-                return {"triggered": True, "value": price,
-                        "message": f"{alert.symbol} hit new 52-week high at ${price:.2f}"}
+                return {
+                    "triggered": True,
+                    "value": price,
+                    "message": f"{alert.symbol} hit new 52-week high at ${price:.2f}",
+                }
 
         elif alert.alert_type == AlertType.NEW_LOW_52W:
             low = data.get("low_52w", 0)
             if low > 0 and price <= low:
-                return {"triggered": True, "value": price,
-                        "message": f"{alert.symbol} hit new 52-week low at ${price:.2f}"}
+                return {
+                    "triggered": True,
+                    "value": price,
+                    "message": f"{alert.symbol} hit new 52-week low at ${price:.2f}",
+                }
 
         # ── Calendar alerts ──
         elif alert.alert_type == AlertType.EARNINGS_SOON:
             days = data.get("days_to_earnings")
             if days is not None and 0 <= days <= threshold:
-                return {"triggered": True, "value": days,
-                        "message": f"{alert.symbol} earnings in {days} day(s)"}
+                return {
+                    "triggered": True,
+                    "value": days,
+                    "message": f"{alert.symbol} earnings in {days} day(s)",
+                }
 
         elif alert.alert_type == AlertType.EX_DIVIDEND_SOON:
             days = data.get("days_to_ex_dividend")
             if days is not None and 0 <= days <= threshold:
-                return {"triggered": True, "value": days,
-                        "message": f"{alert.symbol} ex-dividend date in {days} day(s)"}
+                return {
+                    "triggered": True,
+                    "value": days,
+                    "message": f"{alert.symbol} ex-dividend date in {days} day(s)",
+                }
 
         # ── Short interest alerts ──
         elif alert.alert_type == AlertType.SHORT_INTEREST_SPIKE:
@@ -394,8 +443,11 @@ class AlertManager:
                 if short_pct < 1:
                     short_pct *= 100
                 if short_pct >= threshold:
-                    return {"triggered": True, "value": short_pct,
-                            "message": f"{alert.symbol} short interest at {short_pct:.1f}% of float (threshold: {threshold}%)"}
+                    return {
+                        "triggered": True,
+                        "value": short_pct,
+                        "message": f"{alert.symbol} short interest at {short_pct:.1f}% of float (threshold: {threshold}%)",
+                    }
 
         return {"triggered": False}
 
@@ -403,7 +455,8 @@ class AlertManager:
     def _calc_rsi(closes, period: int = 14) -> float:
         """Calculate RSI from close prices."""
         import numpy as np
-        deltas = np.diff(closes[-period - 1:])
+
+        deltas = np.diff(closes[-period - 1 :])
         gains = np.where(deltas > 0, deltas, 0)
         losses = np.where(deltas < 0, -deltas, 0)
         avg_gain = np.mean(gains)
@@ -519,7 +572,4 @@ def get_available_alert_types() -> List[Dict[str, str]]:
         "ex_dividend_soon": "Triggers N days before ex-dividend date",
         "short_interest_spike": "Triggers when short % of float exceeds threshold",
     }
-    return [
-        {"type": t.value, "description": descriptions.get(t.value, "")}
-        for t in AlertType
-    ]
+    return [{"type": t.value, "description": descriptions.get(t.value, "")} for t in AlertType]

@@ -73,14 +73,18 @@ def detect_volume_anomalies(
                 if idx > 0:
                     price_change = float((close.iloc[idx] / close.iloc[idx - 1] - 1) * 100)
 
-            anomaly_list.append({
-                "date": date_str,
-                "z_score": round(float(z), 2),
-                "volume": int(volume.loc[date]) if date in volume.index else 0,
-                "avg_volume": int(rolling_mean.loc[date]) if date in rolling_mean.index else 0,
-                "price_change_pct": round(price_change, 2),
-                "type": "surge" if z > 0 else "drought",
-            })
+            anomaly_list.append(
+                {
+                    "date": date_str,
+                    "z_score": round(float(z), 2),
+                    "volume": int(volume.loc[date]) if date in volume.index else 0,
+                    "avg_volume": (
+                        int(rolling_mean.loc[date]) if date in rolling_mean.index else 0
+                    ),
+                    "price_change_pct": round(price_change, 2),
+                    "type": "surge" if z > 0 else "drought",
+                }
+            )
 
         return {
             "symbol": symbol,
@@ -90,8 +94,11 @@ def detect_volume_anomalies(
             "anomalies": sorted(anomaly_list, key=lambda x: abs(x["z_score"]), reverse=True),
             "interpretation": (
                 f"Found {len(anomaly_list)} volume anomalies in the last {lookback_days} days. "
-                + ("Volume surges often indicate institutional activity or news events."
-                   if anomaly_list else "No unusual volume detected — normal trading activity.")
+                + (
+                    "Volume surges often indicate institutional activity or news events."
+                    if anomaly_list
+                    else "No unusual volume detected — normal trading activity."
+                )
             ),
             "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -147,13 +154,15 @@ def detect_price_anomalies(
             date_str = str(date.date()) if hasattr(date, "date") else str(date)
             ret = float(returns.loc[date] * 100) if date in returns.index else 0
 
-            anomaly_list.append({
-                "date": date_str,
-                "z_score": round(float(z), 2),
-                "return_pct": round(ret, 2),
-                "direction": "up" if ret > 0 else "down",
-                "magnitude": "extreme" if abs(z) > 3.5 else "significant",
-            })
+            anomaly_list.append(
+                {
+                    "date": date_str,
+                    "z_score": round(float(z), 2),
+                    "return_pct": round(ret, 2),
+                    "direction": "up" if ret > 0 else "down",
+                    "magnitude": "extreme" if abs(z) > 3.5 else "significant",
+                }
+            )
 
         # Gap detection (open vs previous close > 2%)
         gaps = []
@@ -165,11 +174,13 @@ def detect_price_anomalies(
                 if abs(gap_pct) > 2:
                     date = hist.index[-i]
                     date_str = str(date.date()) if hasattr(date, "date") else str(date)
-                    gaps.append({
-                        "date": date_str,
-                        "gap_pct": round(gap_pct, 2),
-                        "direction": "gap_up" if gap_pct > 0 else "gap_down",
-                    })
+                    gaps.append(
+                        {
+                            "date": date_str,
+                            "gap_pct": round(gap_pct, 2),
+                            "direction": "gap_up" if gap_pct > 0 else "gap_down",
+                        }
+                    )
 
         return {
             "symbol": symbol,
@@ -184,8 +195,11 @@ def detect_price_anomalies(
             },
             "interpretation": (
                 f"Found {len(anomaly_list)} extreme return days and {len(gaps)} gap events. "
-                + ("Frequent anomalies suggest high event risk." if len(anomaly_list) > 3
-                   else "Normal price behavior with few outliers.")
+                + (
+                    "Frequent anomalies suggest high event risk."
+                    if len(anomaly_list) > 3
+                    else "Normal price behavior with few outliers."
+                )
             ),
             "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -220,17 +234,21 @@ def detect_pattern_breaks(symbol: str) -> Dict[str, Any]:
         if baseline_vol > 0:
             vol_ratio = recent_vol / baseline_vol
             if vol_ratio > 1.5:
-                breaks.append({
-                    "type": "volatility_expansion",
-                    "significance": round(vol_ratio, 2),
-                    "detail": f"Recent 20-day vol is {vol_ratio:.1f}x the prior baseline — regime shift to higher volatility.",
-                })
+                breaks.append(
+                    {
+                        "type": "volatility_expansion",
+                        "significance": round(vol_ratio, 2),
+                        "detail": f"Recent 20-day vol is {vol_ratio:.1f}x the prior baseline — regime shift to higher volatility.",
+                    }
+                )
             elif vol_ratio < 0.5:
-                breaks.append({
-                    "type": "volatility_compression",
-                    "significance": round(1 / vol_ratio, 2),
-                    "detail": f"Recent 20-day vol is {vol_ratio:.1f}x the prior baseline — compression may precede a large move.",
-                })
+                breaks.append(
+                    {
+                        "type": "volatility_compression",
+                        "significance": round(1 / vol_ratio, 2),
+                        "detail": f"Recent 20-day vol is {vol_ratio:.1f}x the prior baseline — compression may precede a large move.",
+                    }
+                )
 
         # 2. Trend break (price crossing SMA-50)
         sma_50 = close.rolling(50).mean()
@@ -238,17 +256,21 @@ def detect_pattern_breaks(symbol: str) -> Dict[str, Any]:
             recent_above = float(close.iloc[-1]) > float(sma_50.iloc[-1])
             past_above = float(close.iloc[-20]) > float(sma_50.iloc[-20])
             if recent_above and not past_above:
-                breaks.append({
-                    "type": "bullish_trend_break",
-                    "significance": 1.0,
-                    "detail": "Price has crossed above the 50-day SMA — potential trend reversal to bullish.",
-                })
+                breaks.append(
+                    {
+                        "type": "bullish_trend_break",
+                        "significance": 1.0,
+                        "detail": "Price has crossed above the 50-day SMA — potential trend reversal to bullish.",
+                    }
+                )
             elif not recent_above and past_above:
-                breaks.append({
-                    "type": "bearish_trend_break",
-                    "significance": 1.0,
-                    "detail": "Price has fallen below the 50-day SMA — potential trend reversal to bearish.",
-                })
+                breaks.append(
+                    {
+                        "type": "bearish_trend_break",
+                        "significance": 1.0,
+                        "detail": "Price has fallen below the 50-day SMA — potential trend reversal to bearish.",
+                    }
+                )
 
         # 3. Volume regime change
         recent_vol_avg = float(volume.tail(20).mean())
@@ -256,17 +278,21 @@ def detect_pattern_breaks(symbol: str) -> Dict[str, Any]:
         if baseline_vol_avg > 0:
             vol_change = recent_vol_avg / baseline_vol_avg
             if vol_change > 2.0:
-                breaks.append({
-                    "type": "volume_surge_regime",
-                    "significance": round(vol_change, 2),
-                    "detail": f"Average volume has increased {vol_change:.1f}x — sustained elevated interest.",
-                })
+                breaks.append(
+                    {
+                        "type": "volume_surge_regime",
+                        "significance": round(vol_change, 2),
+                        "detail": f"Average volume has increased {vol_change:.1f}x — sustained elevated interest.",
+                    }
+                )
             elif vol_change < 0.5:
-                breaks.append({
-                    "type": "volume_dry_up",
-                    "significance": round(1 / vol_change, 2),
-                    "detail": "Volume has dropped significantly — reduced market interest or consolidation.",
-                })
+                breaks.append(
+                    {
+                        "type": "volume_dry_up",
+                        "significance": round(1 / vol_change, 2),
+                        "detail": "Volume has dropped significantly — reduced market interest or consolidation.",
+                    }
+                )
 
         return {
             "symbol": symbol,
@@ -274,8 +300,11 @@ def detect_pattern_breaks(symbol: str) -> Dict[str, Any]:
             "breaks": breaks,
             "interpretation": (
                 f"Detected {len(breaks)} pattern break(s). "
-                + ("Regime changes suggest the stock is entering a new phase."
-                   if breaks else "No significant regime changes detected — stable behavior.")
+                + (
+                    "Regime changes suggest the stock is entering a new phase."
+                    if breaks
+                    else "No significant regime changes detected — stable behavior."
+                )
             ),
             "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }

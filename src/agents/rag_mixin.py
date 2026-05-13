@@ -163,9 +163,7 @@ class RAGMixin:
                         text = hit.get("text", "").strip()
                         if text:
                             meta = hit.get("metadata", {})
-                            source = " ".join(
-                                filter(None, [meta.get("quarter"), meta.get("year")])
-                            )
+                            source = " ".join(filter(None, [meta.get("quarter"), meta.get("year")]))
                             header = f"[Earnings Transcript{' - ' + source if source else ''}]"
                             context_parts.append(f"{header}\n{text}")
                 except Exception:

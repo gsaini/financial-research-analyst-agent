@@ -86,21 +86,27 @@ def forecast_price(
     """
     try:
         from sklearn.ensemble import GradientBoostingRegressor
+        from sklearn.metrics import mean_absolute_error, r2_score
         from sklearn.model_selection import TimeSeriesSplit
-        from sklearn.metrics import r2_score, mean_absolute_error
 
         provider = get_provider()
         hist = provider.get_history(symbol, period="2y", interval="1d")
 
         if hist is None or len(hist) < 100:
-            return {"symbol": symbol, "error": "Insufficient historical data (need 2 years)"}
+            return {
+                "symbol": symbol,
+                "error": "Insufficient historical data (need 2 years)",
+            }
 
         current_price = float(hist["Close"].iloc[-1])
 
         # Build features
         feat_df = _build_features(hist)
         if len(feat_df) < 60:
-            return {"symbol": symbol, "error": "Insufficient data after feature engineering"}
+            return {
+                "symbol": symbol,
+                "error": "Insufficient data after feature engineering",
+            }
 
         feature_cols = [c for c in feat_df.columns if c != "target"]
         X = feat_df[feature_cols].values
@@ -138,21 +144,23 @@ def forecast_price(
         for day in range(horizon_days):
             pred_return = float(model.predict(last_features)[0])
             forecasted_returns.append(pred_return)
-            price *= (1 + pred_return)
+            price *= 1 + pred_return
 
             # Update features (simplified — shift lags)
             new_feat = last_features.copy()
             # Shift return features
             for i, lag in enumerate([1, 5, 10, 20]):
                 if i < new_feat.shape[1]:
-                    new_feat[0, i] = pred_return if day < lag else forecasted_returns[max(0, day - lag)]
+                    new_feat[0, i] = (
+                        pred_return if day < lag else forecasted_returns[max(0, day - lag)]
+                    )
             last_features = new_feat
 
         # Build price paths
         prices = [current_price]
         p = current_price
         for r in forecasted_returns:
-            p *= (1 + r)
+            p *= 1 + r
             prices.append(round(p, 2))
 
         # Confidence bands (widening over time)
@@ -162,8 +170,8 @@ def forecast_price(
         p_down = current_price
         for day, r in enumerate(forecasted_returns, 1):
             width = pred_std * np.sqrt(day) * 1.96  # 95% CI
-            p_up *= (1 + r + width)
-            p_down *= (1 + r - width)
+            p_up *= 1 + r + width
+            p_down *= 1 + r - width
             upper.append(round(p_up, 2))
             lower.append(round(max(0, p_down), 2))
 
@@ -175,7 +183,9 @@ def forecast_price(
                     "price": prices[h] if h < len(prices) else prices[-1],
                     "upper": upper[h - 1] if h <= len(upper) else upper[-1],
                     "lower": lower[h - 1] if h <= len(lower) else lower[-1],
-                    "return_pct": round((prices[min(h, len(prices) - 1)] / current_price - 1) * 100, 2),
+                    "return_pct": round(
+                        (prices[min(h, len(prices) - 1)] / current_price - 1) * 100, 2
+                    ),
                 }
 
         # Trend direction
@@ -205,7 +215,10 @@ def forecast_price(
         }
 
     except ImportError:
-        return {"symbol": symbol, "error": "scikit-learn not installed — pip install scikit-learn"}
+        return {
+            "symbol": symbol,
+            "error": "scikit-learn not installed — pip install scikit-learn",
+        }
     except Exception as e:
         logger.error(f"Forecast failed for {symbol}: {e}")
         return {"symbol": symbol, "error": str(e)}
@@ -268,8 +281,7 @@ def decompose_trend(symbol: str) -> Dict[str, Any]:
         monthly_avg = close.groupby(close.index.month).mean()
         overall_avg = close.mean()
         seasonal_factors = {
-            int(m): round((v / overall_avg - 1) * 100, 2)
-            for m, v in monthly_avg.items()
+            int(m): round((v / overall_avg - 1) * 100, 2) for m, v in monthly_avg.items()
         }
 
         # Noise level (residual std as % of price)

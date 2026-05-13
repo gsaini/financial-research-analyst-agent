@@ -60,8 +60,9 @@ def _ema(prices: np.ndarray, idx: int, period: int) -> Optional[float]:
     return float(ema_val)
 
 
-def _macd_histogram(prices: np.ndarray, idx: int,
-                    fast: int = 12, slow: int = 26, signal: int = 9) -> Optional[float]:
+def _macd_histogram(
+    prices: np.ndarray, idx: int, fast: int = 12, slow: int = 26, signal: int = 9
+) -> Optional[float]:
     """Return MACD histogram value at *idx*."""
     if idx < slow + signal - 1:
         return None
@@ -89,8 +90,7 @@ def _macd_histogram(prices: np.ndarray, idx: int,
     return float(macd_line[-1] - sig_line[-1])
 
 
-def _bollinger(prices: np.ndarray, idx: int,
-               period: int = 20, num_std: float = 2.0):
+def _bollinger(prices: np.ndarray, idx: int, period: int = 20, num_std: float = 2.0):
     """Return (lower_band, upper_band) at *idx*, or (None, None)."""
     if idx < period - 1:
         return None, None

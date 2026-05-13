@@ -95,12 +95,14 @@ class RAGRetriever:
         ):
             # ChromaDB distance is L2; convert to similarity score (0-1)
             relevance = max(0, 1.0 - (dist / 2.0))
-            output.append({
-                "text": text,
-                "metadata": meta,
-                "relevance_score": round(relevance, 3),
-                "id": doc_id,
-            })
+            output.append(
+                {
+                    "text": text,
+                    "metadata": meta,
+                    "relevance_score": round(relevance, 3),
+                    "id": doc_id,
+                }
+            )
 
         return output
 

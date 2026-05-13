@@ -4,18 +4,19 @@ risk-adjusted metrics, rolling returns, and drawdown analysis.
 """
 
 import streamlit as st
-from utils.theme import inject_css, COLORS
-from utils.session import init_session_state
-from utils.formatters import format_percent, format_currency, format_number
-from utils.data_service import track_performance
 from components.header import render_header
 from components.plotly_charts import (
-    create_gauge_chart,
-    create_line_chart,
     create_area_chart,
     create_benchmark_bar,
+    create_gauge_chart,
     create_horizontal_bar,
+    create_line_chart,
 )
+
+from utils.data_service import track_performance
+from utils.formatters import format_currency, format_number, format_percent
+from utils.session import init_session_state
+from utils.theme import COLORS, inject_css
 
 # ─── Page Config ─────────────────────────────────────────────
 st.set_page_config(
@@ -34,12 +35,16 @@ st.caption("Multi-horizon returns, benchmark comparison, risk-adjusted metrics &
 # ─── Symbol Input ────────────────────────────────────────────
 col1, col2 = st.columns([3, 1])
 with col1:
-    symbol = st.text_input(
-        "Stock Symbol",
-        value=st.session_state.get("selected_symbol", "AAPL"),
-        placeholder="Enter ticker (e.g., AAPL)",
-        key="perf_symbol",
-    ).strip().upper()
+    symbol = (
+        st.text_input(
+            "Stock Symbol",
+            value=st.session_state.get("selected_symbol", "AAPL"),
+            placeholder="Enter ticker (e.g., AAPL)",
+            key="perf_symbol",
+        )
+        .strip()
+        .upper()
+    )
 
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -66,7 +71,8 @@ sector_etf = result.get("sector_etf", "")
 current_price = result.get("current_price", 0)
 date_range = f"{result.get('start_date', '')} to {result.get('end_date', '')}"
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem;
             background: {COLORS['bg_card']}; border-radius: 10px; border: 1px solid {COLORS['border']};
             margin-bottom: 1.5rem;">
@@ -85,12 +91,15 @@ st.markdown(f"""
         <div style="font-size: 0.7rem; color: {COLORS['text_muted']};">{date_range} · {result.get('data_points', 0)} data points</div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ─── Absolute Returns ───────────────────────────────────────
 abs_returns = result.get("absolute_returns", {})
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
     <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
     <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: {COLORS['text_primary']}; font-size: 0.9rem; font-weight: 600;">
@@ -98,11 +107,20 @@ st.markdown(f"""
     </h3>
     <div style="flex: 1; height: 1px; background: linear-gradient(90deg, {COLORS['border']}, transparent);"></div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 horizon_display = [
-    ("1D", "1_day"), ("1W", "1_week"), ("1M", "1_month"), ("3M", "3_month"),
-    ("6M", "6_month"), ("YTD", "ytd"), ("1Y", "1_year"), ("3Y", "3_year"), ("5Y", "5_year"),
+    ("1D", "1_day"),
+    ("1W", "1_week"),
+    ("1M", "1_month"),
+    ("3M", "3_month"),
+    ("6M", "6_month"),
+    ("YTD", "ytd"),
+    ("1Y", "1_year"),
+    ("3Y", "3_year"),
+    ("5Y", "5_year"),
 ]
 
 cols = st.columns(len(horizon_display))
@@ -111,7 +129,12 @@ for col, (label, key) in zip(cols, horizon_display):
     with col:
         if val is not None:
             delta_color = "normal" if val >= 0 else "inverse"
-            col.metric(label=label, value=format_percent(val), delta=format_percent(val), delta_color=delta_color)
+            col.metric(
+                label=label,
+                value=format_percent(val),
+                delta=format_percent(val),
+                delta_color=delta_color,
+            )
         else:
             col.metric(label=label, value="N/A")
 
@@ -121,7 +144,8 @@ st.markdown("<br>", unsafe_allow_html=True)
 bench = result.get("benchmark_comparison", {})
 
 if bench:
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
         <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
         <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: {COLORS['text_primary']}; font-size: 0.9rem; font-weight: 600;">
@@ -129,7 +153,9 @@ if bench:
         </h3>
         <div style="flex: 1; height: 1px; background: linear-gradient(90deg, {COLORS['border']}, transparent);"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     bench_tabs = list(bench.keys())
     bench_tab_labels = []
@@ -151,12 +177,15 @@ if bench:
             else:
                 assessment_color = COLORS["text_muted"]
 
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div style="font-size: 0.9rem; color: {assessment_color}; font-weight: 600;
                         font-family: 'Inter', sans-serif; margin-bottom: 1rem;">
                 {assessment}
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             # Alpha metrics
             alpha_horizons = ["1_month", "3_month", "1_year", "3_year"]
@@ -203,7 +232,8 @@ if bench:
 risk = result.get("risk_adjusted_metrics", {})
 
 if risk:
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
         <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
         <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: {COLORS['text_primary']}; font-size: 0.9rem; font-weight: 600;">
@@ -211,7 +241,9 @@ if risk:
         </h3>
         <div style="flex: 1; height: 1px; background: linear-gradient(90deg, {COLORS['border']}, transparent);"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     r1, r2, r3, r4 = st.columns(4)
 
@@ -278,7 +310,9 @@ if risk:
     with r4:
         vol = risk.get("annual_volatility", 0)
         st.metric("Annual Volatility", format_percent(vol, include_sign=False))
-        st.metric("Daily Volatility", format_percent(risk.get("daily_volatility", 0), include_sign=False))
+        st.metric(
+            "Daily Volatility", format_percent(risk.get("daily_volatility", 0), include_sign=False)
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -286,7 +320,8 @@ if risk:
 rolling = result.get("rolling_returns", {})
 
 if rolling.get("values"):
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
         <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
         <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: {COLORS['text_primary']}; font-size: 0.9rem; font-weight: 600;">
@@ -294,7 +329,9 @@ if rolling.get("values"):
         </h3>
         <div style="flex: 1; height: 1px; background: linear-gradient(90deg, {COLORS['border']}, transparent);"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Summary metrics
     rc1, rc2, rc3, rc4, rc5 = st.columns(5)
@@ -325,7 +362,8 @@ if rolling.get("values"):
 dd = result.get("drawdown_analysis", {})
 
 if dd.get("drawdown_series"):
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
         <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
         <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: {COLORS['text_primary']}; font-size: 0.9rem; font-weight: 600;">
@@ -333,7 +371,9 @@ if dd.get("drawdown_series"):
         </h3>
         <div style="flex: 1; height: 1px; background: linear-gradient(90deg, {COLORS['border']}, transparent);"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     dc1, dc2, dc3, dc4 = st.columns(4)
     dc1.metric("Max Drawdown", format_percent(dd.get("max_drawdown")))
@@ -356,7 +396,8 @@ if dd.get("drawdown_series"):
 stats = result.get("return_statistics", {})
 
 if stats:
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
         <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #6366f1, #8b5cf6); border-radius: 2px;"></div>
         <h3 style="font-family: 'Inter', sans-serif; margin: 0; color: {COLORS['text_primary']}; font-size: 0.9rem; font-weight: 600;">
@@ -364,7 +405,9 @@ if stats:
         </h3>
         <div style="flex: 1; height: 1px; background: linear-gradient(90deg, {COLORS['border']}, transparent);"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     sc1, sc2, sc3, sc4, sc5, sc6 = st.columns(6)
     sc1.metric("Mean Daily", format_percent(stats.get("mean_daily"), decimals=3))
@@ -376,10 +419,13 @@ if stats:
 
 # ─── Footer ─────────────────────────────────────────────────
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown(f"""
+st.markdown(
+    f"""
 <div style="text-align: center; padding: 1rem; border-top: 1px solid {COLORS['border']};">
     <p style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: {COLORS['text_muted']};">
         Performance data from Yahoo Finance · Returns are price-based (not total return) · Past performance does not guarantee future results
     </p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)

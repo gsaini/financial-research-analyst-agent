@@ -19,7 +19,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from src.tools.backtesting_engine import _fetch_prices, _simulate, _compute_metrics
+from src.tools.backtesting_engine import _compute_metrics, _fetch_prices, _simulate
 from src.tools.strategy_definitions import STRATEGIES, get_strategy
 from src.utils.logger import get_logger
 
@@ -117,7 +117,8 @@ def _evaluate(
             return strategy_fn(p, idx, **params)
 
         trade_log, equity = _simulate(
-            prices, param_strategy,
+            prices,
+            param_strategy,
             initial_capital=initial_capital,
             commission_pct=0.1,
         )
@@ -161,7 +162,7 @@ def optimize_strategy(
     if param_space is None:
         return {
             "error": f"No parameter space defined for '{strategy}'. "
-                     f"Available: {list(_PARAM_SPACES.keys())}",
+            f"Available: {list(_PARAM_SPACES.keys())}",
         }
 
     prices = _fetch_prices(symbol, period=period)
@@ -197,11 +198,13 @@ def optimize_strategy(
             best_fitness = gen_best_fitness
             best_ever = gen_best_individual.copy()
 
-        fitness_history.append({
-            "generation": gen + 1,
-            "best_fitness": round(gen_best_fitness, 4),
-            "avg_fitness": round(np.mean(fitnesses), 4),
-        })
+        fitness_history.append(
+            {
+                "generation": gen + 1,
+                "best_fitness": round(gen_best_fitness, 4),
+                "avg_fitness": round(np.mean(fitnesses), 4),
+            }
+        )
 
         # Selection (tournament)
         new_population = [best_ever.copy()]  # Elitism
@@ -227,7 +230,9 @@ def optimize_strategy(
 
     # Overfitting check
     if val_sharpe < train_sharpe * 0.5:
-        overfit_warning = "Possible overfitting — validation Sharpe is significantly lower than training."
+        overfit_warning = (
+            "Possible overfitting — validation Sharpe is significantly lower than training."
+        )
     elif val_sharpe > train_sharpe * 0.8:
         overfit_warning = "Parameters appear robust — validation performance is close to training."
     else:
